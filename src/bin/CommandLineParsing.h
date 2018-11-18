@@ -477,9 +477,9 @@ protected:
 	//! max unpaired in target's seed
 	NumberParameter<int> seedTMaxUP;
 	//! max energy of a seed to be considered
-	NumberParameter<E_type> seedMaxE;
+	NumberParameter<E_user_type> seedMaxE;
 	//! minimal unpaired probability (per sequence) of a seed to be considered
-	NumberParameter<E_type> seedMinPu;
+	NumberParameter<Z_type> seedMinPu;
 	//! intervals in query for seed search
 	std::string seedQRange;
 	//! intervals in target for seed search
@@ -759,13 +759,13 @@ protected:
 	 * Validates the seedMaxE argument.
 	 * @param value the argument value to validate
 	 */
-	void validate_seedMaxE(const E_type & value);
+	void validate_seedMaxE(const E_user_type & value);
 
 	/**
 	 * Validates the seedMinPu argument.
 	 * @param value the argument value to validate
 	 */
-	void validate_seedMinPu(const E_type & value);
+	void validate_seedMinPu(const Z_type & value);
 
 	/**
 	 * Validates the seedQRange argument.
@@ -1508,7 +1508,7 @@ void CommandLineParsing::validate_seedTMaxUP(const int & value) {
 ////////////////////////////////////////////////////////////////////////////
 
 inline
-void CommandLineParsing::validate_seedMaxE(const E_type & value) {
+void CommandLineParsing::validate_seedMaxE(const E_user_type & value) {
 	// forward check to general method
 	validate_numberArgument("seedMaxE", seedMaxE, value);
 }
@@ -1516,7 +1516,7 @@ void CommandLineParsing::validate_seedMaxE(const E_type & value) {
 ////////////////////////////////////////////////////////////////////////////
 
 inline
-void CommandLineParsing::validate_seedMinPu(const E_type & value) {
+void CommandLineParsing::validate_seedMinPu(const Z_type & value) {
 	// forward check to general method
 	validate_numberArgument("seedMinPu", seedMinPu, value);
 }

@@ -223,7 +223,7 @@ public:
 	 * @return 1.0
 	 */
 	virtual
-	E_type
+	Z_type
 	getRT() const {
 		return 1.0;
 	}

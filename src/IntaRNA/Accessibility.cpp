@@ -48,7 +48,7 @@ operator<<(std::ostream& out, const Accessibility& acc)
 
 void
 Accessibility::
-writeRNAplfold_text( std::ostream& out, const E_type RT, const bool writeProbs ) const
+writeRNAplfold_text( std::ostream& out, const Z_type RT, const bool writeProbs ) const
 {
 	// store current flags
 	std::ios_base::fmtflags oldFlags = out.flags();
@@ -96,7 +96,7 @@ writeRNAplfold_text( std::ostream& out, const E_type RT, const bool writeProbs )
 				}
 			} else {
 				// write ED value (ensure not printing infinity)
-				out <<std::min<E_type>( std::numeric_limits<E_type>::max(), getED(j+1-l, j) ) <<'\t';
+				out <<std::min<E_user_type>( std::numeric_limits<E_user_type>::max(), getED(j+1-l, j) / 100.0 ) <<'\t';
 			}
 		}
 		// print NA for remaining entries
@@ -150,7 +150,7 @@ decomposeByMaxED( const size_t maxRangeLength, const size_t winSize, const size_
 			const size_t maxIdx = curRange.to - winSize + 1;
 			// find window with highest ED
 			size_t maxEdIdx = curRange.from;
-			E_type maxEd = getED(maxEdIdx,maxEdIdx+winSize-1);
+			E_user_type maxEd = getED(maxEdIdx,maxEdIdx+winSize-1) / 100.0;
 			for (size_t i = minIdx; i <= maxIdx; i++ ) {
 				const size_t winSizeEnd = i+winSize-1;
 				// check if we found window with higher ED
@@ -196,13 +196,13 @@ decomposeByMaxED( const size_t maxRangeLength, const size_t winSize, const size_
 
 void
 Accessibility::
-decomposeByMinPu( IndexRangeList & ranges, const double minPu, const E_type RT ) const
+decomposeByMinPu( IndexRangeList & ranges, const double minPu, const Z_type RT ) const
 {
 	// the range list to fill
 	IndexRangeList out;
 
 	// compute the maximal energy penalty according to the minimal unpaired probability
-	const E_type maxED = - RT * std::log( minPu );
+	const Z_type maxED = - RT * std::log( minPu );
 
 	// decompose each range individually
 	for (auto range = ranges.begin(); range != ranges.end(); range++) {

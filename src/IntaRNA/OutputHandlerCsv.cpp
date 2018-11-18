@@ -159,7 +159,10 @@ add( const Interaction & i )
 				break;
 
 			case E:
-				outTmp <<i.energy;
+			  {
+					E_type en = i.energy;
+					outTmp <<InteractionEnergy::convertE(en);
+				}
 				break;
 
 			case ED1:
@@ -171,47 +174,62 @@ add( const Interaction & i )
 				break;
 
 			case Pu1:
-				outTmp <<std::exp( - contr.ED1 / energy.getRT() );
+			  {
+					E_user_type en = - contr.ED1 / energy.getRT();
+			  	outTmp <<std::exp( InteractionEnergy::convertE(en) );
+			  }
 				break;
 
 			case Pu2:
-				outTmp <<std::exp( - contr.ED2 / energy.getRT() );
+		  	{
+				  E_user_type en = - contr.ED2 / energy.getRT();
+					outTmp <<std::exp( InteractionEnergy::convertE(en) );
+		   	}
 				break;
 
 			case E_init:
-				outTmp <<contr.init;
+				outTmp <<InteractionEnergy::convertE(contr.init);
 				break;
 
 			case E_loops:
-				outTmp <<contr.loops;
+				outTmp <<InteractionEnergy::convertE(contr.loops);
 				break;
 
 			case E_dangleL:
-				outTmp <<contr.dangleLeft;
+				outTmp <<InteractionEnergy::convertE(contr.dangleLeft);
 				break;
 
 			case E_dangleR:
-				outTmp <<contr.dangleRight;
+				outTmp <<InteractionEnergy::convertE(contr.dangleRight);
 				break;
 
 			case E_endL:
-				outTmp <<contr.endLeft;
+				outTmp <<InteractionEnergy::convertE(contr.endLeft);
 				break;
 
 			case E_endR:
-				outTmp <<contr.endRight;
+				outTmp <<InteractionEnergy::convertE(contr.endRight);
 				break;
 
 			case E_hybrid:
-				outTmp <<(i.energy - contr.ED1 - contr.ED2);
+			  {
+					E_type en = i.energy - contr.ED1 - contr.ED2;
+					outTmp <<InteractionEnergy::convertE(en);
+				}
 				break;
 
 			case E_norm:
-				outTmp <<(i.energy / std::log( energy.size1() * energy.size2() ) );
+		  	{
+				  E_type en = i.energy;
+					outTmp <<InteractionEnergy::convertE(en) / std::log( energy.size1() * energy.size2() );
+		  	}
 				break;
 
 			case E_hybridNorm:
-				outTmp <<( (i.energy - contr.ED1 - contr.ED2) / std::log( energy.size1() * energy.size2() ) );
+		  	{
+				  E_type en = i.energy - contr.ED1 - contr.ED2;
+					outTmp <<InteractionEnergy::convertE(en) / std::log( energy.size1() * energy.size2() );
+		  	}
 				break;
 
 			case seedStart1:
@@ -248,9 +266,9 @@ add( const Interaction & i )
 
 			case seedE:
 				if (i.seed == NULL) {
-					outTmp <<std::numeric_limits<E_type>::signaling_NaN();
+					outTmp <<std::numeric_limits<E_user_type>::signaling_NaN();
 				} else {
-					outTmp <<i.seed->energy;
+					outTmp <<InteractionEnergy::convertE(i.seed->energy);
 				}
 				break;
 
@@ -274,7 +292,8 @@ add( const Interaction & i )
 				if (i.seed == NULL) {
 					outTmp <<std::numeric_limits<E_type>::signaling_NaN();
 				} else {
-					outTmp <<std::exp( - energy.getED1( i.seed->bp_i.first, i.seed->bp_j.first ) / energy.getRT() );
+					E_user_type en = - energy.getED1( i.seed->bp_i.first, i.seed->bp_j.first ) / energy.getRT();
+					outTmp <<std::exp( InteractionEnergy::convertE(en) );
 				}
 				break;
 
@@ -282,7 +301,8 @@ add( const Interaction & i )
 				if (i.seed == NULL) {
 					outTmp <<std::numeric_limits<E_type>::signaling_NaN();
 				} else {
-					outTmp <<std::exp( - energy.getAccessibility2().getAccessibilityOrigin().getED( i.seed->bp_j.second, i.seed->bp_i.second ) / energy.getRT() );
+					E_user_type en = - energy.getAccessibility2().getAccessibilityOrigin().getED( i.seed->bp_j.second, i.seed->bp_i.second ) / energy.getRT();
+					outTmp <<std::exp( InteractionEnergy::convertE(en) );
 				}
 				break;
 
@@ -303,4 +323,3 @@ add( const Interaction & i )
 ////////////////////////////////////////////////////////////////////////
 
 } // namespace
-

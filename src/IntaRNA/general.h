@@ -69,11 +69,17 @@
 
 namespace IntaRNA {
 
-	//! type for energy values (energy + accessibility [ED])
-	typedef float E_type;
+	//! type for energy values for in-/output only
+	typedef float E_user_type;
+
+	//! type for energy values (energy + accessibility [ED]) (internally)
+	typedef int E_type;
+
+	//! type for probabilities, RT and Boltzmann values
+	typedef float Z_type;
 
 	//! type for temperature values
-	typedef E_type T_type;
+	typedef Z_type T_type;
 
 } // namespace
 
@@ -87,8 +93,8 @@ namespace IntaRNA {
 #ifdef E_equal
 	#error E_equal already defined
 #endif
-	//! check if two energies are equal according to some epsilon
-#define E_equal( e1, e2 ) ( std::abs((e1)-(e2)) < E_precisionEpsilon)
+	//! check if two energies are equal
+#define E_equal( e1, e2 ) ( std::abs((e1)-(e2)) )
 // another option from http://en.cppreference.com/w/cpp/types/numeric_limits/epsilon
 //#define E_equal_ULP 2
 //#define E_equal( e1, e2 ) ( \
@@ -109,7 +115,7 @@ namespace IntaRNA {
 	#error E_isINF already defined
 #endif
 	//! check if a given energy is set to E_INF
-#define E_isINF( e ) (  std::numeric_limits<E_type>::max() < e )
+#define E_isINF( e ) ( std::numeric_limits<E_type>::max() < e )
 
 
 ////////////////  GLOBAL CONSTANTS  /////////////////////
@@ -118,7 +124,7 @@ namespace IntaRNA {
 
 namespace IntaRNA {
 
-	const E_type E_INF = std::numeric_limits<E_type>::infinity();
+	const E_type E_INF = (std::numeric_limits<E_type>::max() / 2) + 1;
 
 } // namespace
 

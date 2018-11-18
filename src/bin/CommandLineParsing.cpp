@@ -400,13 +400,13 @@ CommandLineParsing::CommandLineParsing()
 			, std::string("maximal number of unpaired bases within the target's seed region"
 					" (arg in range ["+toString(seedTMaxUP.min)+","+toString(seedTMaxUP.max)+"]); if -1 the value of seedMaxUP is used.").c_str())
 		("seedMaxE"
-			, value<E_type>(&(seedMaxE.val))
+			, value<E_user_type>(&(seedMaxE.val))
 				->default_value(seedMaxE.def)
 				->notifier(boost::bind(&CommandLineParsing::validate_seedMaxE,this,_1))
 			, std::string("maximal energy a seed region may have"
 					" (arg in range ["+toString(seedMaxE.min)+","+toString(seedMaxE.max)+"]).").c_str())
 		("seedMinPu"
-			, value<E_type>(&(seedMinPu.val))
+			, value<Z_type>(&(seedMinPu.val))
 				->default_value(seedMinPu.def)
 				->notifier(boost::bind(&CommandLineParsing::validate_seedMinPu,this,_1))
 			, std::string("minimal unpaired probability (per sequence) a seed region may have"
@@ -1490,8 +1490,8 @@ getOutputConstraint()  const
 	return OutputConstraint(
 			  outNumber.val
 			, overlap
-			, static_cast<E_type>(outMaxE.val)
-			, static_cast<E_type>(outDeltaE.val)
+			, static_cast<E_user_type>(outMaxE.val)
+			, static_cast<E_user_type>(outDeltaE.val)
 			);
 }
 
@@ -2024,7 +2024,6 @@ getTargetRanges( const InteractionEnergy & energy, const size_t sequenceNumber )
 	// since all ranges covering a position will have a lower unpaired probability
 	getTargetAccessibility( sequenceNumber )->decomposeByMinPu( tRegion.at(sequenceNumber), outMinPu.val, energy.getRT() );
 
-
 	return tRegion.at(sequenceNumber);
 }
 
@@ -2055,6 +2054,3 @@ writeAccessibility( const Accessibility& acc, const std::string & fileOrStream, 
 }
 
 ////////////////////////////////////////////////////////////////////////////
-
-
-

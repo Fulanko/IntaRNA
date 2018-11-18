@@ -233,7 +233,7 @@ public:
 	 * @return R*temperature
 	 */
 	virtual
-	E_type
+	Z_type
 	getRT() const;
 
 	/**
@@ -351,7 +351,7 @@ getE_endRight( const size_t j1, const size_t j2 ) const
 ////////////////////////////////////////////////////////////////////////////
 
 inline
-E_type
+Z_type
 InteractionEnergyVrna::
 getRT() const
 {
