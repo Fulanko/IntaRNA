@@ -324,7 +324,7 @@ Then run the following commands:
 
 ```[bash]
 brew install automake
-brew install Viennarna.rb
+brew install ViennaRNA.rb
 brew install doxygen
 ```
 
