@@ -522,11 +522,11 @@ protected:
 	//! whether or not reported interactions can to be overlapping
 	CharParameter outOverlap;
 	//! deltaE to mfe allowed to report an interaction
-	NumberParameter<double> outDeltaE;
+	NumberParameter<E_user_type> outDeltaE;
 	//! max E allowed to report an interaction
-	NumberParameter<double> outMaxE;
+	NumberParameter<E_user_type> outMaxE;
 	//! min unpaired prob of an interacting subsequence allowed
-	NumberParameter<double> outMinPu;
+	NumberParameter<Z_type> outMinPu;
 	//! the CSV column selection
 	std::string outCsvCols;
 	//! the CSV column selection
@@ -840,19 +840,19 @@ protected:
 	 * Validates the outDeltaE argument.
 	 * @param value the argument value to validate
 	 */
-	void validate_outDeltaE(const double & value);
+	void validate_outDeltaE(const E_user_type & value);
 
 	/**
 	 * Validates the outMaxE argument.
 	 * @param value the argument value to validate
 	 */
-	void validate_outMaxE(const double & value);
+	void validate_outMaxE(const E_user_type & value);
 
 	/**
 	 * Validates the outMinPu argument.
 	 * @param value the argument value to validate
 	 */
-	void validate_outMinPu(const double & value);
+	void validate_outMinPu(const Z_type & value);
 
 	/**
 	 * Validates the outCsvCols argument.
@@ -1748,7 +1748,7 @@ void CommandLineParsing::validate_outOverlap(const char & value) {
 ////////////////////////////////////////////////////////////////////////////
 
 inline
-void CommandLineParsing::validate_outDeltaE(const double & value) {
+void CommandLineParsing::validate_outDeltaE(const E_user_type & value) {
 	// forward check to general method
 	validate_numberArgument("outDeltaE", outDeltaE, value);
 }
@@ -1756,7 +1756,7 @@ void CommandLineParsing::validate_outDeltaE(const double & value) {
 ////////////////////////////////////////////////////////////////////////////
 
 inline
-void CommandLineParsing::validate_outMaxE(const double & value) {
+void CommandLineParsing::validate_outMaxE(const E_user_type & value) {
 	// forward check to general method
 	validate_numberArgument("outMaxE", outMaxE, value);
 }
@@ -1764,7 +1764,7 @@ void CommandLineParsing::validate_outMaxE(const double & value) {
 ////////////////////////////////////////////////////////////////////////////
 
 inline
-void CommandLineParsing::validate_outMinPu(const double & value) {
+void CommandLineParsing::validate_outMinPu(const Z_type & value) {
 	// forward check to general method
 	validate_numberArgument("outMinPu", outMinPu, value);
 }

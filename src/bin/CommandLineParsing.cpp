@@ -588,19 +588,19 @@ CommandLineParsing::CommandLineParsing()
 	opts_cmdline_short.add(opts_output);
 	opts_output.add_options()
 	    ("outMaxE"
-			, value<double>(&(outMaxE.val))
+			, value<E_user_type>(&(outMaxE.val))
 				->default_value(outMaxE.def)
 				->notifier(boost::bind(&CommandLineParsing::validate_outMaxE,this,_1))
 			, std::string("only interactions with E <= maxE are reported"
 					" (arg in range ["+toString(outMaxE.min)+","+toString(outMaxE.max)+"])").c_str())
 	    ("outMinPu"
-			, value<double>(&(outMinPu.val))
+			, value<Z_type>(&(outMinPu.val))
 				->default_value(outMinPu.def)
 				->notifier(boost::bind(&CommandLineParsing::validate_outMinPu,this,_1))
 			, std::string("only interactions where all individual positions of both interacting sites have an unpaired probability >= minPu are reported"
 					" (arg in range ["+toString(outMinPu.min)+","+toString(outMinPu.max)+"])").c_str())
 	    ("outDeltaE"
-			, value<double>(&(outDeltaE.val))
+			, value<E_user_type>(&(outDeltaE.val))
 				->default_value(outDeltaE.def)
 				->notifier(boost::bind(&CommandLineParsing::validate_outDeltaE,this,_1))
 			, std::string("suboptimal output : only interactions with E <= (minE+deltaE) are reported"
@@ -1490,8 +1490,8 @@ getOutputConstraint()  const
 	return OutputConstraint(
 			  outNumber.val
 			, overlap
-			, static_cast<E_user_type>(outMaxE.val)
-			, static_cast<E_user_type>(outDeltaE.val)
+			, Euser_2_E(outMaxE.val)
+			, Euser_2_E(outDeltaE.val)
 			);
 }
 

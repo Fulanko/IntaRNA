@@ -525,26 +525,6 @@ public:
 	size_t
 	getIndex2( const Interaction::BasePair & bp ) const;
 
-	/**
-	 * Convert E_type to E_user_type
-	 * @param E_type
-	 *
-	 * @return corresponding E_user_type
-	 */
-	static
-	E_type
-	convertE( E_user_type & e );
-
-	/**
-	 * Convert E_user_type to E_type
-	 * @param E_user_type
-	 *
-	 * @return corresponding E_type
-	 */
-	static
-	E_user_type
-	convertE( E_type & e );
-
 
 protected:
 
@@ -628,26 +608,6 @@ InteractionEnergy::InteractionEnergy( const Accessibility & accS1
 inline
 InteractionEnergy::~InteractionEnergy()
 {
-}
-
-////////////////////////////////////////////////////////////////////////////
-
-inline
-E_user_type
-InteractionEnergy::
-convertE( E_type & e )
-{
-	return e / 100.0;
-}
-
-////////////////////////////////////////////////////////////////////////////
-
-inline
-E_type
-InteractionEnergy::
-convertE( E_user_type & e )
-{
-	return static_cast<int>(e * 100);
 }
 
 ////////////////////////////////////////////////////////////////////////////

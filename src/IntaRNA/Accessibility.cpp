@@ -85,7 +85,7 @@ writeRNAplfold_text( std::ostream& out, const Z_type RT, const bool writeProbs )
 					out <<0 <<'\t';
 				} else {
 					// compute unpaired probability
-					double value = ( std::exp( - getED(j+1-l, j) / RT ) );
+					double value = ( std::exp( - E_2_Euser(getED(j+1-l, j)) / RT ) );
 					// check for nan result of conversion
 					if ( value != value ) {
 						out <<0 <<'\t';
@@ -96,7 +96,7 @@ writeRNAplfold_text( std::ostream& out, const Z_type RT, const bool writeProbs )
 				}
 			} else {
 				// write ED value (ensure not printing infinity)
-				out <<std::min<E_user_type>( std::numeric_limits<E_user_type>::max(), getED(j+1-l, j) / 100.0 ) <<'\t';
+				out <<E_2_Euser(std::min<E_type>( E_MAX, getED(j+1-l, j) )) <<'\t';
 			}
 		}
 		// print NA for remaining entries
@@ -150,7 +150,7 @@ decomposeByMaxED( const size_t maxRangeLength, const size_t winSize, const size_
 			const size_t maxIdx = curRange.to - winSize + 1;
 			// find window with highest ED
 			size_t maxEdIdx = curRange.from;
-			E_user_type maxEd = getED(maxEdIdx,maxEdIdx+winSize-1) / 100.0;
+			E_user_type maxEd = E_2_Euser(getED(maxEdIdx,maxEdIdx+winSize-1));
 			for (size_t i = minIdx; i <= maxIdx; i++ ) {
 				const size_t winSizeEnd = i+winSize-1;
 				// check if we found window with higher ED
