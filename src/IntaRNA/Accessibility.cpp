@@ -150,7 +150,7 @@ decomposeByMaxED( const size_t maxRangeLength, const size_t winSize, const size_
 			const size_t maxIdx = curRange.to - winSize + 1;
 			// find window with highest ED
 			size_t maxEdIdx = curRange.from;
-			E_user_type maxEd = E_2_Euser(getED(maxEdIdx,maxEdIdx+winSize-1));
+			E_type maxEd = getED(maxEdIdx,maxEdIdx+winSize-1);
 			for (size_t i = minIdx; i <= maxIdx; i++ ) {
 				const size_t winSizeEnd = i+winSize-1;
 				// check if we found window with higher ED

@@ -75,8 +75,8 @@ namespace IntaRNA {
 
 	//! type for energy values (energy + accessibility [ED]) (internally)
 	typedef int E_type;
-	const E_type E_MAX = std::numeric_limits<E_type>::max();
-	const E_type E_INF = (E_MAX / 2) + 1;
+	const E_type E_INF = (std::numeric_limits<E_type>::max() / 2) + 1;
+	const E_type E_MAX = E_INF / 2;
 
 	//! type for probabilities, RT and Boltzmann values
 	typedef float Z_type;
@@ -96,7 +96,7 @@ namespace IntaRNA {
   #error Euser_2_E already defined
 #endif
   //! convert E_user_type to E_type
-#define Euser_2_E( e ) ( static_cast<E_type>(e) * 100 )
+#define Euser_2_E( e ) ( static_cast<E_type>(e * 100) )
 
 #ifdef E_precisionEpsilon
 	#error E_precisionEpsilon already defined
@@ -130,7 +130,7 @@ namespace IntaRNA {
 	#error E_isINF already defined
 #endif
 	//! check if a given energy is set to E_INF
-#define E_isINF( e ) ( E_INF < e )
+#define E_isINF( e ) ( E_INF <= e )
 
 
 ////////////////  UTILITY FUNCTION  /////////////////////

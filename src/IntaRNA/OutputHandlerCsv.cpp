@@ -171,11 +171,11 @@ add( const Interaction & i )
 				break;
 
 			case Pu1:
-			  outTmp <<std::exp( E_2_Euser( - contr.ED1 / energy.getRT() ) );
+			  outTmp <<std::exp( E_2_Euser( - contr.ED1 ) / energy.getRT() );
 				break;
 
 			case Pu2:
-				outTmp <<std::exp( E_2_Euser( - contr.ED2 / energy.getRT() ) );
+				outTmp <<std::exp( E_2_Euser( - contr.ED2 ) / energy.getRT() );
 				break;
 
 			case E_init:
@@ -274,7 +274,7 @@ add( const Interaction & i )
 				if (i.seed == NULL) {
 					outTmp <<std::numeric_limits<E_type>::signaling_NaN();
 				} else {
-					outTmp <<std::exp( E_2_Euser( - energy.getED1( i.seed->bp_i.first, i.seed->bp_j.first ) / energy.getRT() ) );
+					outTmp <<std::exp( E_2_Euser( - energy.getED1( i.seed->bp_i.first, i.seed->bp_j.first ) ) / energy.getRT() );
 				}
 				break;
 
@@ -282,7 +282,7 @@ add( const Interaction & i )
 				if (i.seed == NULL) {
 					outTmp <<std::numeric_limits<E_type>::signaling_NaN();
 				} else {
-					outTmp <<std::exp( E_2_Euser( - energy.getAccessibility2().getAccessibilityOrigin().getED( i.seed->bp_j.second, i.seed->bp_i.second ) / energy.getRT() ) );
+					outTmp <<std::exp( E_2_Euser( - energy.getAccessibility2().getAccessibilityOrigin().getED( i.seed->bp_j.second, i.seed->bp_i.second ) ) / energy.getRT() );
 				}
 				break;
 
