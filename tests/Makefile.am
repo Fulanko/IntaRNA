@@ -7,7 +7,7 @@ TESTS = runApiTests
 
 
 # the program to build
-check_PROGRAMS = runApiTests 
+check_PROGRAMS = runApiTests
 
 # test sources
 runApiTests_SOURCES =	\
@@ -21,17 +21,17 @@ runApiTests_SOURCES =	\
 					InteractionEnergyBasePair_test.cpp  \
 					InteractionRange_test.cpp  \
 					NussinovHandler_test.cpp \
-					RnaSequence_test.cpp \
-					runTests.cpp
-					
-
-#					AccessibilityFromStream_test.cpp \
-					PredictionTrackerProfileMinE_test.cpp \
-					PredictionTrackerSpotProb_test.cpp \
 					OutputHandlerRangeOnly_test.cpp \
 					OutputHandlerInteractionList_test.cpp \
+					PredictionTrackerProfileMinE_test.cpp \
+					RnaSequence_test.cpp \
 					SeedHandlerExplicit_test.cpp \
 					SeedHandlerNoBulge_test.cpp \
+					runTests.cpp
+
+
+#					AccessibilityFromStream_test.cpp \
+					PredictionTrackerSpotProb_test.cpp \
 #
 
 

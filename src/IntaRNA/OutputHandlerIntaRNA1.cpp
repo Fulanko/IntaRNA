@@ -214,16 +214,16 @@ add( const Interaction & i )
 				<<"positions(ncRNA)      : "<<(i.basePairs.rbegin()->second +1)<<" -- "<<(i.basePairs.begin()->second +1) <<'\n'
 				<<"positions seed(ncRNA) : "<<(i.seed!=NULL?toString(i.seed->bp_j.second +1):"?")<<" -- "<<(i.seed!=NULL?toString(i.seed->bp_i.second +1):"?") <<'\n'
 				<<"positions with dangle(ncRNA): "<<(i.basePairs.rbegin()->second +1)<<" -- "<<(i.basePairs.begin()->second +1) <<'\n'
-				<<"ED target need: "<<contr.ED1 <<" kcal/mol"<<'\n'
-				<<"ED ncRNA  need: "<<contr.ED2 <<" kcal/mol"<<'\n'
-				<<"hybrid energy : "<<(i.energy-contr.ED1-contr.ED2) <<" kcal/mol"<<'\n'
+				<<"ED target need: "<<E_2_Euser(contr.ED1) <<" kcal/mol"<<'\n'
+				<<"ED ncRNA  need: "<<E_2_Euser(contr.ED2) <<" kcal/mol"<<'\n'
+				<<"hybrid energy : "<<E_2_Euser(i.energy-contr.ED1-contr.ED2) <<" kcal/mol"<<'\n'
 				<<"\n"
-				<<"energy: "<<i.energy <<" kcal/mol\n"
+				<<"energy: "<<E_2_Euser(i.energy) <<" kcal/mol\n"
 				;
 		} else {
 			// normal minimal information output
 			outTmp	<<'\n'
-				<<"energy: "<<i.energy <<" kcal/mol\n"
+				<<"energy: "<<E_2_Euser(i.energy) <<" kcal/mol\n"
 				;
 		}
 
@@ -272,4 +272,3 @@ addSeparator (const bool yesNo )
 ////////////////////////////////////////////////////////////////////////////
 
 } // namespace
-

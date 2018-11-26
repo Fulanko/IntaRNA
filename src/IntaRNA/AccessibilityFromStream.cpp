@@ -15,7 +15,7 @@ AccessibilityFromStream(
 		, const AccessibilityConstraint * const accConstraint
 		, std::istream & inStream
 		, const InStreamType inStreamType
-		, const E_type RT
+		, const Z_type RT
 		)
  :	Accessibility( sequence, maxLength, accConstraint )
 	, edValues()
@@ -49,7 +49,7 @@ AccessibilityFromStream::
 
 void
 AccessibilityFromStream::
-parseRNAplfold_text( std::istream & inStream, const E_type RT, const bool parseProbs )
+parseRNAplfold_text( std::istream & inStream, const Z_type RT, const bool parseProbs )
 {
 #if INTARNA_MULITHREADING
 	#pragma omp critical(intarna_omp_logOutput)
@@ -140,7 +140,7 @@ parseRNAplfold_text( std::istream & inStream, const E_type RT, const bool parseP
 								+" : the "+toString(j+1-i)+". value = "+toString(curVal)+" is no probability in [0,1]");
 					}
 					edValues( i-1, j-1 ) = curVal > 0
-											? std::min<E_type>(ED_UPPER_BOUND, - RT * std::log( curVal ))
+											? std::min<E_type>(ED_UPPER_BOUND, Euser_2_E( - RT * std::log( curVal ) ))
 											: ED_UPPER_BOUND;
 				}
 				// or ED values
@@ -149,7 +149,7 @@ parseRNAplfold_text( std::istream & inStream, const E_type RT, const bool parseP
 						throw std::runtime_error("AccessibilityFromStream::parseRNAplfold_Text(ED) : in line i="+toString(j)
 								+" : the "+toString(j+1-i)+". value = "+toString(curVal)+" is no ED value >= 0");
 					}
-					edValues( i-1, j-1 ) = std::min<E_type>(ED_UPPER_BOUND, curVal);
+					edValues( i-1, j-1 ) = std::min<E_type>(ED_UPPER_BOUND, Euser_2_E(curVal));
 				}
 			} else {
 				throw std::runtime_error("AccessibilityFromStream::parseRNAplfold_text() : in line i="+toString(j)

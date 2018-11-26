@@ -20,7 +20,7 @@ namespace IntaRNA {
 ////////////////////////////////////////////////////////////////////////////
 
 VrnaHandler::
-VrnaHandler( double temperature, const std::string * const vrnaParamFile )
+VrnaHandler( Z_type temperature, const std::string * const vrnaParamFile )
 	:
 	model()
 	, RT(getRT(temperature))
@@ -40,7 +40,7 @@ VrnaHandler( double temperature, const std::string * const vrnaParamFile )
 
 	model.temperature = temperature;
 //	model.temperature = this->temperature;
-//	  double  temperature;                  /**<  @brief  The temperature used to scale the thermodynamic parameters */
+//	  Z_type  temperature;                  /**<  @brief  The temperature used to scale the thermodynamic parameters */
 //	  double  betaScale;                    /**<  @brief  A scaling factor for the thermodynamic temperature of the Boltzmann factors */
 	model.dangles = 2;
 //	  int     dangles;                      /**<  @brief  Specifies the dangle model used in any energy evaluation (0,1,2 or 3) */
@@ -104,7 +104,7 @@ getModel( int max_bp_span, int window_size ) const
 
 	// copy default model
 	vrna_md_copy(&subModel, &model);
-	
+
     // set specific parameters
     subModel.max_bp_span = max_bp_span;
     subModel.window_size = window_size;
@@ -115,9 +115,9 @@ getModel( int max_bp_span, int window_size ) const
 
 ////////////////////////////////////////////////////////////////////////////
 
-double
+Z_type
 VrnaHandler::
-getRT( const double temperature )
+getRT( const Z_type temperature )
 {
 	return ((temperature+K0)*GASCONST/1000.0);
 }
@@ -126,4 +126,3 @@ getRT( const double temperature )
 
 
 } // namespace
-

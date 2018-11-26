@@ -26,29 +26,24 @@ libIntaRNA_a_HEADERS =    \
 					AccessibilityConstraint.h \
 					AccessibilityDisabled.h \
 					AccessibilityBasePair.h \
+					AccessibilityFromStream.h \
+					AccessibilityVrna.h \
 					IndexRange.h \
 					IndexRangeList.h \
 					Interaction.h \
 					InteractionEnergy.h \
 					InteractionEnergyBasePair.h \
+					InteractionEnergyIdxOffset.h \
+					InteractionEnergyVrna.h \
 					InteractionRange.h \
 					NussinovHandler.h \
 					OutputConstraint.h \
 					OutputHandler.h \
 					OutputHandlerCsv.h \
 					OutputHandlerHub.h \
+					OutputHandlerIntaRNA1.h \
 					OutputHandlerInteractionList.h \
 					OutputHandlerRangeOnly.h \
-					ReverseAccessibility.h \
-					RnaSequence.h \
-					general.h
-
-
-#					AccessibilityFromStream.h \
-					AccessibilityVrna.h \
-					InteractionEnergyIdxOffset.h \
-					InteractionEnergyVrna.h \
-					OutputHandlerIntaRNA1.h \
 					OutputHandlerText.h \
 					PredictionTracker.h \
 					PredictionTrackerHub.h \
@@ -65,13 +60,16 @@ libIntaRNA_a_HEADERS =    \
 					PredictorMfe2dHeuristicSeed.h \
 					PredictorMfe4d.h \
 					PredictorMfe4dSeed.h \
+					ReverseAccessibility.h \
+					RnaSequence.h \
 					SeedConstraint.h \
 					SeedHandler.h \
 					SeedHandlerExplicit.h \
 					SeedHandlerIdxOffset.h \
 					SeedHandlerMfe.h \
 					SeedHandlerNoBulge.h \
-					VrnaHandler.h
+					VrnaHandler.h \
+					general.h
 
 
 # the sources to add to the library and to add to the source distribution
@@ -80,28 +78,23 @@ libIntaRNA_a_SOURCES =    \
 					Accessibility.cpp \
 					AccessibilityConstraint.cpp \
 					AccessibilityBasePair.cpp \
+					AccessibilityFromStream.cpp \
+					AccessibilityVrna.cpp \
 					IndexRange.cpp \
 					IndexRangeList.cpp \
 					Interaction.cpp \
 					InteractionEnergy.cpp \
 					InteractionEnergyBasePair.cpp \
+					InteractionEnergyIdxOffset.cpp \
+					InteractionEnergyVrna.cpp \
 					InteractionRange.cpp \
 					NussinovHandler.cpp \
 					OutputConstraint.cpp \
 					OutputHandler.cpp \
 					OutputHandlerCsv.cpp \
+					OutputHandlerIntaRNA1.cpp \
 					OutputHandlerInteractionList.cpp \
 					OutputHandlerRangeOnly.cpp \
-					ReverseAccessibility.cpp \
-					RnaSequence.cpp \
-					general.cpp
-					
-					
-#					AccessibilityFromStream.cpp \
-					AccessibilityVrna.cpp \
-					InteractionEnergyIdxOffset.cpp \
-					InteractionEnergyVrna.cpp \
-					OutputHandlerIntaRNA1.cpp \
 					OutputHandlerText.cpp \
 					PredictionTrackerPairMinE.cpp \
 					PredictionTrackerProfileMinE.cpp \
@@ -115,18 +108,21 @@ libIntaRNA_a_SOURCES =    \
 					PredictorMfe2dHeuristicSeed.cpp \
 					PredictorMfe4d.cpp \
 					PredictorMfe4dSeed.cpp \
+					ReverseAccessibility.cpp \
+					RnaSequence.cpp \
 					SeedConstraint.cpp \
 					SeedHandlerExplicit.cpp \
 					SeedHandlerMfe.cpp \
 					SeedHandlerNoBulge.cpp \
-					VrnaHandler.cpp
+					VrnaHandler.cpp \
+					general.cpp
 
 
-# generated intaRNA sources 
+# generated intaRNA sources
 nodist_libIntaRNA_a_SOURCES = 	\
 					../config.h \
 					intarna_config.h
-						
+
 ################################################################
 # pkg-config
 ################################################################
@@ -137,4 +133,3 @@ pkgconfig_DATA = $(top_srcdir)/IntaRNA.pc
 endif
 
 ###############################################################################
-
