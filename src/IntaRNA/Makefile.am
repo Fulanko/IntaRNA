@@ -36,6 +36,8 @@ libIntaRNA_a_HEADERS =    \
 					OutputConstraint.h \
 					OutputHandler.h \
 					OutputHandlerCsv.h \
+					OutputHandlerHub.h \
+					OutputHandlerRangeOnly.h \
 					ReverseAccessibility.h \
 					RnaSequence.h \
 					general.h
@@ -45,10 +47,8 @@ libIntaRNA_a_HEADERS =    \
 					AccessibilityVrna.h \
 					InteractionEnergyIdxOffset.h \
 					InteractionEnergyVrna.h \
-					OutputHandlerHub.h \
 					OutputHandlerIntaRNA1.h \
 					OutputHandlerInteractionList.h \
-					OutputHandlerRangeOnly.h \
 					OutputHandlerText.h \
 					PredictionTracker.h \
 					PredictionTrackerHub.h \
@@ -90,6 +90,7 @@ libIntaRNA_a_SOURCES =    \
 					OutputConstraint.cpp \
 					OutputHandler.cpp \
 					OutputHandlerCsv.cpp \
+					OutputHandlerRangeOnly.cpp \
 					ReverseAccessibility.cpp \
 					RnaSequence.cpp \
 					general.cpp
@@ -101,7 +102,6 @@ libIntaRNA_a_SOURCES =    \
 					InteractionEnergyVrna.cpp \
 					OutputHandlerIntaRNA1.cpp \
 					OutputHandlerInteractionList.cpp \
-					OutputHandlerRangeOnly.cpp \
 					OutputHandlerText.cpp \
 					PredictionTrackerPairMinE.cpp \
 					PredictionTrackerProfileMinE.cpp \
