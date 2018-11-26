@@ -110,15 +110,6 @@ namespace IntaRNA {
 #endif
 	//! check if two energies are equal
 #define E_equal( e1, e2 ) ( e1 == e2 )
-// another option from http://en.cppreference.com/w/cpp/types/numeric_limits/epsilon
-//#define E_equal_ULP 2
-//#define E_equal( e1, e2 ) ( \
-//	/* the machine epsilon has to be scaled to the magnitude of the values used */ \
-//	/* and multiplied by the desired precision in ULPs (units in the last place) */ \
-//	std::abs(e1-e2) < std::numeric_limits<T>::epsilon() * std::abs(e1+e2) * E_equal_ULP \
-//	/* unless the result is subnormal */ \
-//	|| std::abs(e1-e2) < std::numeric_limits<T>::min() \
-//)
 
 #ifdef E_isNotINF
 	#error E_isNotINF already defined
@@ -131,6 +122,31 @@ namespace IntaRNA {
 #endif
 	//! check if a given energy is set to E_INF
 #define E_isINF( e ) ( E_INF <= e )
+
+
+
+#ifdef Z_precisionEpsilon
+	#error Z_precisionEpsilon already defined
+#endif
+	//! the delta difference range to consider two energies equivalent
+    //! using sqrt(representable positive value closest to zero)
+#define Z_precisionEpsilon std::sqrt(std::numeric_limits<Z_type>::min())
+
+#ifdef Z_equal
+	#error Z_equal already defined
+#endif
+	//! check if two energies are equal according to some epsilon
+#define Z_equal( e1, e2 ) ( std::abs((e1)-(e2)) < Z_precisionEpsilon)
+// another option from http://en.cppreference.com/w/cpp/types/numeric_limits/epsilon
+//#define Z_equal_ULP 2
+//#define Z_equal( e1, e2 ) ( \
+//	/* the machine epsilon has to be scaled to the magnitude of the values used */ \
+//	/* and multiplied by the desired precision in ULPs (units in the last place) */ \
+//	std::abs(e1-e2) < std::numeric_limits<T>::epsilon() * std::abs(e1+e2) * Z_equal_ULP \
+//	/* unless the result is subnormal */ \
+//	|| std::abs(e1-e2) < std::numeric_limits<T>::min() \
+//)
+
 
 
 ////////////////  UTILITY FUNCTION  /////////////////////
