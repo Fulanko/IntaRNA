@@ -117,7 +117,7 @@ public:
 	 * @return E = -RT * log( Z )
 	 */
 	virtual
-	Z_type
+	E_type
 	getE( const Z_type Z ) const;
 
 	/**
@@ -886,12 +886,13 @@ getE( const size_t i1, const size_t j1
 ////////////////////////////////////////////////////////////////////////////
 
 inline
-Z_type
+E_type
 InteractionEnergy::
 getE( const Z_type Z ) const
 {
 	// convert partition function to ensemble energy
-	return - getRT() * std::log( Z );
+	// convert to E_type
+	return Euser_2_E( - getRT() * std::log( Z ) );
 }
 
 
