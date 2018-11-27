@@ -80,6 +80,7 @@ namespace IntaRNA {
 
 	//! type for probabilities, RT and Boltzmann values
 	typedef float Z_type;
+	const Z_type Z_INF = std::numeric_limits<Z_type>::infinity();
 
 	//! type for temperature values
 	typedef Z_type T_type;
@@ -102,8 +103,9 @@ namespace IntaRNA {
 	#error E_precisionEpsilon already defined
 #endif
 	//! the delta difference range to consider two energies equivalent
-    //! using sqrt(representable positive value closest to zero)
-#define E_precisionEpsilon std::sqrt(std::numeric_limits<E_type>::min())
+	//! only needed for floating point energy types:
+    //! for these use sqrt(representable positive value closest to zero)
+#define E_precisionEpsilon 0
 
 #ifdef E_equal
 	#error E_equal already defined
@@ -115,7 +117,7 @@ namespace IntaRNA {
 	#error E_isNotINF already defined
 #endif
 	//! check if a given energy is NOT set to E_INF
-#define E_isNotINF( e ) ( std::numeric_limits<E_type>::max() >= e )
+#define E_isNotINF( e ) ( E_INF > e )
 
 #ifdef E_isINF
 	#error E_isINF already defined
@@ -147,6 +149,17 @@ namespace IntaRNA {
 //	|| std::abs(e1-e2) < std::numeric_limits<T>::min() \
 //)
 
+#ifdef Z_isNotINF
+	#error Z_isNotINF already defined
+#endif
+	//! check if a given energy is NOT set to Z_INF
+#define Z_isNotINF( e ) ( std::numeric_limits<Z_type>::max() >= e )
+
+#ifdef Z_isINF
+	#error Z_isINF already defined
+#endif
+	//! check if a given energy is set to Z_INF
+#define Z_isINF( e ) (  std::numeric_limits<Z_type>::max() < e )
 
 
 ////////////////  UTILITY FUNCTION  /////////////////////
