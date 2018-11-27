@@ -15,11 +15,12 @@ runApiTests_SOURCES =	\
 					testEasyLoggingSetup.icc \
 					AccessibilityConstraint_test.cpp \
 					AccessibilityBasePair_test.cpp \
+					AccessibilityFromStream_test.cpp \
 					IndexRange_test.cpp  \
 					IndexRangeList_test.cpp  \
 					Interaction_test.cpp  \
-					InteractionEnergyBasePair_test.cpp  \
 					InteractionRange_test.cpp  \
+					InteractionEnergyBasePair_test.cpp  \
 					NussinovHandler_test.cpp \
 					OutputHandlerRangeOnly_test.cpp \
 					OutputHandlerInteractionList_test.cpp \
@@ -30,8 +31,7 @@ runApiTests_SOURCES =	\
 					runTests.cpp
 
 
-#					AccessibilityFromStream_test.cpp \
-					PredictionTrackerSpotProb_test.cpp \
+#					PredictionTrackerSpotProb_test.cpp \
 #
 
 
