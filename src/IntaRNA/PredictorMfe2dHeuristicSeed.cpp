@@ -80,7 +80,6 @@ predict( const IndexRange & r1
 	size_t i1,i2,w1,w2;
 
 	// init hybridE matrix
-	bool isValidCell = true;
 	for (i1=0; i1<hybridE.size1(); i1++) {
 	for (i2=0; i2<hybridE.size2(); i2++) {
 
@@ -439,4 +438,3 @@ getNextBest( Interaction & curBest )
 ////////////////////////////////////////////////////////////////////////////
 
 } // namespace
-

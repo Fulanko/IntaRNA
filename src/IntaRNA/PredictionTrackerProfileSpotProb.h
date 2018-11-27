@@ -38,14 +38,13 @@ public:
 	 *        is to be written to. use STDOUT/STDERR for the respective stream.
 	 *        Otherwise, an according file is created;
 	 *        if empty, no data for seq2 is collected
-	 * @param E_INF_string the output string representation of E_INF values in
-	 *        the profile output
+	 * @param Pu_INF_string the output string representation for infinity entries
 	 */
 	PredictionTrackerProfileSpotProb(
 				const InteractionEnergy & energy
 				, const std::string & seq1streamName
 				, const std::string & seq2streamName
-				, const std::string E_INF_string = "NA"
+				, const std::string Pu_INF_string = "NA"
 			);
 
 	/**
@@ -58,14 +57,13 @@ public:
 	 *        is to be written to; if NULL, no data for seq1 is collected
 	 * @param seq2stream if non-NULL, the stream where the profile data for seq2
 	 *        is to be written to; if NULL, no data for seq2 is collected
-	 * @param E_INF_string the output string representation of E_INF values in
-	 *        the profile output
+	 * @param Pu_INF_string the output string representation for infinity entries
 	 */
 	PredictionTrackerProfileSpotProb(
 				const InteractionEnergy & energy
 				, std::ostream * seq1stream
 				, std::ostream * seq2stream
-				, const std::string E_INF_string = "NA"
+				, const std::string Pu_INF_string = "NA"
 			);
 
 	/**
@@ -105,11 +103,11 @@ protected:
 	//! if non-NULL, the stream to write the spotProb-profile for seq2 to
 	std::ostream * seq2stream;
 
-	//! the output string representation of E_INF values in the profile output
-	const std::string E_INF_string;
+	//! the output string representation for infinity entries
+	const std::string Pu_INF_string;
 
 	//! container definition for partition function profile data
-	typedef std::vector<E_type> ZProfile;
+	typedef std::vector<Z_type> ZProfile;
 
 	//! the position-wise partition function values for seq1
 	ZProfile seq1Z;
@@ -118,7 +116,7 @@ protected:
 	ZProfile seq2Z;
 
 	//! the overall partition function to be used for normalization
-	E_type overallZ;
+	Z_type overallZ;
 
 	/**
 	 * Updates a given partition function profile if not empty.
@@ -126,14 +124,14 @@ protected:
 	 * @param profile the partition function profile to update
 	 * @param i the first index to update (inclusive)
 	 * @param j the last index to update (inclusive)
-	 * @param E the Boltzmann weight to be used for the update
+	 * @param boltzmannWeight the Boltzmann weight to be used for the update
 	 */
 	static
 	void
 	updateProfile(	  ZProfile & profile
 					, const size_t i
 					, const size_t j
-					, const E_type boltzmannWeight);
+					, const Z_type boltzmannWeight);
 
 	/**
 	 * Writes profile data to stream.
@@ -144,7 +142,7 @@ protected:
 	 * @param overallZ the overall partition function to be used for
 	 *           normalization
 	 * @param rna the RNA the data is about
-	 * @param E_INF_string the string to be used for E_INF entries
+	 * @param Pu_INF_string the string to be used for infinity entries
 	 */
 	template < typename ZProfileIterator >
 	static
@@ -152,9 +150,9 @@ protected:
 	writeProfile( std::ostream &out
 				, const ZProfileIterator & begin
 				, const ZProfileIterator & end
-				, const E_type overallZ
+				, const Z_type overallZ
 				, const RnaSequence & rna
-				, const std::string & E_INF_string );
+				, const std::string & Pu_INF_string );
 
 
 };
@@ -168,9 +166,9 @@ PredictionTrackerProfileSpotProb::
 writeProfile( std::ostream &out
 			, const ZProfileIterator & begin
 			, const ZProfileIterator & end
-			, const E_type overallZ
+			, const Z_type overallZ
 			, const RnaSequence & rna
-			, const std::string & E_INF_string )
+			, const std::string & Pu_INF_string )
 {
 	// write in CSV-like format (column data)
 
@@ -188,8 +186,8 @@ writeProfile( std::ostream &out
 			<<rna.asString().at(i-1)<<';'
 			;
 		// out infinity replacement if needed
-		if ( noZ || E_isINF( *curZ ) ) {
-			out<<E_INF_string <<'\n';
+		if ( noZ || Z_isINF( *curZ ) ) {
+			out<<Pu_INF_string <<'\n';
 		} else {
 			out <<((*curZ)/overallZ) <<'\n';
 		}

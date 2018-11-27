@@ -25,14 +25,11 @@ runApiTests_SOURCES =	\
 					OutputHandlerRangeOnly_test.cpp \
 					OutputHandlerInteractionList_test.cpp \
 					PredictionTrackerProfileMinE_test.cpp \
+					PredictionTrackerSpotProb_test.cpp \
 					RnaSequence_test.cpp \
 					SeedHandlerExplicit_test.cpp \
 					SeedHandlerNoBulge_test.cpp \
 					runTests.cpp
-
-
-#					PredictionTrackerSpotProb_test.cpp \
-#
 
 
 # add IntaRNA lib for linking

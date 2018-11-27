@@ -112,11 +112,6 @@ initHybridE( const size_t j1, const size_t j2
 	// global vars to avoid reallocation
 	size_t i1,i2,w1,w2,k1,k2;
 
-	// to mark as to be computed
-	const E_type E_MAX = std::numeric_limits<E_type>::max();
-	// to test whether computation is reasonable
-	const E_type minInitDangleEndEnergy = minInitEnergy + 2.0*minDangleEnergy + 2.0*minEndEnergy;
-
 	hybridErange.r1.from = std::max(i1init,j1-std::min(j1,energy.getAccessibility1().getMaxLength()+1));
 	hybridErange.r1.to = j1;
 	hybridErange.r2.from = std::max(i2init,j2-std::min(j2,energy.getAccessibility2().getMaxLength()+1));
