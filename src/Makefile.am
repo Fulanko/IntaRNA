@@ -1,6 +1,6 @@
 
 # sub directories to check for Makefiles
-SUBDIRS = . IntaRNA # bin
+SUBDIRS = . IntaRNA bin
 
 ################################################################
 # extra files to be added to distribution
