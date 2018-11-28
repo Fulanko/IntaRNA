@@ -256,6 +256,18 @@ void
 PredictorMaxProb::
 updateOptima( const size_t i1, const size_t j1
 		, const size_t i2, const size_t j2
+		, const E_type E
+		, const bool isHybridE )
+{
+	INTARNA_NOT_IMPLEMENTED("this function should not be called ..");
+}
+
+////////////////////////////////////////////////////////////////////////////
+
+void
+PredictorMaxProb::
+updateOptima( const size_t i1, const size_t j1
+		, const size_t i2, const size_t j2
 		, const Z_type interZ
 		, const bool isHybridZ )
 {

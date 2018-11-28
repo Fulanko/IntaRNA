@@ -701,7 +701,7 @@ InteractionEnergy::
 getBoltzmannWeight( const E_type e ) const
 {
 	// TODO can be optimized when using exp-energies from VRNA
-	return std::exp( - e / getRT() );
+	return std::exp( - E_2_Euser(e) / getRT() );
 }
 
 ////////////////////////////////////////////////////////////////////////////

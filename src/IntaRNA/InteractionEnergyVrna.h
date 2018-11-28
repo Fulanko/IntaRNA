@@ -336,7 +336,7 @@ InteractionEnergyVrna::
 getE_endLeft( const size_t i1, const size_t i2 ) const
 {
 	// VRNA non-GC penalty
-	return isGC(i1,i2) ? 0.0 : Evrna_2_E(foldParams->TerminalAU);
+	return Evrna_2_E( isGC(i1,i2) ? 0.0 : foldParams->TerminalAU );
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -347,7 +347,7 @@ InteractionEnergyVrna::
 getE_endRight( const size_t j1, const size_t j2 ) const
 {
 	// VRNA non-GC penalty
-	return isGC(j1,j2) ? 0.0 : Evrna_2_E(foldParams->TerminalAU);
+	return Evrna_2_E( isGC(j1,j2) ? 0.0 : foldParams->TerminalAU );
 }
 
 ////////////////////////////////////////////////////////////////////////////
