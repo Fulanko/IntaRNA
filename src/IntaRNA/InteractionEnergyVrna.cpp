@@ -222,7 +222,7 @@ computeES( const Accessibility & acc, InteractionEnergyVrna::EsMatrix & esToFill
 					esToFill(i,j) = E_INF;
 				} else {
 					// ES energy = -RT*log( Qm )
-					esToFill(i,j) =  Euser_2_E( - RT*( std::log(qm_val)
+					esToFill(i,j) =  Z_2_E( - RT*( std::log(qm_val)
 													+((FLT_OR_DBL)(j-i+1))*std::log(foldData->exp_params->pf_scale)));
 				}
 			}

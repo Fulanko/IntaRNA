@@ -99,6 +99,18 @@ namespace IntaRNA {
   //! convert E_user_type to E_type
 #define Euser_2_E( e ) ( static_cast<E_type>(e * 100) )
 
+#ifdef E_2_Z
+  #error E_2_Z already defined
+#endif
+  //! convert E_type to E_user_type
+#define E_2_Z( e ) ( static_cast<Z_type>(e) / 100.0 )
+
+#ifdef Z_2_E
+  #error Z_2_E already defined
+#endif
+  //! convert E_user_type to E_type
+#define Z_2_E( e ) ( static_cast<E_type>(e * 100) )
+
 #ifdef E_precisionEpsilon
 	#error E_precisionEpsilon already defined
 #endif

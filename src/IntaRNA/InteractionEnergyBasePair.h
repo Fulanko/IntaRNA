@@ -305,7 +305,7 @@ InteractionEnergyBasePair::InteractionEnergyBasePair(
   RT(_RT),
   basePairEnergy(bpEnergy),
   minLoopLength(minLoopLen),
-  basePairWeight(std::exp(E_2_Euser(-bpEnergy) / _RT)),
+  basePairWeight(std::exp(E_2_Z(-bpEnergy) / _RT)),
   logQ1(),
   logQ2()
 {

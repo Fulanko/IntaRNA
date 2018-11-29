@@ -701,7 +701,7 @@ InteractionEnergy::
 getBoltzmannWeight( const E_type e ) const
 {
 	// TODO can be optimized when using exp-energies from VRNA
-	return std::exp( - E_2_Euser(e) / getRT() );
+	return std::exp( - E_2_Z(e) / getRT() );
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -892,7 +892,7 @@ getE( const Z_type Z ) const
 {
 	// convert partition function to ensemble energy
 	// convert to E_type
-	return Euser_2_E( - getRT() * std::log( Z ) );
+	return Z_2_E( - getRT() * std::log( Z ) );
 }
 
 

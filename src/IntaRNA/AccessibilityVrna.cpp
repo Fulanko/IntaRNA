@@ -132,7 +132,7 @@ calc_ensemble_free_energy( const int start_unfold, const int end_unfold, vrna_ex
 	// memory cleanup
 	free_pf_arrays();
 
-	return Euser_2_E(energy);
+	return Z_2_E(energy);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -227,7 +227,7 @@ fillByConstraints( const VrnaHandler &vrnaHandler
 				edValues(i,j) = ED_UPPER_BOUND;
 			} else {
 				// compute ED value = E(unstructured in [i,j]) - E_all
-				edValues(i,j) = std::max<E_type>(0.,(Euser_2_E(calc_ensemble_free_energy(i,j, partFoldParams) - E_all)));
+				edValues(i,j) = std::max<E_type>(0.,(Z_2_E(calc_ensemble_free_energy(i,j, partFoldParams) - E_all)));
 			}
 
 		}
@@ -272,7 +272,7 @@ callbackForStorage(FLT_OR_DBL   *pr,
 				edValues(i-1,j-1) = ED_UPPER_BOUND;
 			} else {
 				// compute ED value = E(unstructured in [i,j]) - E_all
-				edValues(i-1,j-1) = std::max<E_type>( 0., Euser_2_E( -RT*std::log(prob_unpaired) ));
+				edValues(i-1,j-1) = std::max<E_type>( 0., Z_2_E( -RT*std::log(prob_unpaired) ));
 			}
 	    }
 
@@ -458,7 +458,7 @@ fillByRNAup( const VrnaHandler &vrnaHandler
 					edValues(i-1,j-1) = ED_UPPER_BOUND;
 				} else {
 					// compute ED value = E(unstructured in [i,j]) - E_all
-					edValues(i-1,j-1) = std::max<E_type>( 0., Euser_2_E( -RT*std::log(prob_unpaired) ));
+					edValues(i-1,j-1) = std::max<E_type>( 0., Z_2_E( -RT*std::log(prob_unpaired) ));
 				}
 			}
 		}
