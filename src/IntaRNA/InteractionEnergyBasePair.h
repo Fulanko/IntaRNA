@@ -257,6 +257,17 @@ public:
 		return 0;
 	}
 
+	/**
+	 * Provides the (constant) energy contribution of a base pair (sequence independent)
+	 * for this energy model.
+	 *
+	 * @return the (constant) base pair energy contribution
+	 */
+	E_type
+	getE_basePair() const {
+		return basePairEnergy;
+	}
+
 
 private:
 
