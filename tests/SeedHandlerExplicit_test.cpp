@@ -40,7 +40,7 @@ TEST_CASE( "SeedHandlerExplicit", "[SeedHandlerExplicit]" ) {
 		REQUIRE( seedEmpty.start2 == 0 );
 		REQUIRE( seedEmpty.dotBar1 == "||" );
 		REQUIRE( seedEmpty.dotBar2 == "||" );
-		REQUIRE( E_equal( seedEmpty.energy, -100 ) );
+		REQUIRE( E_equal( seedEmpty.energy, Euser_2_E(-1.0) ) );
 		REQUIRE( seedEmpty.isValid() );
 
 		// valid input
@@ -49,7 +49,7 @@ TEST_CASE( "SeedHandlerExplicit", "[SeedHandlerExplicit]" ) {
 		REQUIRE( seedEmpty.start2 == 4 );
 		REQUIRE( seedEmpty.dotBar1 == "|..|" );
 		REQUIRE( seedEmpty.dotBar2 == "|..|" );
-		REQUIRE( E_equal( seedEmpty.energy, -100 ) );
+		REQUIRE( E_equal( seedEmpty.energy, Euser_2_E(-1.0) ) );
 		REQUIRE( seedEmpty.isValid() );
 
 		// invalid out of bounds

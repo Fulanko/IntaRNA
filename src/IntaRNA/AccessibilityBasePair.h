@@ -40,7 +40,7 @@ public:
       const RnaSequence& seq,
       const size_t maxLength,
       const AccessibilityConstraint * const accConstr,
-      const E_type basePairEnergy = -100,
+      const E_type basePairEnergy = Euser_2_E(-1.0),
       const Z_type RT = 1,
       const size_t minLoopLength = 3);
 

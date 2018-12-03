@@ -20,7 +20,7 @@ TEST_CASE( "InteractionEnergyBasePair", "[InteractionEnergyBasePair]" ) {
 	ReverseAccessibility rAcc(acc);
 
 	size_t maxLoop1 = 1, maxLoop2 = 2;
-	InteractionEnergyBasePair energy( acc, rAcc, maxLoop1, maxLoop2, true, 1, -100, 1);
+	InteractionEnergyBasePair energy( acc, rAcc, maxLoop1, maxLoop2, true, 1, Euser_2_E(-1.0), 1);
 
 	SECTION("data access") {
 		// check

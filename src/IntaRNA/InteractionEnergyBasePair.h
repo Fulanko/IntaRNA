@@ -46,7 +46,7 @@ public:
 					, const size_t maxInternalLoopSize2 = 16
 					, const bool initES = false
           , const Z_type RT = 1
-          , const E_type bpEnergy = -100
+          , const E_type bpEnergy = Euser_2_E(-1.0)
           , const size_t minLoopLength = 3
 				);
 
