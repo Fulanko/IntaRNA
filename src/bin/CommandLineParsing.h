@@ -477,7 +477,7 @@ protected:
 	//! max unpaired in target's seed
 	NumberParameter<int> seedTMaxUP;
 	//! max energy of a seed to be considered
-	NumberParameter<E_user_type> seedMaxE;
+	NumberParameter<E_kcal_type> seedMaxE;
 	//! minimal unpaired probability (per sequence) of a seed to be considered
 	NumberParameter<Z_type> seedMinPu;
 	//! intervals in query for seed search
@@ -522,9 +522,9 @@ protected:
 	//! whether or not reported interactions can to be overlapping
 	CharParameter outOverlap;
 	//! deltaE to mfe allowed to report an interaction
-	NumberParameter<E_user_type> outDeltaE;
+	NumberParameter<E_kcal_type> outDeltaE;
 	//! max E allowed to report an interaction
-	NumberParameter<E_user_type> outMaxE;
+	NumberParameter<E_kcal_type> outMaxE;
 	//! min unpaired prob of an interacting subsequence allowed
 	NumberParameter<Z_type> outMinPu;
 	//! the CSV column selection
@@ -759,7 +759,7 @@ protected:
 	 * Validates the seedMaxE argument.
 	 * @param value the argument value to validate
 	 */
-	void validate_seedMaxE(const E_user_type & value);
+	void validate_seedMaxE(const E_kcal_type & value);
 
 	/**
 	 * Validates the seedMinPu argument.
@@ -840,13 +840,13 @@ protected:
 	 * Validates the outDeltaE argument.
 	 * @param value the argument value to validate
 	 */
-	void validate_outDeltaE(const E_user_type & value);
+	void validate_outDeltaE(const E_kcal_type & value);
 
 	/**
 	 * Validates the outMaxE argument.
 	 * @param value the argument value to validate
 	 */
-	void validate_outMaxE(const E_user_type & value);
+	void validate_outMaxE(const E_kcal_type & value);
 
 	/**
 	 * Validates the outMinPu argument.
@@ -1508,7 +1508,7 @@ void CommandLineParsing::validate_seedTMaxUP(const int & value) {
 ////////////////////////////////////////////////////////////////////////////
 
 inline
-void CommandLineParsing::validate_seedMaxE(const E_user_type & value) {
+void CommandLineParsing::validate_seedMaxE(const E_kcal_type & value) {
 	// forward check to general method
 	validate_numberArgument("seedMaxE", seedMaxE, value);
 }
@@ -1748,7 +1748,7 @@ void CommandLineParsing::validate_outOverlap(const char & value) {
 ////////////////////////////////////////////////////////////////////////////
 
 inline
-void CommandLineParsing::validate_outDeltaE(const E_user_type & value) {
+void CommandLineParsing::validate_outDeltaE(const E_kcal_type & value) {
 	// forward check to general method
 	validate_numberArgument("outDeltaE", outDeltaE, value);
 }
@@ -1756,7 +1756,7 @@ void CommandLineParsing::validate_outDeltaE(const E_user_type & value) {
 ////////////////////////////////////////////////////////////////////////////
 
 inline
-void CommandLineParsing::validate_outMaxE(const E_user_type & value) {
+void CommandLineParsing::validate_outMaxE(const E_kcal_type & value) {
 	// forward check to general method
 	validate_numberArgument("outMaxE", outMaxE, value);
 }

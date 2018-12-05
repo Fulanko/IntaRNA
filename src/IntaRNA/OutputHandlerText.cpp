@@ -297,21 +297,21 @@ add( const Interaction & i )
 			// print energy
 		outTmp
 			<<"\n"
-			<<"interaction energy = "<<E_2_Euser(i.energy) <<" kcal/mol\n"
+			<<"interaction energy = "<<E_2_Ekcal(i.energy) <<" kcal/mol\n"
 			;
 
 		if (detailedOutput) {
 			outTmp
-				<<"  = E(init)        = "<<E_2_Euser(contr.init)<<'\n'
-				<<"  + E(loops)       = "<<E_2_Euser(contr.loops)<<'\n'
-				<<"  + E(dangleLeft)  = "<<E_2_Euser(contr.dangleLeft)<<'\n'
-				<<"  + E(dangleRight) = "<<E_2_Euser(contr.dangleRight)<<'\n'
-				<<"  + E(endLeft)     = "<<E_2_Euser(contr.endLeft)<<'\n'
-				<<"  + E(endRight)    = "<<E_2_Euser(contr.endRight)<<'\n'
-				<<"  + ED(seq1)       = "<<E_2_Euser(contr.ED1)<<'\n'
-				<<"  + ED(seq2)       = "<<E_2_Euser(contr.ED2)<<'\n'
-				<<"  + Pu(seq1)       = "<<std::exp(E_2_Euser(-contr.ED1)/energy.getRT())<<'\n'
-				<<"  + Pu(seq2)       = "<<std::exp(E_2_Euser(-contr.ED2)/energy.getRT())<<'\n'
+				<<"  = E(init)        = "<<E_2_Ekcal(contr.init)<<'\n'
+				<<"  + E(loops)       = "<<E_2_Ekcal(contr.loops)<<'\n'
+				<<"  + E(dangleLeft)  = "<<E_2_Ekcal(contr.dangleLeft)<<'\n'
+				<<"  + E(dangleRight) = "<<E_2_Ekcal(contr.dangleRight)<<'\n'
+				<<"  + E(endLeft)     = "<<E_2_Ekcal(contr.endLeft)<<'\n'
+				<<"  + E(endRight)    = "<<E_2_Ekcal(contr.endRight)<<'\n'
+				<<"  + ED(seq1)       = "<<E_2_Ekcal(contr.ED1)<<'\n'
+				<<"  + ED(seq2)       = "<<E_2_Ekcal(contr.ED2)<<'\n'
+				<<"  + Pu(seq1)       = "<<std::exp(E_2_Ekcal(-contr.ED1)/energy.getRT())<<'\n'
+				<<"  + Pu(seq2)       = "<<std::exp(E_2_Ekcal(-contr.ED2)/energy.getRT())<<'\n'
 				;
 
 			// print seed information if available
@@ -321,10 +321,10 @@ add( const Interaction & i )
 					<<"seed seq1   = "<<(i.seed->bp_i.first +1)<<" -- "<<(i.seed->bp_j.first +1) <<'\n'
 					<<"seed seq2   = "<<(i.seed->bp_j.second +1)<<" -- "<<(i.seed->bp_i.second +1) <<'\n'
 					<<"seed energy = "<<(i.seed->energy)<<" kcal/mol\n"
-					<<"seed ED1    = "<<E_2_Euser(energy.getED1( i.seed->bp_i.first, i.seed->bp_j.first ))<<" kcal/mol\n"
-					<<"seed ED2    = "<<E_2_Euser(energy.getAccessibility2().getAccessibilityOrigin().getED( i.seed->bp_j.second, i.seed->bp_i.second ))<<" kcal/mol\n"
-					<<"seed Pu1    = "<<std::exp(-E_2_Euser(energy.getED1( i.seed->bp_i.first, i.seed->bp_j.first ))/energy.getRT())<<'\n'
-					<<"seed Pu2    = "<<std::exp(-E_2_Euser(energy.getAccessibility2().getAccessibilityOrigin().getED( i.seed->bp_j.second, i.seed->bp_i.second ))/energy.getRT())<<'\n'
+					<<"seed ED1    = "<<E_2_Ekcal(energy.getED1( i.seed->bp_i.first, i.seed->bp_j.first ))<<" kcal/mol\n"
+					<<"seed ED2    = "<<E_2_Ekcal(energy.getAccessibility2().getAccessibilityOrigin().getED( i.seed->bp_j.second, i.seed->bp_i.second ))<<" kcal/mol\n"
+					<<"seed Pu1    = "<<std::exp(-E_2_Ekcal(energy.getED1( i.seed->bp_i.first, i.seed->bp_j.first ))/energy.getRT())<<'\n'
+					<<"seed Pu2    = "<<std::exp(-E_2_Ekcal(energy.getAccessibility2().getAccessibilityOrigin().getED( i.seed->bp_j.second, i.seed->bp_i.second ))/energy.getRT())<<'\n'
 					;
 			} // seed
 		} // detailed

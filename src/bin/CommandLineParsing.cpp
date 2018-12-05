@@ -400,7 +400,7 @@ CommandLineParsing::CommandLineParsing()
 			, std::string("maximal number of unpaired bases within the target's seed region"
 					" (arg in range ["+toString(seedTMaxUP.min)+","+toString(seedTMaxUP.max)+"]); if -1 the value of seedMaxUP is used.").c_str())
 		("seedMaxE"
-			, value<E_user_type>(&(seedMaxE.val))
+			, value<E_kcal_type>(&(seedMaxE.val))
 				->default_value(seedMaxE.def)
 				->notifier(boost::bind(&CommandLineParsing::validate_seedMaxE,this,_1))
 			, std::string("maximal energy a seed region may have"
@@ -588,7 +588,7 @@ CommandLineParsing::CommandLineParsing()
 	opts_cmdline_short.add(opts_output);
 	opts_output.add_options()
 	    ("outMaxE"
-			, value<E_user_type>(&(outMaxE.val))
+			, value<E_kcal_type>(&(outMaxE.val))
 				->default_value(outMaxE.def)
 				->notifier(boost::bind(&CommandLineParsing::validate_outMaxE,this,_1))
 			, std::string("only interactions with E <= maxE are reported"
@@ -600,7 +600,7 @@ CommandLineParsing::CommandLineParsing()
 			, std::string("only interactions where all individual positions of both interacting sites have an unpaired probability >= minPu are reported"
 					" (arg in range ["+toString(outMinPu.min)+","+toString(outMinPu.max)+"])").c_str())
 	    ("outDeltaE"
-			, value<E_user_type>(&(outDeltaE.val))
+			, value<E_kcal_type>(&(outDeltaE.val))
 				->default_value(outDeltaE.def)
 				->notifier(boost::bind(&CommandLineParsing::validate_outDeltaE,this,_1))
 			, std::string("suboptimal output : only interactions with E <= (minE+deltaE) are reported"
@@ -1490,8 +1490,8 @@ getOutputConstraint()  const
 	return OutputConstraint(
 			  outNumber.val
 			, overlap
-			, Euser_2_E(outMaxE.val)
-			, Euser_2_E(outDeltaE.val)
+			, Ekcal_2_E(outMaxE.val)
+			, Ekcal_2_E(outDeltaE.val)
 			);
 }
 

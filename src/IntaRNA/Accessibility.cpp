@@ -96,7 +96,7 @@ writeRNAplfold_text( std::ostream& out, const Z_type RT, const bool writeProbs )
 				}
 			} else {
 				// write ED value (ensure not printing infinity)
-				out <<E_2_Euser(std::min<E_type>( E_MAX, getED(j+1-l, j) )) <<'\t';
+				out <<E_2_Ekcal(std::min<E_type>( E_MAX, getED(j+1-l, j) )) <<'\t';
 			}
 		}
 		// print NA for remaining entries

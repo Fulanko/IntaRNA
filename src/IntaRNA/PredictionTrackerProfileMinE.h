@@ -178,7 +178,7 @@ writeProfile( std::ostream &out
 		if ( E_isINF( *curE ) ) {
 			out<<E_INF_string <<'\n';
 		} else {
-			out <<E_2_Euser(*curE) <<'\n';
+			out <<E_2_Ekcal(*curE) <<'\n';
 		}
 		// increase position counter
 		i++;

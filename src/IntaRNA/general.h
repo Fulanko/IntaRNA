@@ -70,8 +70,8 @@
 
 namespace IntaRNA {
 
-	//! type for energy values for in-/output only
-	typedef float E_user_type;
+	//! type for energy values in kcal/mol units for in-/output only
+	typedef float E_kcal_type;
 
 	//! type for energy values (energy + accessibility [ED]) (internally)
 	typedef int E_type;
@@ -82,33 +82,33 @@ namespace IntaRNA {
 	typedef float Z_type;
 	const Z_type Z_INF = std::numeric_limits<Z_type>::infinity();
 
-	//! type for temperature values
+	//! type for temperature values (has to be compatible with Z_type for computations)
 	typedef Z_type T_type;
 
 } // namespace
 
-#ifdef E_2_Euser
-  #error E_2_Euser already defined
+#ifdef E_2_Ekcal
+  #error E_2_Ekcal already defined
 #endif
-  //! convert E_type to E_user_type
-#define E_2_Euser( e ) ( static_cast<E_user_type>(e) / 100.0 )
+  //! convert internal energy type to energy value in kcal/mol units
+#define E_2_Ekcal( e ) ( static_cast<E_kcal_type>(e) / 100.0 )
 
-#ifdef Euser_2_E
-  #error Euser_2_E already defined
+#ifdef Ekcal_2_E
+  #error Ekcal_2_E already defined
 #endif
-  //! convert E_user_type to E_type
-#define Euser_2_E( e ) ( static_cast<E_type>(e * 100) )
+  //! convert energy in kcal/mol units to internal energy type
+#define Ekcal_2_E( e ) ( static_cast<E_type>(e * 100) )
 
 #ifdef E_2_Z
   #error E_2_Z already defined
 #endif
-  //! convert E_type to E_user_type
+  //! convert E_type to Z_type
 #define E_2_Z( e ) ( static_cast<Z_type>(e) / 100.0 )
 
 #ifdef Z_2_E
   #error Z_2_E already defined
 #endif
-  //! convert E_user_type to E_type
+  //! convert Z_type to E_type
 #define Z_2_E( e ) ( static_cast<E_type>(e * 100) )
 
 #ifdef E_precisionEpsilon

@@ -96,7 +96,7 @@ public:
    * @param minLoopLength The minimum length of loops
    */
   static std::string dotBracket(const size_t from, const size_t to,
-      const RnaSequence &seq, const size_t minLoopLength, const E_type basePairEnergy = Euser_2_E(-1.0));
+      const RnaSequence &seq, const size_t minLoopLength, const E_type basePairEnergy = Ekcal_2_E(-1.0));
 
   /***
    * Store all the basepairs in pairs, given a traceback.
