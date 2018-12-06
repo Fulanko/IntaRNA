@@ -136,10 +136,9 @@ getBestE_dangling() const
 	for (size_t i=0; i<alphabet.size(); i++) {
 	for (size_t j=0; j<alphabet.size(); j++) {
 		minDangleE = std::min( minDangleE
-				, Evrna_2_E(E_Stem( *p1
+				, Evrna_2_E(E_MLstem( *p1
 					  , alphabet.at(i)
 					  , alphabet.at(j)
-					  , 1 // is an external loop
 					  , foldParams
 					))
 				);

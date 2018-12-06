@@ -404,10 +404,9 @@ InteractionEnergyVrna::
 getE_danglingLeft( const size_t i1, const size_t i2 ) const
 {
 	// Vienna RNA : dangling end contribution
-	return Evrna_2_E(E_Stem( BP_pair[accS1.getSequence().asCodes().at(i1)][accS2.getSequence().asCodes().at(i2)]
+	return Evrna_2_E(E_MLstem( BP_pair[accS1.getSequence().asCodes().at(i1)][accS2.getSequence().asCodes().at(i2)]
 							  , ( i1==0 ? -1 : accS1.getSequence().asCodes().at(i1-1) )
 							  , ( i2==0 ? -1 : accS2.getSequence().asCodes().at(i2-1) )
-							  , 1 // is an external loop
 							  , foldParams))
 			// substract closing penalty
 			- getE_endLeft(i1,i2);
@@ -421,10 +420,9 @@ InteractionEnergyVrna::
 getE_danglingRight( const size_t j1, const size_t j2 ) const
 {
 	// Vienna RNA : dangling end contribution (reverse base pair to be sequence end conform)
-	return Evrna_2_E(E_Stem( BP_pair[accS2.getSequence().asCodes().at(j2)][accS1.getSequence().asCodes().at(j1)]
+	return Evrna_2_E(E_MLstem( BP_pair[accS2.getSequence().asCodes().at(j2)][accS1.getSequence().asCodes().at(j1)]
 							  , ( j2+1>=accS2.getSequence().size() ? -1 : accS2.getSequence().asCodes().at(j2+1) )
 							  , ( j1+1>=accS1.getSequence().size() ? -1 : accS1.getSequence().asCodes().at(j1+1) )
-							  , 1 // is an external loop
 							  , foldParams))
 			// substract closing penalty
 			- getE_endRight(j1,j2);
