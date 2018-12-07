@@ -871,8 +871,8 @@ getE( const size_t i1, const size_t j1
 				+ getED2( i2, j2 )
 				// dangling end penalty
 				// weighted by the probability that ends are unpaired
-				+ (getE_danglingLeft( i1, i2 )*getPr_danglingLeft(i1,j1,i2,j2))
-				+ (getE_danglingRight( j1, j2 )*getPr_danglingRight(i1,j1,i2,j2))
+				+ Z_2_E(E_2_Z(getE_danglingLeft( i1, i2 ))*getPr_danglingLeft(i1,j1,i2,j2))
+				+ Z_2_E(E_2_Z(getE_danglingRight( j1, j2 ))*getPr_danglingRight(i1,j1,i2,j2))
 				// helix closure penalty
 				+ getE_endLeft( i1, i2 )
 				+ getE_endRight( j1, j2 )
