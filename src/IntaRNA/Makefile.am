@@ -61,6 +61,7 @@ libIntaRNA_a_HEADERS =    \
 					PredictorMfe2dHeuristicSeed.h \
 					PredictorMfe4d.h \
 					PredictorMfe4dSeed.h \
+					PredictorMfe4dSeedExtension.h \
 					ReverseAccessibility.h \
 					RnaSequence.h \
 					SeedConstraint.h \
@@ -108,6 +109,7 @@ libIntaRNA_a_SOURCES =    \
 					PredictorMfe2dHeuristicSeed.cpp \
 					PredictorMfe4d.cpp \
 					PredictorMfe4dSeed.cpp \
+					PredictorMfe4dSeedExtension.cpp \
 					ReverseAccessibility.cpp \
 					RnaSequence.cpp \
 					SeedConstraint.cpp \
@@ -117,11 +119,11 @@ libIntaRNA_a_SOURCES =    \
 					VrnaHandler.cpp
 
 
-# generated intaRNA sources 
+# generated intaRNA sources
 nodist_libIntaRNA_a_SOURCES = 	\
 					../config.h \
 					intarna_config.h
-						
+
 ################################################################
 # pkg-config
 ################################################################
@@ -132,4 +134,3 @@ pkgconfig_DATA = $(top_srcdir)/IntaRNA.pc
 endif
 
 ###############################################################################
-
