@@ -46,7 +46,7 @@ extern "C" {
 #include "IntaRNA/PredictorMfe2dHelixBlockHeuristicSeed.h"
 #include "IntaRNA/PredictorMfe2dSeed.h"
 #include "IntaRNA/PredictorMfe4dSeed.h"
-#include "IntaRNA/PredictorMfe4dSeedExtension.h"
+#include "IntaRNA/PredictorMfe2dSeedExtension.h"
 
 #include "IntaRNA/PredictionTracker.h"
 #include "IntaRNA/PredictionTrackerHub.h"
@@ -1966,7 +1966,7 @@ getPredictor( const InteractionEnergy & energy, OutputHandler & output ) const
 			case 'H' :  return new PredictorMfe2dHeuristicSeed( energy, output, predTracker, getSeedHandler( energy ) );
 			case 'M' :  return new PredictorMfe2dSeed( energy, output, predTracker, getSeedHandler( energy ) );
 			case 'E' :  return new PredictorMfe4dSeed( energy, output, predTracker, getSeedHandler( energy ) );
-			case 'X' :  return new PredictorMfe4dSeedExtension( energy, output, predTracker, getSeedHandler( energy ) );
+			case 'X' :  return new PredictorMfe2dSeedExtension( energy, output, predTracker, getSeedHandler( energy ) );
 			}
 		} break;
 		// single-site max-prob interactions (contain only interior loops)

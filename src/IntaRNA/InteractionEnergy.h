@@ -318,7 +318,7 @@ public:
 	 * Computes the energy estimate for the 'left side' interaction loop region
 	 * closed by the intermolecular base pairs (i1,i2) and enclosing (j1,j2)
 	 * where the regions [i1,j1] and [i2,j2] are considered unpaired or E_INF
-	 * is the internal loop size exceeds the allowed maximum (see constructor).
+	 * if the internal loop size exceeds the allowed maximum (see constructor).
 	 *
 	 * Note, the right interaction base pair (j1,j2) is not included in the
 	 * returned energy value.
