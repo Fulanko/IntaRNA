@@ -13,7 +13,6 @@ PredictorMfe2dSeedExtension(
 		, SeedHandler * seedHandlerInstance )
  :
 	PredictorMfe2dSeed(energy,output,predTracker,seedHandlerInstance)
-	, seedHandler(seedHandlerInstance)
 	, hybridE_pq_right( 0,0 )
 	, hybridErangeRight( energy.getAccessibility1().getSequence()
 			, energy.getAccessibility2().getAccessibilityOrigin().getSequence() )
