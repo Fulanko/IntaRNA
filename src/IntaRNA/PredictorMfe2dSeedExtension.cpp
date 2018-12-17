@@ -62,6 +62,7 @@ predict( const IndexRange & r1, const IndexRange & r2
 			, (r1.to==RnaSequence::lastPos?energy.size1()-1:r1.to)-r1.from+1 );
 	const size_t interaction_size2 = std::min( energy.size2()
 			, (r2.to==RnaSequence::lastPos?energy.size2()-1:r2.to)-r2.from+1 );
+	std::cout << "interaction size: " << interaction_size1 << " / " << interaction_size2 << std::endl;
 
 	// compute seed interactions for whole range
 	// and check if any seed possible
