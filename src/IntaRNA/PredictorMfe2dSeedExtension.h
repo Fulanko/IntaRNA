@@ -94,9 +94,6 @@ protected:
 	//! the current range of computed entries within hybridE_pq set by initHybridE()
 	using PredictorMfe2d::hybridErange;
 
-	//! the seed handler (with idx offset)
-	SeedHandlerIdxOffset seedHandler;
-
 	//! energy of all interaction hybrids that start in position p (seq1) and
 	//! q (seq2)
 	E2dMatrix hybridE_pq_right;
