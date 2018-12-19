@@ -12,10 +12,9 @@ PredictorMfe2dSeedExtension(
 		, PredictionTracker * predTracker
 		, SeedHandler * seedHandlerInstance )
  :
-	PredictorMfe2dSeed(energy,output,predTracker,seedHandlerInstance)
-	, hybridE_pq_right( 0,0 )
-	, hybridErangeRight( energy.getAccessibility1().getSequence()
-			, energy.getAccessibility2().getAccessibilityOrigin().getSequence() )
+	PredictorMfe2d(energy,output,predTracker)
+	, seedHandler(seedHandlerInstance)
+	, hybridE_right( 0,0 )
 {
 	assert( seedHandler.getConstraint().getBasePairs() > 1 );
 }
@@ -62,7 +61,7 @@ predict( const IndexRange & r1, const IndexRange & r2
 			, (r1.to==RnaSequence::lastPos?energy.size1()-1:r1.to)-r1.from+1 );
 	const size_t interaction_size2 = std::min( energy.size2()
 			, (r2.to==RnaSequence::lastPos?energy.size2()-1:r2.to)-r2.from+1 );
-	std::cout << "interaction size: " << interaction_size1 << " / " << interaction_size2 << std::endl;
+	LOG(DEBUG) << "interaction size: " << interaction_size1 << " / " << interaction_size2 ;
 
 	// compute seed interactions for whole range
 	// and check if any seed possible
@@ -77,119 +76,63 @@ predict( const IndexRange & r1, const IndexRange & r2
 	// initialize mfe interaction for updates
 	initOptima( outConstraint );
 
-	for (size_t si1 = 0; si1 < interaction_size1; si1++) {
-	for (size_t si2 = 0; si2 < interaction_size2; si2++) {
+	for (size_t si1 = 0; si1 <= interaction_size1-seedHandler.getConstraint().getBasePairs(); si1++) {
+	for (size_t si2 = 0; si2 <= interaction_size2-seedHandler.getConstraint().getBasePairs(); si2++) {
 		E_type seedE = seedHandler.getSeedE(si1, si2);
+		// check if valid left seed base pair
 		if (E_isINF(seedE))
 		  continue;
-		std::cout << "FOUND SEED: " << seedHandler.getSeedE(si1, si2) << " at: " << si1 << "," << si2 << std::endl;
-		size_t seedLength1 = seedHandler.getSeedLength1(si1, si2);
-		size_t seedLength2 = seedHandler.getSeedLength2(si1, si2);
-		std::cout << "length: " << seedLength1 << " / " << seedLength2 << std::endl;
-
-		// resize matrices
-		hybridE_pq.resize( si1, si2 );
-		size_t resize1 = 0;
-		if (interaction_size1 - si1 - seedLength1 > 0) {
-			resize1 = interaction_size1 - si1 - seedLength1 - 1;
-		}
-		size_t resize2 = 0;
-		if (interaction_size2 - si2 - seedLength2 > 0) {
-			resize2 = interaction_size2 - si2 - seedLength2 - 1;
-		}
-		hybridE_pq_right.resize( resize1, resize2 );
+		LOG(DEBUG) << "FOUND SEED: " << seedHandler.getSeedE(si1, si2) << " at: " <<si1 <<"~" << energy.getBasePair(si1,si2).first <<", " <<si2 <<"~" << energy.getBasePair(si1,si2).second ;
+		const size_t sl1 = seedHandler.getSeedLength1(si1, si2)-1;
+		const size_t sl2 = seedHandler.getSeedLength2(si1, si2)-1;
+		const size_t sj1 = si1+sl1;
+		const size_t sj2 = si2+sl2;
+		LOG(DEBUG) << "SEED: " << sj1 <<","<<sj2<<" length "<<sl1<<","<<sl2;
+		// check if seed fits into interaction range
+		if (sj1 > interaction_size1  || sj2 > interaction_size2)
+			continue;
 
 		// EL
-		size_t start_i1 = 0;
-		size_t start_i2 = 0;
-		if (si1 > 0 && si2 > 0) {
-			start_i1 = si1-1;
-			start_i2 = si2-1;
-			fillHybridE(start_i1, start_i2, outConstraint, 0, 0);
-		}
+		LOG(DEBUG) <<"compute EL";
+		hybridE_pq.resize( si1+1, si2+1 );
+		fillHybridE(si1, si2, outConstraint, 0, 0);
 
 		// ER
-		size_t start_j1 = interaction_size1-1;
-		size_t start_j2 = interaction_size2-1;
-		if (si1 + seedLength1 < interaction_size1 && si2 + seedLength2 < interaction_size2) {
-			start_j1 = si1 + seedLength1;
-			start_j2 = si2 + seedLength2;
-		  fillHybridE_right(start_j1, start_j2, outConstraint, interaction_size1-1, interaction_size2-1);
-		}
+		LOG(DEBUG) <<"compute ER";
+		hybridE_right.resize( interaction_size1-sj1, interaction_size2-sj2);
+		fillHybridE_right(sj1, sj2, outConstraint, interaction_size1-1, interaction_size2-1);
 
 		// update Optimum for all boundary combinations
-		for (int i1 = start_i1; i1 >= 0; i1--) {
-		for (int i2 = start_i2; i2 >= 0; i2--) {
-			for (int j1 = start_j1; j1 < interaction_size1; j1++) {
-			for (int j2 = start_j2; j2 < interaction_size2; j2++) {
-				E_type fullE = seedE;
-				if (hybridE_pq.size1() > 0 && hybridE_pq.size2() > 0) {
-					fullE += hybridE_pq(i1,i2);
-				}
-				if (hybridE_pq_right.size1() > 0 && hybridE_pq_right.size2() > 0) {
-					fullE += hybridE_pq_right(j1,j2);
-				}
-				PredictorMfe::updateOptima( i1,j1,i2,j2, fullE, true );
-			}
-	  	}
-	  }
-	  }
+		LOG(DEBUG) <<"update mfe";
+		for (int i1 = 0; i1<=si1; i1++) {
+			// ensure max interaction length in seq 1
+			for (int j1 = 0; j1 < hybridE_right.size1() ; j1++) {
+				if(si1-i1+sl1+j1 > energy.getAccessibility1().getMaxLength()) continue;
+				for (int i2 = 0; i2<=si2; i2++) {
+					if (E_isINF(hybridE_pq(i1,i2))) continue;
+					// ensure max interaction length in seq 2
+					for (int j2 = 0; j2 < hybridE_right.size2() ; j2++) {
+						if(si2-i2+sl2+j2 > energy.getAccessibility2().getMaxLength()) continue;
+						if (E_isINF(hybridE_right(j1,j2))) continue;
 
-	}
-  }
+						E_type fullE = seedE;
+						fullE += hybridE_pq(i1,i2); // contains E_init
+						fullE += hybridE_right(j1,j2);
+						LOG(DEBUG) <<"update ("<<i1<<","<<i2<<","<<j1<<","<<j2<<") = "<<fullE;
+						PredictorMfe::updateOptima( i1, sj1+j1, i2, sj2+j2, fullE, true );
+					} // j2
+				} // i2
+			} // j1
+		} // i1
+
+	} // si2
+	} // si1
 
 	// report mfe interaction
 	reportOptima( outConstraint );
 
 }
 
-////////////////////////////////////////////////////////////////////////////
-
-void
-PredictorMfe2dSeedExtension::
-initHybridE_right( const size_t i1, const size_t i2
-			, const OutputConstraint & outConstraint
-			, const size_t j1init, const size_t j2init
-			)
-{
-#if INTARNA_IN_DEBUG_MODE
-	if (i1 > j1init)
-		throw std::runtime_error("PredictorMfe2dSeedExtension::initHybridE_right() : i1 > j1init : "+toString(i1)+" > "+toString(j1init));
-	if (i2 > j2init)
-		throw std::runtime_error("PredictorMfe2dSeedExtension::initHybridE_right() : i2 > j2init : "+toString(i2)+" > "+toString(j2init));
-#endif
-
-	// global vars to avoid reallocation
-	size_t j1,j2,w1,w2,k1,k2;
-
-	// to mark as to be computed
-	const E_type E_MAX = std::numeric_limits<E_type>::max();
-	// to test whether computation is reasonable
-	const E_type minInitDangleEndEnergy = minInitEnergy + 2.0*minDangleEnergy + 2.0*minEndEnergy;
-
-	hybridErangeRight.r1.from = 0;
-	hybridErangeRight.r1.to = std::min(j1init,i1+std::min(i1,energy.getAccessibility1().getMaxLength()-1)) - i1;
-	hybridErangeRight.r2.from = 0;
-	hybridErangeRight.r2.to = std::min(j2init,i2+std::min(i2,energy.getAccessibility2().getMaxLength()-1)) - i2;
-
-	if (hybridErangeRight.r1.from > 0 && hybridErangeRight.r1.to > 0) {
-		for (j1=hybridErangeRight.r1.to-1; j1>hybridErangeRight.r1.from; j1-- ) {
-			for (j2=hybridErangeRight.r2.to-1; j2>hybridErangeRight.r2.from; j2--) {
-				// check if complementary, i.e. to be computed
-				if( energy.areComplementary(j1,j2) )
-				{
-					// mark as to be computed (has to be < E_INF)
-					hybridE_pq_right(j1,j2) = E_MAX;
-
-				} else {
-					// mark as NOT to be computed
-					hybridE_pq_right(j1,j2) = E_INF;
-				}
-			}
-		}
-	}
-
-}
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -197,64 +140,49 @@ void
 PredictorMfe2dSeedExtension::
 fillHybridE_right( const size_t i1, const size_t i2
 			, const OutputConstraint & outConstraint
-			, const size_t j1init, const size_t j2init )
+			, const size_t j1max, const size_t j2max )
 {
 
-	// init for left interaction end (i1,i2)
-	initHybridE_right( i1, i2, outConstraint, j1init, j2init );
-	// sanity check of initialization
-	assert(hybridErangeRight.r1.from == 0);
-	assert(hybridErangeRight.r2.from == 0);
-
 	// global vars to avoid reallocation
-	size_t j1,j2,w1,w2,k1,k2;
+	size_t j1,j2,k1,k2;
 
 	//////////  FIRST ROUND : COMPUTE HYBRIDIZATION ENERGIES ONLY  ////////////
 
 	// current minimal value
 	E_type curMinE = E_INF;
 	// iterate over all window starts j1 (seq1) and j2 (seq2)
-	// TODO PARALLELIZE THIS DOUBLE LOOP ?!
-	for (j1=hybridErangeRight.r1.from-1; j1++ < hybridErangeRight.r1.to; ) {
-		w1 = i1+j1-1;
+	for (j1=i1; j1 <= j1max; j1++ ) {
 		// w1 width check obsolete due to hybridErangeRight setup
 		// screen for left boundaries in seq2
-		for (j2=hybridErangeRight.r2.from-1; j2++ < hybridErangeRight.r2.to; ) {
-			// w2 width check obsolete due to hybridErangeRight setup
-			w2 = i2+j2-1;
-			curMinE = E_INF;
+		for (j2=i2; j2 <= j2max; j2++ ) {
 
-			// check if this cell is to be computed (!=E_INF)
-			if( E_isNotINF( hybridE_pq_right(j1,j2) ) ) {
+			// init current cell (0 if just left (i1,i2) base pair)
+			hybridE_right(j1,j2) = i1==j1 && i2==j2 ? 0 : E_INF;
 
-				// compute entry
+			// check if complementary
+			if( i1<j1 && i2<j2 && energy.areComplementary(j1,j2) ) {
 
-				// either interaction initiation
-				if ( i1==j1 && i2==j2 )  {
-					curMinE = energy.getE_init();
-				} else { // or more complex stuff
-					// test only internal loop energy (nothing between i and j)
-					// will be E_INF if loop is too large
-					curMinE = energy.getE_interLeft(i1,j1,i2,j2)
-							+ hybridE_pq_right(i1,i2);
+				curMinE = E_INF;
 
-					// check all combinations of decompositions into (i1,i2)..(k1,k2)-(j1,j2)
-					if (w1 > 2 && w2 > 2) {
-						for (k1=std::min(i1+1,j1-energy.getMaxInternalLoopSize1()-1); k1<j1; k1++) {
-						for (k2=std::min(i2+1,j2-energy.getMaxInternalLoopSize2()-1); k2<j2; k2++) {
-							// check if (k1,k2) are valid left boundary
-							if ( E_isNotINF( hybridE_pq_right(k1,k2) ) ) {
-								curMinE = std::min( curMinE,
-										(energy.getE_interLeft(k1,j1,k2,j2)
-												+ hybridE_pq_right(k1,k2) )
-										);
-							}
-						}
-						}
+				// check all combinations of decompositions into (i1,i2)..(k1,k2)-(j1,j2)
+				for (k1=j1; k1-- > i1; ) {
+					// ensure maximal loop length
+					if (j1-k1 > energy.getMaxInternalLoopSize1()+1) break;
+				for (k2=j2; k2-- > i2; ) {
+					// ensure maximal loop length
+					if (j2-k2 > energy.getMaxInternalLoopSize2()+1) break;
+					// check if (k1,k2) are valid left boundary
+					if ( E_isNotINF( hybridE_right(k1,k2) ) ) {
+						curMinE = std::min( curMinE,
+								(energy.getE_interLeft(k1,j1,k2,j2)
+										+ hybridE_right(k1,k2) )
+								);
 					}
 				}
+				}
+
 				// store value
-				hybridE_pq_right(j1,j2) = curMinE;
+				hybridE_right(j1,j2) = curMinE;
 				// update mfe if needed
 				// updateOptima( i1,j1,i2,j2, hybridE_pq_right(j1,j2), true );
 				continue;
@@ -314,7 +242,7 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 	}
 #endif
 
-std::cout << "traceback" << std::endl;
+LOG(DEBUG) << "traceback" ;
 /*
 	// temp variables
 	size_t k1,k2;
@@ -427,7 +355,7 @@ void
 PredictorMfe2dSeedExtension::
 getNextBest( Interaction & curBest )
 {
-	throw std::runtime_error("PredictorMfe2dSeedExtension::getNextBest() : This prediction mode does not support non-overlapping suboptimal interaction enumeration.");
+	INTARNA_NOT_IMPLEMENTED("PredictorMfe2dSeedExtension::getNextBest() not implemented yet");
 }
 
 //////////////////////////////////////////////////////////////////////////

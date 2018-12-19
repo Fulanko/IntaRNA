@@ -23,7 +23,7 @@ namespace IntaRNA {
  * @author Martin Mann
  *
  */
-class PredictorMfe2dSeedExtension: public PredictorMfe2dSeed {
+class PredictorMfe2dSeedExtension: public PredictorMfe2d {
 
 protected:
 
@@ -85,21 +85,16 @@ protected:
 	//! access to the output handler of the super class
 	using PredictorMfe2d::output;
 
-	// TODO provide all data structures as arguments to make predict() call threadsafe
-
 	//! energy of all interaction hybrids that end in position p (seq1) and
 	//! q (seq2) and do not necessarily contain a seed interaction
 	using PredictorMfe2d::hybridE_pq;
 
-	//! the current range of computed entries within hybridE_pq set by initHybridE()
-	using PredictorMfe2d::hybridErange;
+	//! the seed handler (with idx offset)
+	SeedHandlerIdxOffset seedHandler;
 
 	//! energy of all interaction hybrids that start in position p (seq1) and
 	//! q (seq2)
-	E2dMatrix hybridE_pq_right;
-
-	//! the current range of computed entries within hybridE_pq_right set by initHybridE_right()
-	InteractionRange hybridErangeRight;
+	E2dMatrix hybridE_right;
 
 protected:
 
@@ -119,22 +114,6 @@ protected:
 			, const size_t i2, const size_t j2
 			, const E_type energy
 			, const bool isHybridE );
-
-	/**
-	 * Initializes the hybridE_pq_right table for the computation for interactions
-	 * starting in p=i1 and q=i2
-	 *
-	 * @param i1 end of the interaction within seq 1
-	 * @param i2 end of the interaction within seq 2
-	 * @param outConstraint constrains the interactions reported to the output handler
-	 * @param j1init largest value for j1
-	 * @param j2init largest value for j2
-	 */
-	void
-	initHybridE_right( const size_t i1, const size_t i2
-				, const OutputConstraint & outConstraint
-				, const size_t j1init, const size_t j2init
-				);
 
 	/**
 	 * Computes all entries of the hybridE matrix for interactions starting in
