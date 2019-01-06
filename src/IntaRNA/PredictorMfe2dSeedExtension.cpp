@@ -103,7 +103,6 @@ predict( const IndexRange & r1, const IndexRange & r2
 		fillHybridE_right(sj1, sj2, outConstraint, interaction_size1-1, interaction_size2-1);
 
 		// update Optimum for all boundary combinations
-		LOG(DEBUG) <<"update mfe";
 		for (int i1 = 0; i1<=si1; i1++) {
 			// ensure max interaction length in seq 1
 			for (int j1 = 0; j1 < hybridE_right.size1() ; j1++) {
@@ -118,7 +117,6 @@ predict( const IndexRange & r1, const IndexRange & r2
 						E_type fullE = seedE;
 						fullE += hybridE_pq(i1,i2); // contains E_init
 						fullE += hybridE_right(j1,j2);
-						LOG(DEBUG) <<"update ("<<i1<<","<<i2<<","<<j1<<","<<j2<<") = "<<fullE;
 						PredictorMfe::updateOptima( i1, sj1+j1, i2, sj2+j2, fullE, true );
 					} // j2
 				} // i2
@@ -145,7 +143,6 @@ fillHybridE_right( const size_t i1, const size_t i2
 
 	// global vars to avoid reallocation
 	size_t j1,j2,k1,k2;
-
 	//////////  FIRST ROUND : COMPUTE HYBRIDIZATION ENERGIES ONLY  ////////////
 
 	// current minimal value
@@ -157,7 +154,7 @@ fillHybridE_right( const size_t i1, const size_t i2
 		for (j2=i2; j2 <= j2max; j2++ ) {
 
 			// init current cell (0 if just left (i1,i2) base pair)
-			hybridE_right(j1,j2) = i1==j1 && i2==j2 ? 0 : E_INF;
+			hybridE_right(j1-i1,j2-i2) = i1==j1 && i2==j2 ? 0 : E_INF;
 
 			// check if complementary
 			if( i1<j1 && i2<j2 && energy.areComplementary(j1,j2) ) {
@@ -172,17 +169,17 @@ fillHybridE_right( const size_t i1, const size_t i2
 					// ensure maximal loop length
 					if (j2-k2 > energy.getMaxInternalLoopSize2()+1) break;
 					// check if (k1,k2) are valid left boundary
-					if ( E_isNotINF( hybridE_right(k1,k2) ) ) {
+					if ( E_isNotINF( hybridE_right(k1-i1,k2-i2) ) ) {
 						curMinE = std::min( curMinE,
 								(energy.getE_interLeft(k1,j1,k2,j2)
-										+ hybridE_right(k1,k2) )
+										+ hybridE_right(k1-i1,k2-i2) )
 								);
 					}
 				}
 				}
 
 				// store value
-				hybridE_right(j1,j2) = curMinE;
+				hybridE_right(j1-i1,j2-i2) = curMinE;
 				// update mfe if needed
 				// updateOptima( i1,j1,i2,j2, hybridE_pq_right(j1,j2), true );
 				continue;
@@ -243,6 +240,10 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 #endif
 
 LOG(DEBUG) << "traceback" ;
+
+
+
+
 /*
 	// temp variables
 	size_t k1,k2;
