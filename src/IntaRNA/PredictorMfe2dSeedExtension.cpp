@@ -316,13 +316,8 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 
 					// trace seed
 					LOG(DEBUG) << "seed at:" << si1 << ":" << si2;
-					if (si1 > 1 && si2 > 1) {
-						interaction.basePairs.push_back( energy.getBasePair(si1,si2) );
-					}
+					// bugged: ./IntaRNA -t CCCCGGUGUGGUGGCCGGGGGCCCGGGGCGCGUSGUSUGUSGCGCGCG -q GGCCCCCCCCGGGGCCCCCCGGGCGCGGCGCGC -m X
 					seedHandler.traceBackSeed( interaction, si1, si2 );
-					if (sj1 < j1-2 && sj2 < j2-2) {
-						interaction.basePairs.push_back( energy.getBasePair(sj1,sj2) );
-					}
 
 					// the currently traced value for sj1-j1, sj2-j2
 					curE = hybridE_right(j1-sj1,j2-sj2);
