@@ -156,6 +156,9 @@ protected:
 	void
 	getNextBest( Interaction & curBest );
 
+	void
+	printMatrix( const E2dMatrix & matrix );
+
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -174,6 +177,20 @@ updateOptima( const size_t i1, const size_t j1
 }
 
 //////////////////////////////////////////////////////////////////////////
+
+inline
+void
+PredictorMfe2dSeedExtension::
+printMatrix( const E2dMatrix & matrix )
+{
+	for (int i = 0; i < matrix.size1(); i++) {
+		std::cout << "| ";
+		for (int j = 0; j < matrix.size2(); j++) {
+			std::cout << matrix(i, j) << " | ";
+		}
+		std::cout << std::endl;
+	}
+}
 
 } // namespace
 
