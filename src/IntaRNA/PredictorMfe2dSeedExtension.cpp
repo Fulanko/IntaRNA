@@ -329,51 +329,57 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 
 					// the currently traced value for sj1-j1, sj2-j2
 					if (j1 > sj1 && j2 > sj2) {
-						curE = hybridE_right(j1-1-sj1,j2-1-sj2);
-						LOG(DEBUG) << curE;
+						curE = hybridE_right(j1-sj1,j2-sj2);
+						LOG(DEBUG) << "curE: "<< curE;
+
+						// temporarily store detected base pairs
+						std::vector<std::pair<size_t,size_t>> tempPairs;
 
 						// trace back right
-						while( j1-1 != sj1 ) {
+						while( j1 != sj1 ) {
 
 							// check if just internal loop
-							if ( E_equal( curE, (energy.getE_interLeft(sj1,j1-1,sj2,j2-1) + hybridE_right(j1-1-sj1,j2-1-sj2)) ) )
+							if ( E_equal( curE, (energy.getE_interLeft(sj1,j1,sj2,j2) + hybridE_right(0,0)) ) )
 							{
 								break;
 							}
 							// check all interval splits
-							if ( (j1-1-sj1) > 1 && (j2-1-sj2) > 1) {
+							if ( (j1-sj1) > 1 && (j2-sj2) > 1) {
 								// temp variables
 								size_t k1,k2;
 								bool traceNotFound = true;
 								// check all combinations of decompositions into (i1,i2)..(k1,k2)-(j1,j2)
-								for (k1=sj1+1; traceNotFound && k1<j1; k1++) {
-									if (j1-k1 > energy.getMaxInternalLoopSize1()+1) break;
-								for (k2=sj2+1; traceNotFound && k2<j2; k2++) {
-									if (j2-k2 > energy.getMaxInternalLoopSize2()+1) break;
+								for (k1=std::min(j1-1,sj1+energy.getMaxInternalLoopSize1()+1); traceNotFound && k1>sj1; k1--) {
+								for (k2=std::min(j2-1,sj2+energy.getMaxInternalLoopSize2()+1); traceNotFound && k2>sj2; k2--) {
 									// check if (k1,k2) are valid left boundary
-									if ( E_isNotINF( hybridE_right(k1-1-sj1,k2-1-sj2) ) ) {
+									if ( E_isNotINF( hybridE_right(k1-sj1,k2-sj2) ) ) {
 										// LOG(DEBUG) << (energy.getE_interLeft(i1,k1,i2,k2) + hybridE_pq(k1,k2));
-										LOG(DEBUG) << hybridE_right(k1-1-sj1,k2-1-sj2);
-										LOG(DEBUG) << k1 << ":" << j1-1 << ":" << k2 << ":" << j2-1 << ":" << energy.getE_interLeft(k1-1,j1-1,k2-1,j2-1);
-										
+										// LOG(DEBUG) << hybridE_right(k1-sj1,k2-sj2);
+										// LOG(DEBUG) << k1 << ":" << j1 << ":" << k2 << ":" << j2 << ":" << energy.getE_interLeft(k1,j1,k2,j2);
+
 										if ( E_equal( curE,
-												(energy.getE_interLeft(k1-1,j1-1,k2-1,j2-1) + hybridE_right(k1-1-sj1,k2-1-sj2)) ) )
+												(energy.getE_interLeft(k1,j1,k2,j2) + hybridE_right(k1-sj1,k2-sj2)) ) )
 										{
 											// stop searching
 											traceNotFound = false;
 											// store splitting base pair
 											LOG(DEBUG) << "update right at: " << k1 << ":" << k2;
-											interaction.basePairs.push_back( energy.getBasePair(k1+1,k2+1) );
+											tempPairs.push_back(energy.getBasePair(k1,k2));
 											// trace right part of split
 											j1=k1;
 											j2=k2;
-											curE = hybridE_right(j1-1-sj1,j2-1-sj2);
+											curE = hybridE_right(j1-sj1,j2-sj2);
 										}
 									}
 								}
 								}
 							}
 						}  // traceback right
+
+						// save base pairs in reverse order
+						for (int i = tempPairs.size() - 1; i >= 0; i--) {
+							interaction.basePairs.push_back( tempPairs[i] );
+						}
 					}
 
 					// sort final interaction (to make valid) (faster than calling sort())
