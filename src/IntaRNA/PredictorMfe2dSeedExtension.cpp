@@ -327,9 +327,6 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 					// the currently traced value for sj1-j1, sj2-j2
 					curE = hybridE_right(j1-sj1,j2-sj2);
 
-					// temporarily store detected base pairs
-					std::vector<std::pair<size_t,size_t>> tempPairs;
-
 					// trace back right
 					while( j1 != sj1 ) {
 
@@ -355,7 +352,7 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 										traceNotFound = false;
 										// store splitting base pair
 										LOG(DEBUG) << "update right at: " << k1 << ":" << k2;
-										tempPairs.push_back(energy.getBasePair(k1,k2));
+										interaction.basePairs.push_back( energy.getBasePair(k1,k2) );
 										// trace right part of split
 										j1=k1;
 										j2=k2;
@@ -367,22 +364,7 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 						}
 					}  // traceback right
 
-					// save base pairs in reverse order
-					for (int i = tempPairs.size() - 1; i >= 0; i--) {
-						interaction.basePairs.push_back( tempPairs[i] );
-					}
-
-					// sort final interaction (to make valid) (faster than calling sort())
-					if (interaction.basePairs.size() > 2) {
-						Interaction::PairingVec & bps = interaction.basePairs;
-						// shift all added base pairs to the front
-						for (size_t i=2; i<bps.size(); i++) {
-							bps.at(i-1).first = bps.at(i).first;
-							bps.at(i-1).second = bps.at(i).second;
-						}
-						// set last to j1-j2
-						(*bps.rbegin()) = energy.getBasePair(jj1,jj2);
-					}
+					interaction.sort();
 
 					// stop searching for seeds
 					return;
