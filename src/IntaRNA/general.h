@@ -82,7 +82,7 @@ namespace IntaRNA {
 #endif
 	//! the delta difference range to consider two energies equivalent
     //! using sqrt(representable positive value closest to zero)
-#define E_precisionEpsilon std::sqrt(std::numeric_limits<E_type>::min()) + 0.0001
+#define E_precisionEpsilon 0.0001
 
 #ifdef E_equal
 	#error E_equal already defined

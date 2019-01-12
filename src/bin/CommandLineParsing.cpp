@@ -43,6 +43,7 @@ extern "C" {
 #include "IntaRNA/PredictorMfe2dSeed.h"
 #include "IntaRNA/PredictorMfe4dSeed.h"
 #include "IntaRNA/PredictorMfe2dSeedExtension.h"
+#include "IntaRNA/PredictorMfe2dHeuristicSeedExtension.h"
 
 #include "IntaRNA/PredictionTracker.h"
 #include "IntaRNA/PredictionTrackerHub.h"
@@ -134,7 +135,7 @@ CommandLineParsing::CommandLineParsing()
 	temperature(0,100,37),
 
 	pred( "SP", 'S'),
-	predMode( "HMEX", 'H'),
+	predMode( "HMEXY", 'H'),
 #if INTARNA_MULITHREADING
 	threads( 0, omp_get_max_threads(), 1),
 #endif
@@ -1817,6 +1818,7 @@ getPredictor( const InteractionEnergy & energy, OutputHandler & output ) const
 			case 'M' :  return new PredictorMfe2dSeed( energy, output, predTracker, getSeedHandler( energy ) );
 			case 'E' :  return new PredictorMfe4dSeed( energy, output, predTracker, getSeedHandler( energy ) );
 			case 'X' :  return new PredictorMfe2dSeedExtension( energy, output, predTracker, getSeedHandler( energy ) );
+			case 'Y' :  return new PredictorMfe2dHeuristicSeedExtension( energy, output, predTracker, getSeedHandler( energy ) );
 			}
 		} break;
 		// single-site max-prob interactions (contain only interior loops)
