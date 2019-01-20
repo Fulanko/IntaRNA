@@ -295,6 +295,9 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 				hybridE_right.resize( std::min(j1-sj1+1, maxMatrixLen1), std::min(j2-sj2+1, maxMatrixLen2) );
 				fillHybridE_right( sj1, sj2, outConstraint );
 
+				LOG(DEBUG) << seedE << "::" << hybridE_pq( i1, i2 ) << "::" << hybridE_right( j1-sj1, j2-sj2 );
+				LOG(DEBUG) << energy.getE(i1, j1, i2, j2, seedE + hybridE_pq( i1, i2 ) + hybridE_right( j1-sj1, j2-sj2 ));
+
 				if ( E_equal( fullE,
 						(energy.getE(i1, j1, i2, j2, seedE + hybridE_left( si1-i1, si2-i2 ) + hybridE_right( j1-sj1, j2-sj2 )))))
 				{
