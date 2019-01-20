@@ -1,14 +1,8 @@
-/*
- * PredictorMfe2dSeedExtension.h
- *
- *  Created on: 13.10.2016
- *      Author: Mmann
- */
 
 #ifndef INTARNA_PREDICTORMFE2DSEEDEXTENSION_H_
 #define INTARNA_PREDICTORMFE2DSEEDEXTENSION_H_
 
-#include "IntaRNA/PredictorMfe2dSeed.h"
+#include "IntaRNA/PredictorMfe2d.h"
 #include "IntaRNA/SeedHandlerIdxOffset.h"
 
 namespace IntaRNA {

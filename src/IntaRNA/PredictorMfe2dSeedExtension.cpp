@@ -258,15 +258,16 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 				const size_t sj1 = si1+sl1;
 				const size_t sj2 = si2+sl2;
 
-				size_t jj1 = j1;
-				size_t jj2 = j2;
-
 				LOG(DEBUG) << "seed at " << si1 << "  " << si2;
+				LOG(DEBUG) << "start at " << i1 << "  " << i2;
 
 				hybridE_pq.resize( si1+1, si2+1 );
 				fillHybridE( si1, si2, outConstraint, 0, 0 );
 				hybridE_right.resize( j1-sj1+1, j2-sj2+1 );
 				fillHybridE_right( sj1, sj2, outConstraint, j1, j2 );
+
+				LOG(DEBUG) << seedE << "::" << hybridE_pq( i1, i2 ) << "::" << hybridE_right( j1-sj1, j2-sj2 );
+				LOG(DEBUG) << energy.getE(i1, j1, i2, j2, seedE + hybridE_pq( i1, i2 ) + hybridE_right( j1-sj1, j2-sj2 ));
 
 				if ( E_equal( fullE,
 						(energy.getE(i1, j1, i2, j2, seedE + hybridE_pq( i1, i2 ) + hybridE_right( j1-sj1, j2-sj2 )))))
