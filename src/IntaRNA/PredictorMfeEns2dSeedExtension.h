@@ -1,8 +1,8 @@
 
-#ifndef INTARNA_PREDICTORMFE2DHEURISTICSEEDEXTENSION_H_
-#define INTARNA_PREDICTORMFE2DHEURISTICSEEDEXTENSION_H_
+#ifndef INTARNA_PREDICTORMFEENS2DSEEDEXTENSION_H_
+#define INTARNA_PREDICTORMFEENS2DSEEDEXTENSION_H_
 
-#include "IntaRNA/PredictorMfe2dSeedExtension.h"
+#include "IntaRNA/PredictorMfe2d.h"
 #include "IntaRNA/SeedHandlerIdxOffset.h"
 
 namespace IntaRNA {
@@ -17,12 +17,28 @@ namespace IntaRNA {
  * @author Martin Mann
  *
  */
-class PredictorMfe2dHeuristicSeedExtension: public PredictorMfe2dSeedExtension {
+class PredictorMfeEns2dSeedExtension: public PredictorMfe2d {
 
 protected:
 
+	typedef float Z_type;
+	const Z_type Z_INF = std::numeric_limits<Z_type>::infinity();
+
+	//! the delta difference range to consider two energies equivalent
+  //! using sqrt(representable positive value closest to zero)
+	#define Z_precisionEpsilon 0.0001
+
+	//! check if two energies are equal according to some epsilon
+	#define Z_equal( e1, e2 ) ( std::abs((e1)-(e2)) < Z_precisionEpsilon )
+
+	//! check if a given energy is NOT set to Z_INF
+	#define Z_isNotINF( e ) ( std::numeric_limits<Z_type>::max() >= e )
+
+	//! check if a given energy is set to Z_INF
+	#define Z_isINF( e ) (  std::numeric_limits<Z_type>::max() < e )
+
 	//! matrix type to hold the mfe energies for interaction site starts
-	typedef PredictorMfe2dSeedExtension::E2dMatrix E2dMatrix;
+	typedef boost::numeric::ublas::matrix<Z_type> E2dMatrix;
 
 public:
 
@@ -37,7 +53,7 @@ public:
 	 *         on this->destruction.
 	 * @param seedHandler the seed handler to be used
 	 */
-	PredictorMfe2dHeuristicSeedExtension(
+	PredictorMfeEns2dSeedExtension(
 			const InteractionEnergy & energy
 			, OutputHandler & output
 			, PredictionTracker * predTracker
@@ -47,7 +63,7 @@ public:
 	/**
 	 * data cleanup
 	 */
-	virtual ~PredictorMfe2dHeuristicSeedExtension();
+	virtual ~PredictorMfeEns2dSeedExtension();
 
 
 	/**
@@ -74,24 +90,21 @@ protected:
 
 
 	//! access to the interaction energy handler of the super class
-	using PredictorMfe2dSeedExtension::energy;
+	using PredictorMfe2d::energy;
 
 	//! access to the output handler of the super class
-	using PredictorMfe2dSeedExtension::output;
+	using PredictorMfe2d::output;
 
 	//! energy of all interaction hybrids that end in position p (seq1) and
 	//! q (seq2) and do not necessarily contain a seed interaction
-	using PredictorMfe2dSeedExtension::hybridE_pq;
+	E2dMatrix hybridE_pq;
 
 	//! the seed handler (with idx offset)
-	using PredictorMfe2dSeedExtension::seedHandler;
+	SeedHandlerIdxOffset seedHandler;
 
 	//! energy of all interaction hybrids that start in position p (seq1) and
 	//! q (seq2)
-	using PredictorMfe2dSeedExtension::hybridE_right;
-
-	E_type energy_opt = E_INF;
-	size_t j1opt, j2opt;
+	E2dMatrix hybridE_right;
 
 protected:
 
@@ -110,8 +123,24 @@ protected:
 	updateOptima( const size_t i1, const size_t j1
 			, const size_t i2, const size_t j2
 			, const E_type energy
-			, const bool isHybridE
-		  , const size_t si1, const size_t si2 );
+			, const bool isHybridE );
+
+	/**
+	 * Computes all entries of the hybridE matrix for interactions ending in
+	 * p=j1 and q=j2 and report all valid interactions to updateOptima()
+	 *
+	 * @param j1 end of the interaction within seq 1
+	 * @param j2 end of the interaction within seq 2
+	 * @param outConstraint constrains the interactions reported to the output handler
+	 * @param i1init smallest value for i1
+	 * @param i2init smallest value for i2
+	 *
+	 */
+	void
+	fillHybridE( const size_t j1, const size_t j2
+				, const OutputConstraint & outConstraint
+				, const size_t i1init, const size_t i2init
+				);
 
 	/**
 	 * Computes all entries of the hybridE matrix for interactions starting in
@@ -127,13 +156,8 @@ protected:
 	void
 	fillHybridE_right( const size_t i1, const size_t i2
 				, const OutputConstraint & outConstraint
-				, const size_t j1init, const size_t j2init, const size_t si1, const size_t si2
+				, const size_t j1init, const size_t j2init
 				);
-
-	void
-	fillHybridE( const size_t j1, const size_t j2
-				, const OutputConstraint & outConstraint
-				, const size_t i1init, const size_t i2init );
 
 	/**
 	 * Fills a given interaction (boundaries given) with the according
@@ -170,26 +194,20 @@ protected:
 
 inline
 void
-PredictorMfe2dHeuristicSeedExtension::
+PredictorMfeEns2dSeedExtension::
 updateOptima( const size_t i1, const size_t j1
 		, const size_t i2, const size_t j2
 		, const E_type energy
-		, const bool isHybridE
-	  , const size_t si1, const size_t si2 )
+		, const bool isHybridE )
 {
-	E_type fullE = energy + this->energy.getED1(si1, j1) + this->energy.getED2(si2, j2);
-	if (fullE < energy_opt) {
-		energy_opt = fullE;
-		j1opt = j1-1;
-		j2opt = j2-1;
-	}
+	// do nothing and ignore calls from fillHybridE()
 }
 
 //////////////////////////////////////////////////////////////////////////
 
 inline
 void
-PredictorMfe2dHeuristicSeedExtension::
+PredictorMfeEns2dSeedExtension::
 printMatrix( const E2dMatrix & matrix )
 {
 	for (int i = 0; i < matrix.size1(); i++) {
@@ -203,4 +221,4 @@ printMatrix( const E2dMatrix & matrix )
 
 } // namespace
 
-#endif /* INTARNA_PREDICTORMFE2DHEURISTICSEEDEXTENSION_H_ */
+#endif /* INTARNA_PREDICTORMFEENS2DSEEDEXTENSION_H_ */
