@@ -90,8 +90,8 @@ predict( const IndexRange & r1, const IndexRange & r2
 			continue;
 
 		// init opt_j
-		j1opt = interaction_size1-1;
-		j2opt = interaction_size2-1;
+		j1opt = sj1;
+		j2opt = sj2;
 
 		// ER
 		hybridE_right.resize( interaction_size1-sj1, interaction_size2-sj2);
