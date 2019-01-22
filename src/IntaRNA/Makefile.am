@@ -67,6 +67,7 @@ libIntaRNA_a_HEADERS =    \
 					PredictorMfe2dHelixBlockHeuristic.h \
 					PredictorMfe2dHelixBlockHeuristicSeed.h \
 					PredictorMfe2dHeuristicSeedExtension.h \
+					PredictorMfeEns2dHeuristicSeedExtension.h \
 					PredictorMfe4d.h \
 					PredictorMfe4dSeed.h \
 					PredictorMfeEns.h \
@@ -125,6 +126,7 @@ libIntaRNA_a_SOURCES =    \
 					PredictorMfe2dHelixBlockHeuristic.cpp \
 					PredictorMfe2dHelixBlockHeuristicSeed.cpp \
 					PredictorMfe2dHeuristicSeedExtension.cpp \
+					PredictorMfeEns2dHeuristicSeedExtension.cpp \
 					PredictorMfe4d.cpp \
 					PredictorMfe4dSeed.cpp \
 					PredictorMfeEns.cpp \
