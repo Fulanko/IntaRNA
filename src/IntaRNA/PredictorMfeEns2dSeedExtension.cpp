@@ -309,9 +309,6 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 				fillHybridE( si1, si2, outConstraint, 0, 0 );
 				hybridE_right.resize( j1-sj1+1, j2-sj2+1 );
 				fillHybridE_right( sj1, sj2, outConstraint, j1, j2 );
-				printMatrix(hybridE_pq);
-				LOG(DEBUG) << "==============";
-				printMatrix(hybridE_right);
 
 				if ( Z_equal( fullE,
 						(energy.getE(i1, j1, i2, j2, energy.getE(energy.getBoltzmannWeight(seedE) * hybridE_pq( i1, i2 ) * hybridE_right( j1-sj1, j2-sj2 ))))))
