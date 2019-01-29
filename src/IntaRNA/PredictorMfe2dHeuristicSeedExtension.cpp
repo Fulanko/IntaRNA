@@ -59,7 +59,6 @@ predict( const IndexRange & r1, const IndexRange & r2
 			, (r1.to==RnaSequence::lastPos?energy.size1()-1:r1.to)-r1.from+1 );
 	const size_t interaction_size2 = std::min( energy.size2()
 			, (r2.to==RnaSequence::lastPos?energy.size2()-1:r2.to)-r2.from+1 );
-	LOG(DEBUG) << "interaction size: " << interaction_size1 << " / " << interaction_size2 ;
 
 	// compute seed interactions for whole range
 	// and check if any seed possible
@@ -80,7 +79,7 @@ predict( const IndexRange & r1, const IndexRange & r2
 		// check if valid left seed base pair
 		if (E_isINF(seedE))
 		  continue;
-		LOG(DEBUG) << "FOUND SEED: " << seedHandler.getSeedE(si1, si2) << " at: " <<si1 <<"~" << energy.getBasePair(si1,si2).first <<", " <<si2 <<"~" << energy.getBasePair(si1,si2).second ;
+
 		const size_t sl1 = seedHandler.getSeedLength1(si1, si2)-1;
 		const size_t sl2 = seedHandler.getSeedLength2(si1, si2)-1;
 		const size_t sj1 = si1+sl1;
@@ -89,15 +88,13 @@ predict( const IndexRange & r1, const IndexRange & r2
 		if (sj1 > interaction_size1 || sj2 > interaction_size2)
 			continue;
 
-		// init opt_j
+		// init optimal right boundaries
 		j1opt = sj1;
 		j2opt = sj2;
 
 		// ER
 		hybridE_right.resize( interaction_size1-sj1, interaction_size2-sj2);
 		fillHybridE_right(sj1, sj2, outConstraint, interaction_size1-1, interaction_size2-1, si1, si2);
-
-		LOG(DEBUG) << j1opt << ":" << j2opt << "   " << energy_opt;
 
 		// EL
 		hybridE_pq.resize( si1+1, si2+1 );
@@ -108,7 +105,6 @@ predict( const IndexRange & r1, const IndexRange & r2
 
 	// report mfe interaction
 	reportOptima( outConstraint );
-
 }
 
 
@@ -130,8 +126,7 @@ fillHybridE_right( const size_t i1, const size_t i2
 	E_type curMinE = E_INF;
 	// iterate over all window starts j1 (seq1) and j2 (seq2)
 	for (j1=i1; j1 <= j1max; j1++ ) {
-		// w1 width check obsolete due to hybridErangeRight setup
-		// screen for left boundaries in seq2
+		// screen for right boundaries in seq2
 		for (j2=i2; j2 <= j2max; j2++ ) {
 
 			// init current cell (0 if just left (i1,i2) base pair)
@@ -139,7 +134,6 @@ fillHybridE_right( const size_t i1, const size_t i2
 
 			// check if complementary
 			if( i1<j1 && i2<j2 && energy.areComplementary(j1,j2) ) {
-
 				curMinE = E_INF;
 
 				// check all combinations of decompositions into (i1,i2)..(k1,k2)-(j1,j2)

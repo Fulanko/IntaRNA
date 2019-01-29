@@ -58,7 +58,6 @@ predict( const IndexRange & r1, const IndexRange & r2
 			, (r1.to==RnaSequence::lastPos?energy.size1()-1:r1.to)-r1.from+1 );
 	const size_t interaction_size2 = std::min( energy.size2()
 			, (r2.to==RnaSequence::lastPos?energy.size2()-1:r2.to)-r2.from+1 );
-	LOG(DEBUG) << "interaction size: " << interaction_size1 << " / " << interaction_size2 ;
 
 	// compute seed interactions for whole range
 	// and check if any seed possible
@@ -79,7 +78,7 @@ predict( const IndexRange & r1, const IndexRange & r2
 		// check if valid left seed base pair
 		if (E_isINF(seedE))
 		  continue;
-		LOG(DEBUG) << "FOUND SEED: " << seedHandler.getSeedE(si1, si2) << " at: " <<si1 <<"~" << energy.getBasePair(si1,si2).first <<", " <<si2 <<"~" << energy.getBasePair(si1,si2).second ;
+
 		const size_t sl1 = seedHandler.getSeedLength1(si1, si2)-1;
 		const size_t sl2 = seedHandler.getSeedLength2(si1, si2)-1;
 		const size_t sj1 = si1+sl1;
@@ -88,15 +87,13 @@ predict( const IndexRange & r1, const IndexRange & r2
 		if (sj1 > interaction_size1 || sj2 > interaction_size2)
 			continue;
 
-		// init opt_j
+		// init optimal right boundaries
 		j1opt = sj1;
 		j2opt = sj2;
 
 		// ER
 		hybridE_right.resize( interaction_size1-sj1, interaction_size2-sj2);
 		fillHybridE_right(sj1, sj2, outConstraint, interaction_size1-1, interaction_size2-1, si1, si2);
-
-		LOG(DEBUG) << j1opt << ":" << j2opt << "   " << energy_opt;
 
 		// EL
 		hybridE_pq.resize( si1+1, si2+1 );
@@ -128,7 +125,7 @@ fillHybridE_right( const size_t i1, const size_t i2
 	Z_type curZ = 0.0;
 	// iterate over all window starts j1 (seq1) and j2 (seq2)
 	for (j1=i1; j1 <= j1max; j1++ ) {
-		// screen for left boundaries in seq2
+		// screen for right boundaries in seq2
 		for (j2=i2; j2 <= j2max; j2++ ) {
 
 			if (i1==j1 && i2==j2) {
@@ -208,7 +205,6 @@ fillHybridE( const size_t j1, const size_t j2
 					curZ += energy.getBoltzmannWeight(energy.getE_interLeft(i1,k1,i2,k2)) * hybridE_pq(k1,k2);
 				}
 				}
-
 
 			}
 			// store value

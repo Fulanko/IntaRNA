@@ -61,7 +61,6 @@ predict( const IndexRange & r1, const IndexRange & r2
 			, (r1.to==RnaSequence::lastPos?energy.size1()-1:r1.to)-r1.from+1 );
 	const size_t interaction_size2 = std::min( energy.size2()
 			, (r2.to==RnaSequence::lastPos?energy.size2()-1:r2.to)-r2.from+1 );
-	LOG(DEBUG) << "interaction size: " << interaction_size1 << " / " << interaction_size2 ;
 
 	// compute seed interactions for whole range
 	// and check if any seed possible
@@ -82,23 +81,20 @@ predict( const IndexRange & r1, const IndexRange & r2
 		// check if valid left seed base pair
 		if (Z_isINF(seedE))
 		  continue;
-		LOG(DEBUG) << "FOUND SEED: " << seedHandler.getSeedE(si1, si2) << " at: " <<si1 <<"~" << energy.getBasePair(si1,si2).first <<", " <<si2 <<"~" << energy.getBasePair(si1,si2).second ;
+
 		const size_t sl1 = seedHandler.getSeedLength1(si1, si2)-1;
 		const size_t sl2 = seedHandler.getSeedLength2(si1, si2)-1;
 		const size_t sj1 = si1+sl1;
 		const size_t sj2 = si2+sl2;
-		LOG(DEBUG) << "SEED: " << sj1 <<","<<sj2<<" length "<<sl1<<","<<sl2;
 		// check if seed fits into interaction range
 		if (sj1 > interaction_size1 || sj2 > interaction_size2)
 			continue;
 
 		// EL
-		LOG(DEBUG) <<"compute EL";
 		hybridE_pq.resize( si1+1, si2+1 );
 		fillHybridE(si1, si2, outConstraint, 0, 0);
 
 		// ER
-		LOG(DEBUG) <<"compute ER";
 		hybridE_right.resize( interaction_size1-sj1, interaction_size2-sj2);
 		fillHybridE_right(sj1, sj2, outConstraint, interaction_size1-1, interaction_size2-1);
 
@@ -113,13 +109,7 @@ predict( const IndexRange & r1, const IndexRange & r2
 					for (int j2 = 0; j2 < hybridE_right.size2() ; j2++) {
 						if(si2-i2+sl2+j2 > energy.getAccessibility2().getMaxLength()) continue;
 						if (Z_isINF(hybridE_right(j1,j2))) continue;
-
-						Z_type fullE = energy.getBoltzmannWeight(seedE);
-						fullE *= hybridE_pq(i1,i2); // contains E_init
-						fullE *= hybridE_right(j1,j2);
-						//LOG(DEBUG) << seedE << "::" << hybridE_pq(i1,i2) << "::" << hybridE_right(j1,j2) << "::" << fullE;
-
-						// LOG(DEBUG) << i1 << ":" << sj1+j1 << ":" << i2 << ":" << sj2+j2 << "__" << hybridE_pq(i1,i2) << "___" <<hybridE_right(j1,j2) << " --> " << energy.getE(i1, sj1+j1, i2, sj2+j2, fullE);
+						Z_type fullE = energy.getBoltzmannWeight(seedE) * hybridE_pq(i1,i2) * hybridE_right(j1,j2);
 						PredictorMfe::updateOptima( i1, sj1+j1, i2, sj2+j2, energy.getE(fullE), true );
 					} // j2
 				} // i2
@@ -177,7 +167,6 @@ fillHybridE( const size_t j1, const size_t j2
 				}
 				}
 
-
 			}
 			// store value
 			hybridE_pq(i1,i2) = curZ;
@@ -202,7 +191,7 @@ fillHybridE_right( const size_t i1, const size_t i2
 	Z_type curZ = 0.0;
 	// iterate over all window starts j1 (seq1) and j2 (seq2)
 	for (j1=i1; j1 <= j1max; j1++ ) {
-		// screen for left boundaries in seq2
+		// screen for right boundaries in seq2
 		for (j2=i2; j2 <= j2max; j2++ ) {
 
 			if (i1==j1 && i2==j2) {
@@ -287,13 +276,7 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 	}
 #endif
 
-	LOG(DEBUG) << "traceback";
-
-	LOG(DEBUG) << i1 << "/" << i2 << "/" << j1 << "/" << j2;
-
 	E_type fullE = interaction.energy;
-
-	LOG(DEBUG) << "interactionEnergy" << fullE;
 
 	for (size_t si1 = i1; si1 <= j1+1-seedHandler.getConstraint().getBasePairs(); si1++) {
 		for (size_t si2 = i2; si2 <= j2+1-seedHandler.getConstraint().getBasePairs(); si2++) {
@@ -314,11 +297,8 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 						(energy.getE(i1, j1, i2, j2, energy.getE(energy.getBoltzmannWeight(seedE) * hybridE_pq( i1, i2 ) * hybridE_right( j1-sj1, j2-sj2 ))))))
 				{
 					// found seed -> traceback
-					LOG(DEBUG) << "found seed";
-
 					// the currently traced value for i1-si1, i2-si2
 					Z_type curE = hybridE_pq(i1,i2);
-					LOG(DEBUG) << curE;
 
 					// trace back left
 					while( i1 != si1 ) {
@@ -338,14 +318,12 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 							for (k2=std::min(si2-1,i2+energy.getMaxInternalLoopSize2()+1); traceNotFound && k2>i2; k2--) {
 								// check if (k1,k2) are valid left boundary
 								if ( Z_isNotINF( hybridE_pq(k1,k2) ) ) {
-									// LOG(DEBUG) << (energy.getE_interLeft(i1,k1,i2,k2) + hybridE_pq(k1,k2));
 									if ( Z_equal( curE,
 											(energy.getBoltzmannWeight(energy.getE_interLeft(i1,k1,i2,k2)) * hybridE_pq(k1,k2)) ) )
 									{
 										// stop searching
 										traceNotFound = false;
 										// store splitting base pair
-										LOG(DEBUG) << "update left at: " << k1 << ":" << k2;
 										interaction.basePairs.push_back( energy.getBasePair(k1,k2) );
 										// trace right part of split
 										i1=k1;
@@ -360,7 +338,6 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 				  } // traceback left
 
 					// trace seed
-					LOG(DEBUG) << "seed at:" << si1 << ":" << si2;
 					if (si1 > i1 && si2 > i2) {
 						interaction.basePairs.push_back( energy.getBasePair(si1,si2) );
 					}
@@ -371,7 +348,6 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 
 					// the currently traced value for sj1-j1, sj2-j2
 					curE = hybridE_right(j1-sj1,j2-sj2);
-					LOG(DEBUG) << curE;
 
 					// trace back right
 					// TODO: implement

@@ -86,8 +86,7 @@ protected:
 	//! the seed handler (with idx offset)
 	SeedHandlerIdxOffset seedHandler;
 
-	//! energy of all interaction hybrids that start in position p (seq1) and
-	//! q (seq2)
+	//! energy of all interaction hybrids that start on the right side of the seed
 	E2dMatrix hybridE_right;
 
 protected:
@@ -111,7 +110,7 @@ protected:
 
 	/**
 	 * Computes all entries of the hybridE matrix for interactions starting in
-	 * p=i1 and q=i2 and report all valid interactions to updateOptima()
+	 * i1 and i2 and report all valid interactions to updateOptima()
 	 *
 	 * @param i1 end of the interaction within seq 1
 	 * @param i2 end of the interaction within seq 2
