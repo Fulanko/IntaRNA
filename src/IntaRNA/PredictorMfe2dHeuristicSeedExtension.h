@@ -90,7 +90,10 @@ protected:
 	//! q (seq2)
 	using PredictorMfe2dSeedExtension::hybridE_right;
 
+  //! optimal energy of the right extension
 	E_type energy_opt = E_INF;
+
+	//! boundaries of the right extension with the optimal energy
 	size_t j1opt, j2opt;
 
 protected:
@@ -115,7 +118,7 @@ protected:
 
 	/**
 	 * Computes all entries of the hybridE matrix for interactions starting in
-	 * p=i1 and q=i2 and report all valid interactions to updateOptima()
+	 * i1 and i2 and report all valid interactions to updateOptima()
 	 *
 	 * @param i1 end of the interaction within seq 1
 	 * @param i2 end of the interaction within seq 2
@@ -130,6 +133,17 @@ protected:
 				, const size_t j1init, const size_t j2init, const size_t si1, const size_t si2
 				);
 
+	/**
+	 * Computes all entries of the hybridE matrix for interactions ending in
+	 * p=j1 and q=j2 and report all valid interactions to updateOptima()
+	 *
+   * @param j1 end of the interaction within seq 1
+	 * @param j2 end of the interaction within seq 2
+	 * @param outConstraint constrains the interactions reported to the output handler
+	 * @param i1init smallest value for i1
+	 * @param i2init smallest value for i2
+	 *
+	 */
 	void
 	fillHybridE( const size_t j1, const size_t j2
 				, const OutputConstraint & outConstraint
@@ -177,6 +191,7 @@ updateOptima( const size_t i1, const size_t j1
 		, const bool isHybridE
 	  , const size_t si1, const size_t si2 )
 {
+	// store boundaries and energy of the optimal right extension
 	E_type fullE = energy + this->energy.getED1(si1, j1) + this->energy.getED2(si2, j2);
 	if (fullE < energy_opt) {
 		energy_opt = fullE;
