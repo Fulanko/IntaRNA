@@ -2037,8 +2037,8 @@ getPredictor( const InteractionEnergy & energy, OutputHandler & output ) const
 			case 'B' :  return new PredictorMfeEns2dHeuristicSeedExtension( energy, output, predTracker, getSeedHandler( energy ) );
 			}
 		} break;
-		// single-site max-prob interactions (contain only interior loops)
-		case 'P' : {
+		// single-site min ensemble energy interactions (contain only interior loops)
+		case 'E' : {
 			switch ( predMode.val ) {
 			case 'E' :  INTARNA_NOT_IMPLEMENTED("mode "+toString(predMode.val)+" not implemented for seed constraint (try --noSeed)"); return NULL;
 			default :  INTARNA_NOT_IMPLEMENTED("mode "+toString(predMode.val)+" not implemented for model "+toString(model.val));
