@@ -136,7 +136,7 @@ CommandLineParsing::CommandLineParsing()
 
 	temperature(0,100,37),
 
-	pred( "SP", 'S'),
+	pred( "SE", 'S'),
 	predMode( "HMEXYAB", 'H'),
 #if INTARNA_MULITHREADING
 	threads( 0, omp_get_max_threads(), 1),
@@ -503,7 +503,7 @@ CommandLineParsing::CommandLineParsing()
 				->notifier(boost::bind(&CommandLineParsing::validate_pred,this,_1))
 			, std::string("prediction target : "
 					"\n 'S' = single-site minimum-free-energy interaction (interior loops only), "
-					"\n 'P' = single-site maximum-probability interaction (interior loops only)"
+					"\n 'E' = single-site minimum-free-ensemble-energy interaction (interior loops only)"
 					).c_str())
 		("energy,e"
 			, value<char>(&(energy.val))
@@ -1795,12 +1795,9 @@ getPredictor( const InteractionEnergy & energy, OutputHandler & output ) const
 			default :  INTARNA_NOT_IMPLEMENTED("mode "+toString(predMode.val)+" not implemented for prediction target "+toString(pred.val));
 			}
 		} break;
-		// single-site max-prob interactions (contain only interior loops)
-		case 'P' : {
-			switch ( predMode.val ) {
-			case 'E' :  return new PredictorMaxProb( energy, output, predTracker );
-			default :  INTARNA_NOT_IMPLEMENTED("mode "+toString(predMode.val)+" not implemented for prediction target "+toString(pred.val)+" : try --mode=E");
-			}
+		// single-site min ensemble energy interactions (contain only interior loops)
+		case 'E' : {
+			INTARNA_NOT_IMPLEMENTED("mode "+toString(predMode.val)+" not implemented for prediction target "+toString(pred.val)+" : try --pred=S");
 		} break;
 		// multi-site mfe interactions (contain interior and multi-loops loops)
 		case 'M' : {
@@ -1825,11 +1822,12 @@ getPredictor( const InteractionEnergy & energy, OutputHandler & output ) const
 			case 'B' :  return new PredictorMfeEns2dHeuristicSeedExtension( energy, output, predTracker, getSeedHandler( energy ) );
 			}
 		} break;
-		// single-site max-prob interactions (contain only interior loops)
-		case 'P' : {
+		// single-site min ensemble energy interactions (contain only interior loops)
+		case 'E' : {
 			switch ( predMode.val ) {
-			case 'E' :  INTARNA_NOT_IMPLEMENTED("mode "+toString(predMode.val)+" not implemented for seed constraint (try --noSeed)"); return NULL;
-			default :  INTARNA_NOT_IMPLEMENTED("mode "+toString(predMode.val)+" not implemented for prediction target "+toString(pred.val));
+			case 'H' :  return new PredictorMfeEns2dHeuristicSeedExtension( energy, output, predTracker, getSeedHandler( energy ) );
+			case 'M' :  return new PredictorMfeEns2dSeedExtension( energy, output, predTracker, getSeedHandler( energy ) );
+			case 'E' :  INTARNA_NOT_IMPLEMENTED("mode "+toString(predMode.val)+" not implemented"); return NULL;
 			}
 		} break;
 		// multi-site mfe interactions (contain interior and multi-loops loops)
