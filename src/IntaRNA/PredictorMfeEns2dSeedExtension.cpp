@@ -296,48 +296,7 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 				if ( Z_equal( fullE,
 						(energy.getE(i1, j1, i2, j2, energy.getE(energy.getBoltzmannWeight(seedE) * hybridE_pq( i1, i2 ) * hybridE_right( j1-sj1, j2-sj2 ))))))
 				{
-					// found seed -> traceback
-					// the currently traced value for i1-si1, i2-si2
-					Z_type curE = hybridE_pq(i1,i2);
-
-					// trace back left
-					while( i1 != si1 ) {
-
-						// check if just internal loop
-						if ( Z_equal( curE, (energy.getBoltzmannWeight(energy.getE_interLeft(i1,si1,i2,si2)) * hybridE_pq(si1,si2)) ) )
-						{
-							break;
-						}
-						// check all interval splits
-						if ( (si1-i1) > 1 && (si2-i2) > 1) {
-							// temp variables
-							size_t k1,k2;
-							bool traceNotFound = true;
-							// check all combinations of decompositions into (i1,i2)..(k1,k2)-(j1,j2)
-							for (k1=std::min(si1-1,i1+energy.getMaxInternalLoopSize1()+1); traceNotFound && k1>i1; k1--) {
-							for (k2=std::min(si2-1,i2+energy.getMaxInternalLoopSize2()+1); traceNotFound && k2>i2; k2--) {
-								// check if (k1,k2) are valid left boundary
-								if ( Z_isNotINF( hybridE_pq(k1,k2) ) ) {
-									if ( Z_equal( curE,
-											(energy.getBoltzmannWeight(energy.getE_interLeft(i1,k1,i2,k2)) * hybridE_pq(k1,k2)) ) )
-									{
-										// stop searching
-										traceNotFound = false;
-										// store splitting base pair
-										interaction.basePairs.push_back( energy.getBasePair(k1,k2) );
-										// trace right part of split
-										i1=k1;
-										i2=k2;
-										curE = hybridE_pq(i1,i2);
-									}
-								}
-							}
-							}
-						}
-
-				  } // traceback left
-
-					// trace seed
+					// found seed -> traceback seed base pairs
 					if (si1 > i1 && si2 > i2) {
 						interaction.basePairs.push_back( energy.getBasePair(si1,si2) );
 					}
@@ -345,13 +304,7 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 					if (sj1 < j1 && sj2 < j2) {
 						interaction.basePairs.push_back( energy.getBasePair(sj1,sj2) );
 					}
-
-					// the currently traced value for sj1-j1, sj2-j2
-					curE = hybridE_right(j1-sj1,j2-sj2);
-
-					// trace back right
-					// TODO: implement
-
+					// sort output interaction
 					interaction.sort();
 
 					// stop searching for seeds
