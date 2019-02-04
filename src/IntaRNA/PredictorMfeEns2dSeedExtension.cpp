@@ -110,6 +110,7 @@ predict( const IndexRange & r1, const IndexRange & r2
 						if(si2-i2+sl2+j2 > energy.getAccessibility2().getMaxLength()) continue;
 						if (Z_isINF(hybridE_right(j1,j2))) continue;
 						Z_type fullE = energy.getBoltzmannWeight(seedE) * hybridE_pq(i1,i2) * hybridE_right(j1,j2);
+						if (fullE == 0) continue;
 						PredictorMfe::updateOptima( i1, sj1+j1, i2, sj2+j2, energy.getE(fullE), true );
 					} // j2
 				} // i2
@@ -135,41 +136,40 @@ fillHybridE( const size_t j1, const size_t j2
 
 	// global vars to avoid reallocation
 	size_t i1,i2,k1,k2;
+	//////////  FIRST ROUND : COMPUTE HYBRIDIZATION ENERGIES ONLY  ////////////
 
 	// current minimal value
 	Z_type curZ = 0.0;
 	// iterate over all window starts j1 (seq1) and j2 (seq2)
 	for (i1=j1+1; i1-- > i1init; ) {
-		// screen for left boundaries in seq2
+		// screen for right boundaries in seq2
 		for (i2=j2+1; i2-- > i2init; ) {
 
-			if (i1==j1 && i2==j2) {
-				curZ = energy.getBoltzmannWeight(energy.getE_init());
-			} else {
-				if (j1-i1 <= energy.getMaxInternalLoopSize1()+1 && j2-i2 <= energy.getMaxInternalLoopSize2()+1) {
-					curZ = energy.getBoltzmannWeight(energy.getE_interLeft(i1,j1,i2,j2))
-						* hybridE_pq(j1, j2);
-				}
-			}
+			// init current cell (0 if just left (i1,i2) base pair)
+			hybridE_pq(i1,i2) = i1==j1 && i2==j2 ? energy.getBoltzmannWeight(energy.getE_init()) : 0.0;
 
 			// check if complementary
-			if( i1<j1 && i2<j2 ) {
+			if( i1<j1 && i2<j2 && energy.areComplementary(i1,i2) ) {
+				curZ = 0.0;
 
 				// check all combinations of decompositions into (i1,i2)..(k1,k2)-(j1,j2)
-				for (k1=j1-1; k1 > i1; k1--) {
+				for (k1=i1+1; k1 < j1; k1++ ) {
 					// ensure maximal loop length
 					if (k1-i1 > energy.getMaxInternalLoopSize1()+1) break;
-				for (k2=j2-1; k2 > i2; k2--) {
+				for (k2=i2+1; k2 < j2; k2++ ) {
 					// ensure maximal loop length
 					if (k2-i2 > energy.getMaxInternalLoopSize2()+1) break;
 					// check if (k1,k2) are valid left boundary
-					curZ += energy.getBoltzmannWeight(energy.getE_interLeft(i1,k1,i2,k2)) * hybridE_pq(k1,k2);
-				}
-				}
+					if ( hybridE_pq(k1,k2) != 0.0 ) {
+						curZ += energy.getBoltzmannWeight(energy.getE_interLeft(i1,k1,i2,k2)) * hybridE_pq(k1,k2);
+					}
+				} // k2
+				} // k1
 
+				// store value
+				hybridE_pq(i1,i2) = curZ;
+				continue;
 			}
-			// store value
-			hybridE_pq(i1,i2) = curZ;
 		}
 	}
 
@@ -186,6 +186,7 @@ fillHybridE_right( const size_t i1, const size_t i2
 
 	// global vars to avoid reallocation
 	size_t j1,j2,k1,k2;
+	//////////  FIRST ROUND : COMPUTE HYBRIDIZATION ENERGIES ONLY  ////////////
 
 	// current minimal value
 	Z_type curZ = 0.0;
@@ -194,17 +195,12 @@ fillHybridE_right( const size_t i1, const size_t i2
 		// screen for right boundaries in seq2
 		for (j2=i2; j2 <= j2max; j2++ ) {
 
-			if (i1==j1 && i2==j2) {
-				curZ = energy.getBoltzmannWeight(0.0);
-			} else {
-				if (j1-i1 <= energy.getMaxInternalLoopSize1()+1 && j2-i2 <= energy.getMaxInternalLoopSize2()+1) {
-					curZ = energy.getBoltzmannWeight(energy.getE_interLeft(i1,j1,i2,j2))
-						* hybridE_right(0, 0);
-				}
-			}
+			// init current cell (0 if just left (i1,i2) base pair)
+			hybridE_right(j1-i1,j2-i2) = i1==j1 && i2==j2 ? energy.getBoltzmannWeight(0.0) : 0.0;
 
 			// check if complementary
-			if( i1<j1 && i2<j2 ) {
+			if( i1<j1 && i2<j2 && energy.areComplementary(j1,j2) ) {
+				curZ = 0.0;
 
 				// check all combinations of decompositions into (i1,i2)..(k1,k2)-(j1,j2)
 				for (k1=j1; k1-- > i1; ) {
@@ -214,13 +210,16 @@ fillHybridE_right( const size_t i1, const size_t i2
 					// ensure maximal loop length
 					if (j2-k2 > energy.getMaxInternalLoopSize2()+1) break;
 					// check if (k1,k2) are valid left boundary
-					curZ += energy.getBoltzmannWeight(energy.getE_interLeft(k1,j1,k2,j2)) * hybridE_right(k1-i1,k2-i2);
-				}
-				}
+					if ( hybridE_right(k1-i1,k2-i2) != 0.0 ) {
+						curZ += energy.getBoltzmannWeight(energy.getE_interLeft(k1,j1,k2,j2)) * hybridE_right(k1-i1,k2-i2);
+					}
+				} // k2
+			  } // k1
 
+				// store value
+				hybridE_right(j1-i1,j2-i2) = curZ;
+				continue;
 			}
-			// store value
-			hybridE_right(j1-i1,j2-i2) = curZ;
 		}
 	}
 
