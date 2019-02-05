@@ -169,7 +169,6 @@ fillHybridE_right( const size_t i1, const size_t i2
 
 				// store value
 				hybridE_right(j1-i1,j2-i2) = curMinE;
-				continue;
 			}
 		}
 	}
