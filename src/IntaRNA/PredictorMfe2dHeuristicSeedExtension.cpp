@@ -157,7 +157,6 @@ fillHybridE_right( const size_t i1, const size_t i2
 				hybridE_right(j1-i1,j2-i2) = curMinE;
 				// update mfe if needed
 				updateOptima( si1,j1,si2,j2, hybridE_right(j1-i1,j2-i2) + energy.getE_init() + seedHandler.getSeedE(si1, si2), true, si1, si2 );
-				continue;
 			}
 		}
 	}
@@ -234,64 +233,9 @@ fillHybridE( const size_t j1, const size_t j2
 				const size_t sj1 = j1+sl1;
 				const size_t sj2 = j2+sl2;
 				PredictorMfe2d::updateOptima( i1,j1opt,i2,j2opt, hybridE_right(j1opt-sj1, j2opt-sj2) + hybridE_pq(i1,i2) + seedHandler.getSeedE(j1, j2), true );
-				continue;
 			}
 		}
 	}
-
-}
-
-////////////////////////////////////////////////////////////////////////////
-
-void
-PredictorMfe2dHeuristicSeedExtension::
-traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
-{
-	// check if something to trace
-	if (interaction.basePairs.size() < 2) {
-		return;
-	}
-
-#if INTARNA_IN_DEBUG_MODE
-	// sanity checks
-	if ( interaction.basePairs.size() != 2 ) {
-		throw std::runtime_error("PredictorMfe2dHeuristicSeedExtension::traceBack() : given interaction does not contain boundaries only");
-	}
-#endif
-
-	// check for single interaction
-	if (interaction.basePairs.at(0).first == interaction.basePairs.at(1).first) {
-		// delete second boundary (identical to first)
-		interaction.basePairs.resize(1);
-		// update done
-		return;
-	}
-
-#if INTARNA_IN_DEBUG_MODE
-	// sanity checks
-	if ( ! interaction.isValid() ) {
-		throw std::runtime_error("PredictorMfe2dHeuristicSeedExtension::traceBack() : given interaction not valid");
-	}
-#endif
-
-	// ensure sorting
-	interaction.sort();
-	// get indices in hybridE for boundary base pairs
-	size_t	i1 = energy.getIndex1(interaction.basePairs.at(0)),
-			j1 = energy.getIndex1(interaction.basePairs.at(1)),
-			i2 = energy.getIndex2(interaction.basePairs.at(0)),
-			j2 = energy.getIndex2(interaction.basePairs.at(1))
-			;
-
-#if INTARNA_IN_DEBUG_MODE
-	// check if intervals are larger enough to contain a seed
-	if (std::min(j1-i1,j2-i2)+1 < seedHandler.getConstraint().getBasePairs()) {
-		// no seed possible, abort computation
-		throw std::runtime_error("PredictorMfe2dHeuristicSeedExtension::traceBack() : given boundaries "+toString(interaction)+" can not hold a seed of "+toString(seedHandler.getConstraint().getBasePairs())+" base pairs");
-	}
-#endif
-
-PredictorMfe2dSeedExtension::traceBack(interaction, outConstraint);
 
 }
 
