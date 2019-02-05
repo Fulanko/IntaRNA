@@ -88,10 +88,10 @@ protected:
 
 	//! energy of all interaction hybrids that start in position p (seq1) and
 	//! q (seq2)
-	using PredictorMfeEns2dSeedExtension::hybridE_right;
+	using PredictorMfeEns2dSeedExtension::hybridZ_right;
 
 	//! optimal energy of the right extension
-	E_type energy_opt = E_INF;
+	Z_type E_right_opt = E_INF;
 
 	//! boundaries of the right extension with the optimal energy
 	size_t j1opt, j2opt;
@@ -99,22 +99,19 @@ protected:
 protected:
 
 	/**
-	 * does nothing but to ignore the calls from fillHybridE()
+	 * updates E_right_opt, j1opt, and j2opt if needed
 	 *
 	 * @param i1 the index of the first sequence interacting with i2
 	 * @param j1 the index of the first sequence interacting with j2
 	 * @param i2 the index of the second sequence interacting with i1
 	 * @param j2 the index of the second sequence interacting with j1
-	 * @param energy ignored
-	 * @param isHybridE ignored
+	 * @param hybridE ensemble energy of the hybridization
 	 */
 	virtual
 	void
-	updateOptima( const size_t i1, const size_t j1
+	updateOptRightZ( const size_t i1, const size_t j1
 			, const size_t i2, const size_t j2
-			, const E_type energy
-			, const bool isHybridE
-		  , const size_t si1, const size_t si2 );
+			, const E_type hybridE );
 
 	/**
 	 * Computes all entries of the hybridE matrix for interactions starting in
@@ -127,8 +124,9 @@ protected:
 	 * @param j2init largest value for j2
 	 *
 	 */
+	virtual
 	void
-	fillHybridE_right( const size_t i1, const size_t i2
+	fillHybridZ_right( const size_t i1, const size_t i2
 				, const OutputConstraint & outConstraint
 				, const size_t j1init, const size_t j2init, const size_t si1, const size_t si2
 				);
@@ -144,20 +142,21 @@ protected:
 	 * @param i2init smallest value for i2
 	 *
 	 */
+	virtual
 	void
-	fillHybridE( const size_t j1, const size_t j2
+	fillHybridZ_left( const size_t j1, const size_t j2
 				, const OutputConstraint & outConstraint
 				, const size_t i1init, const size_t i2init );
 
-	/**
-	 * Fills a given interaction (boundaries given) with the according
-	 * hybridizing base pairs using hybridE_seed.
-	 * @param interaction IN/OUT the interaction to fill
-	 * @param outConstraint constrains the interactions reported to the output handler
-	 */
-	virtual
-	void
-	traceBack( Interaction & interaction, const OutputConstraint & outConstraint  );
+//	/**
+//	 * Fills a given interaction (boundaries given) with the according
+//	 * hybridizing base pairs using hybridE_seed.
+//	 * @param interaction IN/OUT the interaction to fill
+//	 * @param outConstraint constrains the interactions reported to the output handler
+//	 */
+//	virtual
+//	void
+//	traceBack( Interaction & interaction, const OutputConstraint & outConstraint  );
 
 	/**
 	 * Identifies the next best interaction with an energy equal to or higher
@@ -173,9 +172,6 @@ protected:
 	void
 	getNextBest( Interaction & curBest );
 
-	void
-	printMatrix( const E2dMatrix & matrix );
-
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -185,36 +181,20 @@ protected:
 inline
 void
 PredictorMfeEns2dHeuristicSeedExtension::
-updateOptima( const size_t i1, const size_t j1
+updateOptRightZ( const size_t i1, const size_t j1
 		, const size_t i2, const size_t j2
-		, const E_type energy
-		, const bool isHybridE
-	  , const size_t si1, const size_t si2 )
+		, const E_type hybridE )
 {
 	// store boundaries and energy of the optimal right extension
-	E_type fullE = energy + this->energy.getED1(si1, j1) + this->energy.getED2(si2, j2);
-	if (fullE < energy_opt) {
-		energy_opt = fullE;
+	E_type fullE = energy.getE( i1,j1, i2,j2, hybridE );
+	if (fullE < E_right_opt) {
+		E_right_opt = fullE;
 		j1opt = j1;
 		j2opt = j2;
 	}
 }
 
 //////////////////////////////////////////////////////////////////////////
-
-inline
-void
-PredictorMfeEns2dHeuristicSeedExtension::
-printMatrix( const E2dMatrix & matrix )
-{
-	for (int i = 0; i < matrix.size1(); i++) {
-		std::cout << "| ";
-		for (int j = 0; j < matrix.size2(); j++) {
-			std::cout << energy.getE(matrix(i, j)) << " | ";
-		}
-		std::cout << std::endl;
-	}
-}
 
 } // namespace
 

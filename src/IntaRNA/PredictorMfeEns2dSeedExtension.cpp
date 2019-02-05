@@ -14,7 +14,7 @@ PredictorMfeEns2dSeedExtension(
  :
 	PredictorMfe2d(energy,output,predTracker)
 	, seedHandler(seedHandlerInstance)
-	, hybridE_right( 0,0 )
+	, hybridZ_right( 0,0 )
 {
 	assert( seedHandler.getConstraint().getBasePairs() > 1 );
 }
@@ -48,7 +48,7 @@ predict( const IndexRange & r1, const IndexRange & r2
 #if INTARNA_IN_DEBUG_MODE
 	// check indices
 	if (!(r1.isAscending() && r2.isAscending()) )
-		throw std::runtime_error("PredictorMfe2d::predict("+toString(r1)+","+toString(r2)+") is not sane");
+		throw std::runtime_error("PredictorMfeEns2dSeedExtension::predict("+toString(r1)+","+toString(r2)+") is not sane");
 #endif
 
 	// setup index offset
@@ -77,10 +77,11 @@ predict( const IndexRange & r1, const IndexRange & r2
 
 	for (size_t si1 = 0; si1 <= interaction_size1-seedHandler.getConstraint().getBasePairs(); si1++) {
 	for (size_t si2 = 0; si2 <= interaction_size2-seedHandler.getConstraint().getBasePairs(); si2++) {
-		Z_type seedE = seedHandler.getSeedE(si1, si2);
+		E_type seedE = seedHandler.getSeedE(si1, si2);
 		// check if valid left seed base pair
-		if (Z_isINF(seedE))
+		if (E_isINF(seedE))
 		  continue;
+		const Z_type seedZ = energy.getBoltzmannWeight( seedE );
 
 		const size_t sl1 = seedHandler.getSeedLength1(si1, si2)-1;
 		const size_t sl2 = seedHandler.getSeedLength2(si1, si2)-1;
@@ -91,31 +92,50 @@ predict( const IndexRange & r1, const IndexRange & r2
 			continue;
 
 		// EL
-		hybridE_pq.resize( si1+1, si2+1 );
-		fillHybridE(si1, si2, outConstraint, 0, 0);
+		// has to be resized based on interaction_size* and sl* (index shift needed) and ranges
+		hybridZ_left.resize( std::min( si1 - r1.from + 1, interaction_size1-sl1+1)
+						,  std::min( si2 - r2.from + 1, interaction_size2-sl2+1) );
+		fillHybridZ_left(si1, si2, outConstraint, 0, 0);
 
-		// ER
-		hybridE_right.resize( interaction_size1-sj1, interaction_size2-sj2);
-		fillHybridE_right(sj1, sj2, outConstraint, interaction_size1-1, interaction_size2-1);
+		// ER (min size*() == 1 == right-most bp of seed)
+		hybridZ_right.resize( std::min(r1.to - sj1 + 1, interaction_size1-sl1+1)
+							, std::min(r2.to - sj2 + 1, interaction_size2-sl2+1) );
+		fillHybridZ_right(sj1, sj2, outConstraint, sj1+hybridZ_right.size1()-1, sj2+hybridZ_right.size2()-1);
 
 		// update Optimum for all boundary combinations
-		for (int i1 = 0; i1<=si1; i1++) {
+		for (size_t di1 = 0; di1<hybridZ_left.size1(); di1++) {
+			// get current left boundary in seq 1
+			const size_t i1 = si1 - (hybridZ_left.size1() - di1 -1);
 			// ensure max interaction length in seq 1
-			for (int j1 = 0; j1 < hybridE_right.size1() ; j1++) {
-				if(si1-i1+sl1+j1 > energy.getAccessibility1().getMaxLength()) continue;
-				for (int i2 = 0; i2<=si2; i2++) {
-					if (Z_isINF(hybridE_pq(i1,i2))) continue;
+			for (size_t dj1 = 0; dj1 < hybridZ_right.size1() ; dj1++) {
+				// get current right boundary in seq 1
+				size_t j1 = sj1 + dj1 ;
+				// check interaction length
+				if( j1 - i1 + 1 > energy.getAccessibility1().getMaxLength()) continue;
+
+				for (size_t di2 = 0; di2< hybridZ_left.size2(); di2++) {
+					// get current left boundary in seq 1
+					const size_t i2 = si2 - (hybridZ_left.size2() - di2 -1);
+					// check complementarity of boundary
+					if ( Z_equal(hybridZ_left(di1,di2), 0.0) ) continue;
 					// ensure max interaction length in seq 2
-					for (int j2 = 0; j2 < hybridE_right.size2() ; j2++) {
-						if(si2-i2+sl2+j2 > energy.getAccessibility2().getMaxLength()) continue;
-						if (Z_isINF(hybridE_right(j1,j2))) continue;
-						Z_type fullE = energy.getBoltzmannWeight(seedE) * hybridE_pq(i1,i2) * hybridE_right(j1,j2);
-						if (fullE == 0) continue;
-						PredictorMfe::updateOptima( i1, sj1+j1, i2, sj2+j2, energy.getE(fullE), true );
-					} // j2
-				} // i2
-			} // j1
-		} // i1
+					for (size_t dj2 = 0; dj2 < hybridZ_right.size2() ; dj2++) {
+						// get current right boundary in seq 2
+						size_t j2 = sj2 + dj2;
+						// check interaction length
+						if( j2-i2+1 > energy.getAccessibility2().getMaxLength()) continue;
+						// check complementarity of boundary
+						if (Z_equal(hybridZ_right(dj1,dj2),0.0)) continue;
+						// compute full partition function
+						Z_type fullZ = seedZ * hybridZ_left(di1,di2) * hybridZ_right(dj1,dj2);
+						// update ensemble mfe
+						if (! Z_equal(fullZ, 0.0)) {
+							PredictorMfe::updateOptima( i1,j1, i2,j2, energy.getE(fullZ), true );
+						}
+					} // dj2
+				} // di2
+			} // dj1
+		} // di1
 
 	} // si2
 	} // si1
@@ -129,46 +149,47 @@ predict( const IndexRange & r1, const IndexRange & r2
 
 void
 PredictorMfeEns2dSeedExtension::
-fillHybridE( const size_t j1, const size_t j2
+fillHybridZ_left( const size_t j1orig, const size_t j2orig
 			, const OutputConstraint & outConstraint
 			, const size_t i1init, const size_t i2init )
 {
+#if INTARNA_IN_DEBUG_MODE
+	// check indices
+	if (!energy.areComplementary(j1orig,j2orig) )
+		throw std::runtime_error("PredictorMfeEns2dSeedExtension::fillHybridZ_left("+toString(j1orig)+","+toString(j2orig)+",..) are not complementary");
+#endif
 
+
+	// NOTE: indices not in global indexing but in local hybrid_pq matrix
+	const size_t j1 = hybridZ_left.size1()-1, j2 = hybridZ_left.size2()-1;
+	// compute shift to global sequence indexing
+	const size_t shift1 = j1orig-j1, shift2 = j2orig-j2;
 	// global vars to avoid reallocation
 	size_t i1,i2,k1,k2;
-	//////////  FIRST ROUND : COMPUTE HYBRIDIZATION ENERGIES ONLY  ////////////
 
-	// current minimal value
-	Z_type curZ = 0.0;
-	// iterate over all window starts j1 (seq1) and j2 (seq2)
+	// iterate over all window starts i1 (seq1) and i2 (seq2)
 	for (i1=j1+1; i1-- > i1init; ) {
-		// screen for right boundaries in seq2
 		for (i2=j2+1; i2-- > i2init; ) {
 
-			// init current cell (0 if just left (i1,i2) base pair)
-			hybridE_pq(i1,i2) = i1==j1 && i2==j2 ? energy.getBoltzmannWeight(energy.getE_init()) : 0.0;
+			// init current cell (0 if not just right-most (j1,j2) base pair)
+			hybridZ_left(i1,i2) = i1==j1 && i2==j2 ? energy.getBoltzmannWeight(energy.getE_init()) : 0.0;
 
-			// check if complementary
-			if( i1<j1 && i2<j2 && energy.areComplementary(i1,i2) ) {
-				curZ = 0.0;
+			// check if complementary (use global sequence indexing)
+			if( i1<j1 && i2<j2 && energy.areComplementary(shift1+i1,shift2+i2) ) {
 
 				// check all combinations of decompositions into (i1,i2)..(k1,k2)-(j1,j2)
 				for (k1=i1+1; k1 < j1; k1++ ) {
 					// ensure maximal loop length
 					if (k1-i1 > energy.getMaxInternalLoopSize1()+1) break;
-				for (k2=i2+1; k2 < j2; k2++ ) {
-					// ensure maximal loop length
-					if (k2-i2 > energy.getMaxInternalLoopSize2()+1) break;
-					// check if (k1,k2) are valid left boundary
-					if ( hybridE_pq(k1,k2) != 0.0 ) {
-						curZ += energy.getBoltzmannWeight(energy.getE_interLeft(i1,k1,i2,k2)) * hybridE_pq(k1,k2);
-					}
-				} // k2
+					for (k2=i2+1; k2 < j2; k2++ ) {
+						// ensure maximal loop length
+						if (k2-i2 > energy.getMaxInternalLoopSize2()+1) break;
+						// check if (k1,k2) are valid left boundary
+						if ( ! Z_equal(hybridZ_left(k1,k2), 0.0) ) {
+							hybridZ_left(i1,i2) += energy.getBoltzmannWeight(energy.getE_interLeft(shift1+i1,shift1+k1,shift2+i2,shift2+k2)) * hybridZ_left(k1,k2);
+						}
+					} // k2
 				} // k1
-
-				// store value
-				hybridE_pq(i1,i2) = curZ;
-				continue;
 			}
 		}
 	}
@@ -179,46 +200,44 @@ fillHybridE( const size_t j1, const size_t j2
 
 void
 PredictorMfeEns2dSeedExtension::
-fillHybridE_right( const size_t i1, const size_t i2
+fillHybridZ_right( const size_t i1, const size_t i2
 			, const OutputConstraint & outConstraint
 			, const size_t j1max, const size_t j2max )
 {
+#if INTARNA_IN_DEBUG_MODE
+	// check indices
+	if (!energy.areComplementary(i1,i2) )
+		throw std::runtime_error("PredictorMfeEns2dSeedExtension::fillHybridZ_right("+toString(i1)+","+toString(i2)+",..) are not complementary");
+#endif
+
 
 	// global vars to avoid reallocation
 	size_t j1,j2,k1,k2;
-	//////////  FIRST ROUND : COMPUTE HYBRIDIZATION ENERGIES ONLY  ////////////
 
-	// current minimal value
-	Z_type curZ = 0.0;
-	// iterate over all window starts j1 (seq1) and j2 (seq2)
+	// iterate over all window ends j1 (seq1) and j2 (seq2)
 	for (j1=i1; j1 <= j1max; j1++ ) {
-		// screen for right boundaries in seq2
 		for (j2=i2; j2 <= j2max; j2++ ) {
 
-			// init current cell (0 if just left (i1,i2) base pair)
-			hybridE_right(j1-i1,j2-i2) = i1==j1 && i2==j2 ? energy.getBoltzmannWeight(0.0) : 0.0;
+			// init partition function for current cell -> (i1,i2) are complementary per definition
+			hybridZ_right(j1-i1,j2-i2) = i1==j1 && i2==j2 ? energy.getBoltzmannWeight(0.0) : 0.0;
 
-			// check if complementary
+			// check if complementary free base pair
 			if( i1<j1 && i2<j2 && energy.areComplementary(j1,j2) ) {
-				curZ = 0.0;
 
 				// check all combinations of decompositions into (i1,i2)..(k1,k2)-(j1,j2)
 				for (k1=j1; k1-- > i1; ) {
 					// ensure maximal loop length
 					if (j1-k1 > energy.getMaxInternalLoopSize1()+1) break;
-				for (k2=j2; k2-- > i2; ) {
-					// ensure maximal loop length
-					if (j2-k2 > energy.getMaxInternalLoopSize2()+1) break;
-					// check if (k1,k2) are valid left boundary
-					if ( hybridE_right(k1-i1,k2-i2) != 0.0 ) {
-						curZ += energy.getBoltzmannWeight(energy.getE_interLeft(k1,j1,k2,j2)) * hybridE_right(k1-i1,k2-i2);
-					}
-				} // k2
-			  } // k1
-
-				// store value
-				hybridE_right(j1-i1,j2-i2) = curZ;
-				continue;
+					for (k2=j2; k2-- > i2; ) {
+						// ensure maximal loop length
+						if (j2-k2 > energy.getMaxInternalLoopSize2()+1) break;
+						// check if (k1,k2) are valid left boundary
+						if ( ! Z_equal(hybridZ_right(k1-i1,k2-i2), 0.0) ) {
+							// update partition function
+							hybridZ_right(j1-i1,j2-i2) += energy.getBoltzmannWeight(energy.getE_interLeft(k1,j1,k2,j2)) * hybridZ_right(k1-i1,k2-i2);
+						}
+					} // k2
+				} // k1
 			}
 		}
 	}
@@ -279,26 +298,34 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 
 	for (size_t si1 = i1; si1 <= j1+1-seedHandler.getConstraint().getBasePairs(); si1++) {
 		for (size_t si2 = i2; si2 <= j2+1-seedHandler.getConstraint().getBasePairs(); si2++) {
-			Z_type seedE = seedHandler.getSeedE(si1, si2);
-			if ( Z_isNotINF( seedE ) ) {
+			E_type seedE = seedHandler.getSeedE(si1, si2);
+			if ( E_isNotINF( seedE ) ) {
 
 				const size_t sl1 = seedHandler.getSeedLength1(si1, si2)-1;
 				const size_t sl2 = seedHandler.getSeedLength2(si1, si2)-1;
 				const size_t sj1 = si1+sl1;
 				const size_t sj2 = si2+sl2;
 
-				hybridE_pq.resize( si1+1, si2+1 );
-				fillHybridE( si1, si2, outConstraint, 0, 0 );
-				hybridE_right.resize( j1-sj1+1, j2-sj2+1 );
-				fillHybridE_right( sj1, sj2, outConstraint, j1, j2 );
+				// compute auxiliary matrices for seed check
+				hybridZ_left.resize( si1-i1+1, si2-i2+1 );
+				fillHybridZ_left( si1, si2, outConstraint, 0, 0 );
+				hybridZ_right.resize( j1-sj1+1, j2-sj2+1 );
+				fillHybridZ_right( sj1, sj2, outConstraint, j1, j2 );
 
-				if ( Z_equal( fullE,
-						(energy.getE(i1, j1, i2, j2, energy.getE(energy.getBoltzmannWeight(seedE) * hybridE_pq( i1, i2 ) * hybridE_right( j1-sj1, j2-sj2 ))))))
+				// check if we found the right seed for the interaction energy
+				if ( E_equal( fullE,
+						(energy.getE(i1, j1, i2, j2, energy.getE(energy.getBoltzmannWeight(seedE) * hybridZ_left( 0, 0 ) * hybridZ_right( j1-sj1, j2-sj2 ))))))
 				{
 					// found seed -> traceback seed base pairs
 					if (si1 > i1 && si2 > i2) {
 						interaction.basePairs.push_back( energy.getBasePair(si1,si2) );
 					}
+					// store seed information
+					interaction.setSeedRange(
+									energy.getBasePair(si1,si2),
+									energy.getBasePair(sj1,sj2),
+									energy.getE(si1,sj1,si2,sj2,seedE)+energy.getE_init());
+					// trace seed base pairs
 					seedHandler.traceBackSeed( interaction, si1, si2 );
 					if (sj1 < j1 && sj2 < j2) {
 						interaction.basePairs.push_back( energy.getBasePair(sj1,sj2) );
@@ -309,7 +336,6 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 					// stop searching for seeds
 					return;
 				}
-
 			}
 
 		} // si2
