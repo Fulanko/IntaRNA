@@ -150,16 +150,6 @@ protected:
 				, const size_t i1init, const size_t i2init );
 
 	/**
-	 * Fills a given interaction (boundaries given) with the according
-	 * hybridizing base pairs using hybridE_seed.
-	 * @param interaction IN/OUT the interaction to fill
-	 * @param outConstraint constrains the interactions reported to the output handler
-	 */
-	virtual
-	void
-	traceBack( Interaction & interaction, const OutputConstraint & outConstraint  );
-
-	/**
 	 * Identifies the next best interaction with an energy equal to or higher
 	 * than the given interaction. The new interaction will not overlap any
 	 * index range stored in reportedInteractions.
@@ -201,20 +191,6 @@ updateOptima( const size_t i1, const size_t j1
 }
 
 //////////////////////////////////////////////////////////////////////////
-
-inline
-void
-PredictorMfe2dHeuristicSeedExtension::
-printMatrix( const E2dMatrix & matrix )
-{
-	for (int i = 0; i < matrix.size1(); i++) {
-		std::cout << "| ";
-		for (int j = 0; j < matrix.size2(); j++) {
-			std::cout << matrix(i, j) << " | ";
-		}
-		std::cout << std::endl;
-	}
-}
 
 } // namespace
 
