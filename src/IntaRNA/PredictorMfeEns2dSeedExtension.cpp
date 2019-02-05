@@ -145,9 +145,12 @@ fillHybridZ_left( const size_t j1, const size_t j2
 		throw std::runtime_error("PredictorMfeEns2dSeedExtension::fillHybridZ_left("+toString(j1)+","+toString(j2)+",..) are not complementary");
 #endif
 
+	// NOTE: indices not in global indexing but in local hybrid_pq matrix
+	const size_t j1 = hybridZ_left.size1()-1, j2 = hybridZ_left.size2()-1;
+	// compute shift to global sequence indexing
+	const size_t shift1 = j1orig-j1, shift2 = j2orig-j2;
 	// global vars to avoid reallocation
 	size_t i1,i2,k1,k2;
-	//////////  FIRST ROUND : COMPUTE HYBRIDIZATION ENERGIES ONLY  ////////////
 
 	// iterate over all window starts i1 (seq1) and i2 (seq2)
 	for (i1=j1; j1-i1 < hybridZ_left.size1(); i1-- ) {
@@ -194,7 +197,6 @@ fillHybridZ_right( const size_t i1, const size_t i2
 
 	// global vars to avoid reallocation
 	size_t j1,j2,k1,k2;
-	//////////  FIRST ROUND : COMPUTE HYBRIDIZATION ENERGIES ONLY  ////////////
 
 	// iterate over all window ends j1 (seq1) and j2 (seq2)
 	for (j1=i1; j1-i1 < hybridZ_right.size1(); j1++ ) {

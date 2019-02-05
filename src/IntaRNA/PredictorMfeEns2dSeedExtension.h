@@ -37,8 +37,8 @@ protected:
 	//! check if a given energy is set to Z_INF
 	#define Z_isINF( e ) (  std::numeric_limits<Z_type>::max() < e )
 
-	//! matrix type to hold the mfe energies for interaction site starts
-	typedef boost::numeric::ublas::matrix<Z_type> E2dMatrix;
+	//! matrix type to hold the partition functions for interaction site starts
+	typedef boost::numeric::ublas::matrix<Z_type> Z2dMatrix;
 
 public:
 
@@ -95,15 +95,14 @@ protected:
 	//! access to the output handler of the super class
 	using PredictorMfe2d::output;
 
-	//! energy of all interaction hybrids that end in position p (seq1) and
-	//! q (seq2) and do not necessarily contain a seed interaction
-	E2dMatrix hybridE_pq;
+	//! partition function of all interaction hybrids that start on the left side of the seed including E_init
+	Z2dMatrix hybridZ_left;
 
 	//! the seed handler (with idx offset)
 	SeedHandlerIdxOffset seedHandler;
 
-	//! energy of all interaction hybrids that start on the right side of the seed
-	E2dMatrix hybridE_right;
+	//! partition function of all interaction hybrids that start on the right side of the seed excluding E_init
+	Z2dMatrix hybridZ_right;
 
 protected:
 
@@ -135,8 +134,9 @@ protected:
 	 * @param i2init smallest value for i2
 	 *
 	 */
+	virtual
 	void
-	fillHybridE( const size_t j1, const size_t j2
+	fillHybridZ_left( const size_t j1, const size_t j2
 				, const OutputConstraint & outConstraint
 				, const size_t i1init, const size_t i2init
 				);
@@ -145,6 +145,8 @@ protected:
 	 * Computes all entries of the hybridE matrix for interactions starting in
 	 * i1 and i2 and report all valid interactions to updateOptima()
 	 *
+	 * Note: (i1,i2) have to be complementary (right-most base pair of seed)
+	 *
 	 * @param i1 end of the interaction within seq 1
 	 * @param i2 end of the interaction within seq 2
 	 * @param outConstraint constrains the interactions reported to the output handler
@@ -152,8 +154,9 @@ protected:
 	 * @param j2init largest value for j2
 	 *
 	 */
+	virtual
 	void
-	fillHybridE_right( const size_t i1, const size_t i2
+	fillHybridZ_right( const size_t i1, const size_t i2
 				, const OutputConstraint & outConstraint
 				, const size_t j1init, const size_t j2init
 				);
@@ -182,9 +185,6 @@ protected:
 	void
 	getNextBest( Interaction & curBest );
 
-	void
-	printMatrix( const E2dMatrix & matrix );
-
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -204,19 +204,6 @@ updateOptima( const size_t i1, const size_t j1
 
 //////////////////////////////////////////////////////////////////////////
 
-inline
-void
-PredictorMfeEns2dSeedExtension::
-printMatrix( const E2dMatrix & matrix )
-{
-	for (int i = 0; i < matrix.size1(); i++) {
-		std::cout << "| ";
-		for (int j = 0; j < matrix.size2(); j++) {
-			std::cout << matrix(i, j) << " | ";
-		}
-		std::cout << std::endl;
-	}
-}
 
 } // namespace
 
