@@ -136,8 +136,8 @@ CommandLineParsing::CommandLineParsing()
 
 	temperature(0,100,37),
 
-	pred( "SE", 'S'),
-	predMode( "HMEXYAB", 'H'),
+	pred( "SXE", 'S'),
+	predMode( "HME", 'H'),
 #if INTARNA_MULITHREADING
 	threads( 0, omp_get_max_threads(), 1),
 #endif
@@ -503,7 +503,8 @@ CommandLineParsing::CommandLineParsing()
 				->notifier(boost::bind(&CommandLineParsing::validate_pred,this,_1))
 			, std::string("prediction target : "
 					"\n 'S' = single-site minimum-free-energy interaction (interior loops only), "
-					"\n 'E' = single-site minimum-free-ensemble-energy interaction (interior loops only)"
+					"\n 'X' = single-site minimum-free-energy interaction via seed-extension (interior loops only), "
+					"\n 'E' = single-site ensemble minimum-free-energy interaction via seed-extension (interior loops only)"
 					).c_str())
 		("energy,e"
 			, value<char>(&(energy.val))
@@ -1816,13 +1817,17 @@ getPredictor( const InteractionEnergy & energy, OutputHandler & output ) const
 			case 'H' :  return new PredictorMfe2dHeuristicSeed( energy, output, predTracker, getSeedHandler( energy ) );
 			case 'M' :  return new PredictorMfe2dSeed( energy, output, predTracker, getSeedHandler( energy ) );
 			case 'E' :  return new PredictorMfe4dSeed( energy, output, predTracker, getSeedHandler( energy ) );
-			case 'X' :  return new PredictorMfe2dSeedExtension( energy, output, predTracker, getSeedHandler( energy ) );
-			case 'Y' :  return new PredictorMfe2dHeuristicSeedExtension( energy, output, predTracker, getSeedHandler( energy ) );
-			case 'A' :  return new PredictorMfeEns2dSeedExtension( energy, output, predTracker, getSeedHandler( energy ) );
-			case 'B' :  return new PredictorMfeEns2dHeuristicSeedExtension( energy, output, predTracker, getSeedHandler( energy ) );
 			}
 		} break;
-		// single-site min ensemble energy interactions (contain only interior loops)
+		// single-site min energy interactions via seed extension(contain only interior loops)
+		case 'X' : {
+			switch ( predMode.val ) {
+			case 'H' :  return new PredictorMfe2dHeuristicSeedExtension( energy, output, predTracker, getSeedHandler( energy ) );
+			case 'M' :  return new PredictorMfe2dSeedExtension( energy, output, predTracker, getSeedHandler( energy ) );
+			case 'E' :  INTARNA_NOT_IMPLEMENTED("mode "+toString(predMode.val)+" not implemented"); return NULL;
+			}
+		} break;
+		// single-site min ensemble energy interactions via seed extension (contain only interior loops)
 		case 'E' : {
 			switch ( predMode.val ) {
 			case 'H' :  return new PredictorMfeEns2dHeuristicSeedExtension( energy, output, predTracker, getSeedHandler( energy ) );
