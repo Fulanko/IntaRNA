@@ -47,6 +47,7 @@ extern "C" {
 #include "IntaRNA/PredictorMfe2dSeed.h"
 #include "IntaRNA/PredictorMfe4dSeed.h"
 #include "IntaRNA/PredictorMfe2dSeedExtension.h"
+#include "IntaRNA/PredictorMfe2dSeedExtensionRiBlast.h"
 #include "IntaRNA/PredictorMfeEns2dSeedExtension.h"
 #include "IntaRNA/PredictorMfe2dHeuristicSeedExtension.h"
 #include "IntaRNA/PredictorMfeEns2dHeuristicSeedExtension.h"
@@ -156,7 +157,7 @@ CommandLineParsing::CommandLineParsing( const Personality personality  )
 	temperature(0,100,37),
 
 	model( "SPBXE", personality == IntaRNAhelix ? 'B' : 'S'),
-	predMode( "HME", personality == IntaRNAup ? 'M' : 'H'),
+	predMode( "HMER", personality == IntaRNAup ? 'M' : 'H'),
 #if INTARNA_MULITHREADING
 	threads( 0, omp_get_max_threads(), 1),
 #endif
@@ -2033,6 +2034,7 @@ getPredictor( const InteractionEnergy & energy, OutputHandler & output ) const
 			case 'H' :  return new PredictorMfe2dHeuristicSeed( energy, output, predTracker, getSeedHandler( energy ) );
 			case 'M' :  return new PredictorMfe2dSeed( energy, output, predTracker, getSeedHandler( energy ) );
 			case 'E' :  return new PredictorMfe4dSeed( energy, output, predTracker, getSeedHandler( energy ) );
+			case 'R' :  INTARNA_NOT_IMPLEMENTED("mode "+toString(predMode.val)+" not implemented"); return NULL;
 			}
 		} break;
 		// single-site min energy interactions via seed extension(contain only interior loops)
@@ -2040,6 +2042,7 @@ getPredictor( const InteractionEnergy & energy, OutputHandler & output ) const
 			switch ( predMode.val ) {
 			case 'H' :  return new PredictorMfe2dHeuristicSeedExtension( energy, output, predTracker, getSeedHandler( energy ) );
 			case 'M' :  return new PredictorMfe2dSeedExtension( energy, output, predTracker, getSeedHandler( energy ) );
+			case 'R' :  return new PredictorMfe2dSeedExtensionRiBlast( energy, output, predTracker, getSeedHandler( energy ) );
 			case 'E' :  INTARNA_NOT_IMPLEMENTED("mode "+toString(predMode.val)+" not implemented"); return NULL;
 			}
 		} break;
@@ -2047,6 +2050,9 @@ getPredictor( const InteractionEnergy & energy, OutputHandler & output ) const
 		case 'E' : {
 			switch ( predMode.val ) {
 			case 'E' :  INTARNA_NOT_IMPLEMENTED("mode "+toString(predMode.val)+" not implemented for seed constraint (try --noSeed)"); return NULL;
+			case 'H' :  return new PredictorMfeEns2dHeuristicSeedExtension( energy, output, predTracker, getSeedHandler( energy ) );
+			case 'M' :  return new PredictorMfeEns2dSeedExtension( energy, output, predTracker, getSeedHandler( energy ) );
+			case 'R' :  INTARNA_NOT_IMPLEMENTED("mode "+toString(predMode.val)+" not implemented"); return NULL;
 			default :  INTARNA_NOT_IMPLEMENTED("mode "+toString(predMode.val)+" not implemented for model "+toString(model.val));
 			}
 		} break;
