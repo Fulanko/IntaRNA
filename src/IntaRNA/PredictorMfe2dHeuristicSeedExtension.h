@@ -185,8 +185,8 @@ updateOptima( const size_t i1, const size_t j1
 	E_type fullE = energy + this->energy.getED1(si1, j1) + this->energy.getED2(si2, j2);
 	if (fullE < energy_opt) {
 		energy_opt = fullE;
-		j1opt = j1-1;
-		j2opt = j2-1;
+		j1opt = j1;
+		j2opt = j2;
 	}
 }
 
