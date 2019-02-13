@@ -313,8 +313,8 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 							size_t k1,k2;
 							bool traceNotFound = true;
 							// check all combinations of decompositions into (i1,i2)..(k1,k2)-(j1,j2)
-							for (k1=std::min(j1-1,sj1+energy.getMaxInternalLoopSize1()+1); traceNotFound && k1>sj1; k1--) {
-							for (k2=std::min(j2-1,sj2+energy.getMaxInternalLoopSize2()+1); traceNotFound && k2>sj2; k2--) {
+							for (k1=j1-1; traceNotFound && k1 > sj1 && (j1-k1 <= energy.getMaxInternalLoopSize1()+1); k1--) {
+							for (k2=j2-1; traceNotFound && k2 > sj2 && (j2-k2 <= energy.getMaxInternalLoopSize2()+1); k2--) {
 								// check if (k1,k2) are valid left boundary
 								if ( E_isNotINF( hybridE_right(k1-sj1,k2-sj2) ) ) {
 									if ( E_equal( curE,
