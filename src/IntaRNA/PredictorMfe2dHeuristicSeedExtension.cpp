@@ -92,6 +92,9 @@ predict( const IndexRange & r1, const IndexRange & r2
 		j1opt = sj1;
 		j2opt = sj2;
 
+		// update mfe for seed only
+		updateOptima( si1,sj1,si2,sj2, energy.getE_init() + seedHandler.getSeedE(si1, si2), true, si1, si2 );
+
 		// ER
 		hybridE_right.resize( interaction_size1-sj1, interaction_size2-sj2);
 		fillHybridE_right(sj1, sj2, outConstraint, interaction_size1-1, interaction_size2-1, si1, si2);
