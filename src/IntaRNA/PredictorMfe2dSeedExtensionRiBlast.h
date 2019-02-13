@@ -127,7 +127,7 @@ protected:
 	 * @param interaction_size2
 	 */
 	virtual
-	extended_seed
+	extended_seed // todo ggf als in/out argument verwenden statt i1,j1,...
 	parallelExtension( const size_t i1, const size_t j1
 		  , const size_t i2, const size_t j2
 		  , const E_type seedE, const size_t interaction_size1, size_t interaction_size2 );

@@ -89,7 +89,7 @@ predict( const IndexRange & r1, const IndexRange & r2
 		if (sj1 > interaction_size1 || sj2 > interaction_size2)
 			continue;
 
-		extended_seed extended_seed = parallelExtension(si1, sj1, si2, sj2, seedE, interaction_size1, interaction_size2);
+		extended_seed extended_seed = parallelExtension(si1, sj1, si2, sj2, seedE, interaction_size1, interaction_size2 );
 
 		sl1 = extended_seed.j1 - extended_seed.i1;
 		sl2 = extended_seed.j2 - extended_seed.i2;
@@ -133,7 +133,9 @@ PredictorMfe2dSeedExtensionRiBlast::extended_seed
 PredictorMfe2dSeedExtensionRiBlast::
 parallelExtension( const size_t i1, const size_t j1
 	   	, const size_t i2, const size_t j2
-	  	, const E_type seedE, const size_t interaction_size1, size_t interaction_size2 )
+	  	, const E_type seedE
+	  	, const size_t interaction_size1, size_t interaction_size2
+	  	)
 {
 
 	E_type curMinE = seedE;
@@ -145,7 +147,9 @@ parallelExtension( const size_t i1, const size_t j1
 	size_t i1min = i1;
 	size_t i2min = i2;
 	while (i1 >= k && i2 >= k) {
+		// todo acc1/acc2 maxLength() termination
 		if (energy.areComplementary(i1-k,i2-k)) {
+			// todo reference t i1min i2min missing
 			E_type newEnergy = tempMinE + energy.getE_interLeft(i1-k_last,i1,i2-k_last,i2);
 			if (newEnergy < curMinE) {
 				curMinE = newEnergy;
@@ -164,6 +168,7 @@ parallelExtension( const size_t i1, const size_t j1
 	size_t j1max = j1;
 	size_t j2max = j2;
 	while (j1+k < interaction_size1 && j2+k < interaction_size2) {
+		// todo acc1/acc2 maxLength() termination
 		if (energy.areComplementary(j1+k,j2+k)) {
 			E_type newEnergy = tempMinE + energy.getE_interLeft(j1,j1+k_last,j2,j2+k_last);
 			if (newEnergy < curMinE) {
@@ -204,6 +209,7 @@ fillHybridE_right( const size_t i1, const size_t i2
 	// current minimal value
 	E_type curMinE = E_INF;
 	// iterate over all window starts j1 (seq1) and j2 (seq2)
+	// todo outer loop = length sum of both subsequences; j1 computed based on length and j2
 	for (j1=i1; j1 <= j1max; j1++ ) {
 		// screen for right boundaries in seq2
 		for (j2=i2; j2 <= j2max; j2++ ) {

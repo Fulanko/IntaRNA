@@ -90,11 +90,14 @@ predict( const IndexRange & r1, const IndexRange & r2
 			continue;
 
 		// EL
+		// todo resize based on acc1/acc2.getMaxLength()
 		hybridE_pq.resize( si1+1, si2+1 );
 		fillHybridE(si1, si2, outConstraint, 0, 0);
 
 		// ER
+		// todo resize based on acc1/acc2.getMaxLength()
 		hybridE_right.resize( interaction_size1-sj1, interaction_size2-sj2);
+		// todo right boundary is eventually based on matrix dimension (remove last two arguments)
 		fillHybridE_right(sj1, sj2, outConstraint, interaction_size1-1, interaction_size2-1);
 
 		// update Optimum for all boundary combinations
@@ -237,8 +240,10 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 				const size_t sj1 = si1+sl1;
 				const size_t sj2 = si2+sl2;
 
+				// todo resize based on acc1/acc2.getMaxLength()
 				hybridE_pq.resize( si1+1, si2+1 );
 				fillHybridE( si1, si2, outConstraint, 0, 0 );
+				// todo resize based on acc1/acc2.getMaxLength()
 				hybridE_right.resize( j1-sj1+1, j2-sj2+1 );
 				fillHybridE_right( sj1, sj2, outConstraint, j1, j2 );
 
