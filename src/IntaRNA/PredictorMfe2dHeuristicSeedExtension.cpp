@@ -100,7 +100,7 @@ predict( const IndexRange & r1, const IndexRange & r2
 		fillHybridE_right(sj1, sj2, outConstraint, interaction_size1-1, interaction_size2-1, si1, si2);
 
 		// EL
-		hybridE_pq.resize( si1+1, si2+1 );
+		hybridE_left.resize( si1+1, si2+1 );
 		fillHybridE(si1, si2, outConstraint, 0, 0);
 
 	} // si2
@@ -200,7 +200,7 @@ fillHybridE( const size_t j1, const size_t j2
 			curMinE = E_INF;
 
 			// check if this cell is to be computed (!=E_INF)
-			if( E_isNotINF( hybridE_pq(i1,i2) ) ) {
+			if( E_isNotINF( hybridE_left(i1,i2) ) ) {
 
 				// compute entry
 
@@ -211,17 +211,17 @@ fillHybridE( const size_t j1, const size_t j2
 					// test only internal loop energy (nothing between i and j)
 					// will be E_INF if loop is too large
 					curMinE = energy.getE_interLeft(i1,j1,i2,j2)
-							+ hybridE_pq(j1,j2);
+							+ hybridE_left(j1,j2);
 
 					// check all combinations of decompositions into (i1,i2)..(k1,k2)-(j1,j2)
 					if (w1 > 2 && w2 > 2) {
 						for (k1=std::min(j1-1,i1+energy.getMaxInternalLoopSize1()+1); k1>i1; k1--) {
 						for (k2=std::min(j2-1,i2+energy.getMaxInternalLoopSize2()+1); k2>i2; k2--) {
 							// check if (k1,k2) are valid left boundary
-							if ( E_isNotINF( hybridE_pq(k1,k2) ) ) {
+							if ( E_isNotINF( hybridE_left(k1,k2) ) ) {
 								curMinE = std::min( curMinE,
 										(energy.getE_interLeft(i1,k1,i2,k2)
-												+ hybridE_pq(k1,k2) )
+												+ hybridE_left(k1,k2) )
 										);
 							}
 						}
@@ -229,13 +229,13 @@ fillHybridE( const size_t j1, const size_t j2
 					}
 				}
 				// store value
-				hybridE_pq(i1,i2) = curMinE;
+				hybridE_left(i1,i2) = curMinE;
 				// update mfe if needed
 				const size_t sl1 = seedHandler.getSeedLength1(j1, j2)-1;
 				const size_t sl2 = seedHandler.getSeedLength2(j1, j2)-1;
 				const size_t sj1 = j1+sl1;
 				const size_t sj2 = j2+sl2;
-				PredictorMfe2d::updateOptima( i1,j1opt,i2,j2opt, hybridE_right(j1opt-sj1, j2opt-sj2) + hybridE_pq(i1,i2) + seedHandler.getSeedE(j1, j2), true );
+				PredictorMfe2d::updateOptima( i1,j1opt,i2,j2opt, hybridE_right(j1opt-sj1, j2opt-sj2) + hybridE_left(i1,i2) + seedHandler.getSeedE(j1, j2), true );
 			}
 		}
 	}
