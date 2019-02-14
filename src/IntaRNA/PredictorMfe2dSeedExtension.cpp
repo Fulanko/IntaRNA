@@ -188,9 +188,9 @@ fillHybridE_right( const size_t i1, const size_t i2
 	// current minimal value
 	E_type curMinE = E_INF;
 	// iterate over all window starts j1 (seq1) and j2 (seq2)
-	for (j1=i1; j1-i1 < hybridE_right.size1(); j1++ ) {
+	for (j1=i1; j1-i1 < hybridE_right.size1(); j1++) {
 		// screen for right boundaries in seq2
-		for (j2=i2; j2-i2 < hybridE_right.size2(); j2++ ) {
+		for (j2=i2; j2-i2 < hybridE_right.size2(); j2++) {
 
 			// init current cell (0 if just left (i1,i2) base pair)
 			hybridE_right(j1-i1,j2-i2) = i1==j1 && i2==j2 ? 0 : E_INF;
