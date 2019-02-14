@@ -81,7 +81,7 @@ protected:
 
 	//! energy of all interaction hybrids that end in position p (seq1) and
 	//! q (seq2) and do not necessarily contain a seed interaction
-	using PredictorMfe2dSeedExtension::hybridE_pq;
+	using PredictorMfe2dSeedExtension::hybridE_left;
 
 	//! the seed handler (with idx offset)
 	using PredictorMfe2dSeedExtension::seedHandler;

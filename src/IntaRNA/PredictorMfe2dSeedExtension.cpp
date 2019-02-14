@@ -85,33 +85,32 @@ predict( const IndexRange & r1, const IndexRange & r2
 		const size_t sl2 = seedHandler.getSeedLength2(si1, si2)-1;
 		const size_t sj1 = si1+sl1;
 		const size_t sj2 = si2+sl2;
+		const size_t maxMatrixLen1 = energy.getAccessibility1().getMaxLength()-sl1;
+		const size_t maxMatrixLen2 = energy.getAccessibility2().getMaxLength()-sl2;
 		// check if seed fits into interaction range
 		if (sj1 > interaction_size1 || sj2 > interaction_size2)
 			continue;
 
 		// EL
-		// todo resize based on acc1/acc2.getMaxLength()
-		hybridE_pq.resize( si1+1, si2+1 );
-		fillHybridE(si1, si2, outConstraint, 0, 0);
+		hybridE_left.resize( std::min(si1+1, maxMatrixLen1), std::min(si2+1, maxMatrixLen2) );
+		fillHybridE_left(si1, si2, outConstraint);
 
 		// ER
-		// todo resize based on acc1/acc2.getMaxLength()
-		hybridE_right.resize( interaction_size1-sj1, interaction_size2-sj2);
-		// todo right boundary is eventually based on matrix dimension (remove last two arguments)
-		fillHybridE_right(sj1, sj2, outConstraint, interaction_size1-1, interaction_size2-1);
+		hybridE_right.resize( std::min(interaction_size1-sj1, maxMatrixLen1), std::min(interaction_size2-sj2, maxMatrixLen2) );
+		fillHybridE_right(sj1, sj2, outConstraint);
 
 		// update Optimum for all boundary combinations
-		for (int i1 = 0; i1<=si1; i1++) {
+		for (int i1 = 0; i1 < hybridE_left.size1(); i1++) {
 			// ensure max interaction length in seq 1
-			for (int j1 = 0; j1 < hybridE_right.size1() ; j1++) {
-				if(si1-i1+sl1+j1 > energy.getAccessibility1().getMaxLength()) continue;
-				for (int i2 = 0; i2<=si2; i2++) {
-					if (E_isINF(hybridE_pq(i1,i2))) continue;
+			for (int j1 = 0; j1 < hybridE_right.size1(); j1++) {
+				if (sj1+j1-si1+i1 > energy.getAccessibility1().getMaxLength()) continue;
+				for (int i2 = 0; i2 < hybridE_left.size2(); i2++) {
+					if (E_isINF(hybridE_left(i1,i2))) continue;
 					// ensure max interaction length in seq 2
-					for (int j2 = 0; j2 < hybridE_right.size2() ; j2++) {
-						if(si2-i2+sl2+j2 > energy.getAccessibility2().getMaxLength()) continue;
+					for (int j2 = 0; j2 < hybridE_right.size2(); j2++) {
+						if (sj2+j2-si2+i2 > energy.getAccessibility2().getMaxLength()) continue;
 						if (E_isINF(hybridE_right(j1,j2))) continue;
-						PredictorMfe::updateOptima( i1, sj1+j1, i2, sj2+j2, seedE + hybridE_pq(i1,i2) + hybridE_right(j1,j2), true );
+						PredictorMfe::updateOptima( si1-i1, sj1+j1, si2-i2, sj2+j2, seedE + hybridE_left(i1,i2) + hybridE_right(j1,j2), true );
 					} // j2
 				} // i2
 			} // j1
@@ -125,14 +124,12 @@ predict( const IndexRange & r1, const IndexRange & r2
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////
 
 void
 PredictorMfe2dSeedExtension::
-fillHybridE_right( const size_t i1, const size_t i2
-			, const OutputConstraint & outConstraint
-			, const size_t j1max, const size_t j2max )
+fillHybridE_left( const size_t i1, const size_t i2
+			, const OutputConstraint & outConstraint )
 {
 
 	// global vars to avoid reallocation
@@ -142,9 +139,58 @@ fillHybridE_right( const size_t i1, const size_t i2
 	// current minimal value
 	E_type curMinE = E_INF;
 	// iterate over all window starts j1 (seq1) and j2 (seq2)
-	for (j1=i1; j1 <= j1max; j1++ ) {
+	for (j1=i1; i1-j1 < hybridE_left.size1(); j1--) {
 		// screen for right boundaries in seq2
-		for (j2=i2; j2 <= j2max; j2++ ) {
+		for (j2=i2; i2-j2 < hybridE_left.size2(); j2--) {
+			// init current cell (0 if just left (i1,i2) base pair)
+			hybridE_left(i1-j1,i2-j2) = i1==j1 && i2==j2 ? energy.getE_init() : E_INF;
+			// check if complementary
+			if( j1<i1 && j2<i2 && energy.areComplementary(j1,j2) ) {
+				curMinE = E_INF;
+
+				// check all combinations of decompositions into (i1,i2)..(k1,k2)-(j1,j2)
+				for (k1=j1; k1++ < i1; ) {
+					// ensure maximal loop length
+					if (k1-j1 > energy.getMaxInternalLoopSize1()+1) break;
+				for (k2=j2; k2++ < i2; ) {
+					// ensure maximal loop length
+					if (k2-j2 > energy.getMaxInternalLoopSize2()+1) break;
+					// check if (k1,k2) are valid left boundary
+					if ( E_isNotINF( hybridE_left(i1-k1,i2-k2) ) ) {
+						curMinE = std::min( curMinE,
+								(energy.getE_interLeft(j1,k1,j2,k2)
+										+ hybridE_left(i1-k1,i2-k2) )
+								);
+					}
+				} // k2
+			  } // k1
+
+				// store value
+				hybridE_left(i1-j1,i2-j2) = curMinE;
+			}
+		}
+	}
+
+}
+
+////////////////////////////////////////////////////////////////////////////
+
+void
+PredictorMfe2dSeedExtension::
+fillHybridE_right( const size_t i1, const size_t i2
+			, const OutputConstraint & outConstraint )
+{
+
+	// global vars to avoid reallocation
+	size_t j1,j2,k1,k2;
+	//////////  FIRST ROUND : COMPUTE HYBRIDIZATION ENERGIES ONLY  ////////////
+
+	// current minimal value
+	E_type curMinE = E_INF;
+	// iterate over all window starts j1 (seq1) and j2 (seq2)
+	for (j1=i1; j1-i1 < hybridE_right.size1(); j1++ ) {
+		// screen for right boundaries in seq2
+		for (j2=i2; j2-i2 < hybridE_right.size2(); j2++ ) {
 
 			// init current cell (0 if just left (i1,i2) base pair)
 			hybridE_right(j1-i1,j2-i2) = i1==j1 && i2==j2 ? 0 : E_INF;
@@ -239,26 +285,26 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 				const size_t sl2 = seedHandler.getSeedLength2(si1, si2)-1;
 				const size_t sj1 = si1+sl1;
 				const size_t sj2 = si2+sl2;
+				const size_t maxMatrixLen1 = energy.getAccessibility1().getMaxLength()-sl1;
+				const size_t maxMatrixLen2 = energy.getAccessibility2().getMaxLength()-sl2;
 
-				// todo resize based on acc1/acc2.getMaxLength()
-				hybridE_pq.resize( si1+1, si2+1 );
-				fillHybridE( si1, si2, outConstraint, 0, 0 );
-				// todo resize based on acc1/acc2.getMaxLength()
-				hybridE_right.resize( j1-sj1+1, j2-sj2+1 );
-				fillHybridE_right( sj1, sj2, outConstraint, j1, j2 );
+				hybridE_left.resize( std::min(si1+1, maxMatrixLen1), std::min(si2+1, maxMatrixLen2) );
+				fillHybridE_left( si1, si2, outConstraint );
+				hybridE_right.resize( std::min(j1-sj1+1, maxMatrixLen1), std::min(j2-sj2+1, maxMatrixLen2) );
+				fillHybridE_right( sj1, sj2, outConstraint );
 
 				if ( E_equal( fullE,
-						(energy.getE(i1, j1, i2, j2, seedE + hybridE_pq( i1, i2 ) + hybridE_right( j1-sj1, j2-sj2 )))))
+						(energy.getE(i1, j1, i2, j2, seedE + hybridE_left( si1-i1, si2-i2 ) + hybridE_right( j1-sj1, j2-sj2 )))))
 				{
 					// found seed -> traceback
 					// the currently traced value for i1-si1, i2-si2
-					E_type curE = hybridE_pq(i1,i2);
+					E_type curE = hybridE_left(si1-i1, si2-i2);
 
 					// trace back left
 					while( i1 != si1 ) {
 
 						// check if just internal loop
-						if ( E_equal( curE, (energy.getE_interLeft(i1,si1,i2,si2) + hybridE_pq(si1,si2)) ) )
+						if ( E_equal( curE, (energy.getE_interLeft(i1,si1,i2,si2) + hybridE_left(0,0)) ) )
 						{
 							break;
 						}
@@ -271,10 +317,10 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 							for (k1=std::min(si1-1,i1+energy.getMaxInternalLoopSize1()+1); traceNotFound && k1>i1; k1--) {
 							for (k2=std::min(si2-1,i2+energy.getMaxInternalLoopSize2()+1); traceNotFound && k2>i2; k2--) {
 								// check if (k1,k2) are valid left boundary
-								if ( E_isNotINF( hybridE_pq(k1,k2) ) ) {
-									// LOG(DEBUG) << (energy.getE_interLeft(i1,k1,i2,k2) + hybridE_pq(k1,k2));
+								if ( E_isNotINF( hybridE_left(si1-k1,si2-k2) ) ) {
+									// LOG(DEBUG) << (energy.getE_interLeft(i1,k1,i2,k2) + hybridE_left(k1,k2));
 									if ( E_equal( curE,
-											(energy.getE_interLeft(i1,k1,i2,k2) + hybridE_pq(k1,k2)) ) )
+											(energy.getE_interLeft(i1,k1,i2,k2) + hybridE_left(si1-k1,si2-k2)) ) )
 									{
 										// stop searching
 										traceNotFound = false;
@@ -283,7 +329,7 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 										// trace right part of split
 										i1=k1;
 										i2=k2;
-										curE = hybridE_pq(i1,i2);
+										curE = hybridE_left(si1-i1,si2-i2);
 									}
 								}
 							}

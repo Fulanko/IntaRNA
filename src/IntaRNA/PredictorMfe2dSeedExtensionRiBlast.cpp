@@ -95,7 +95,7 @@ predict( const IndexRange & r1, const IndexRange & r2
 		sl2 = extended_seed.j2 - extended_seed.i2;
 
 		// EL
-		hybridE_pq.resize( extended_seed.i1+1, extended_seed.i2+1 );
+		hybridE_left.resize( extended_seed.i1+1, extended_seed.i2+1 );
 		fillHybridE(extended_seed.i1, extended_seed.i2, outConstraint, 0, 0);
 
 		// ER
@@ -108,12 +108,12 @@ predict( const IndexRange & r1, const IndexRange & r2
 			for (int j1 = 0; j1 < hybridE_right.size1() ; j1++) {
 				if (extended_seed.i1-i1+sl1+j1 > energy.getAccessibility1().getMaxLength()) continue;
 				for (int i2 = 0; i2<=extended_seed.i2; i2++) {
-					if (E_isINF(hybridE_pq(i1,i2))) continue;
+					if (E_isINF(hybridE_left(i1,i2))) continue;
 					// ensure max interaction length in seq 2
 					for (int j2 = 0; j2 < hybridE_right.size2() ; j2++) {
 						if (extended_seed.i2-i2+sl2+j2 > energy.getAccessibility2().getMaxLength()) continue;
 						if (E_isINF(hybridE_right(j1,j2))) continue;
-						PredictorMfe::updateOptima( i1, extended_seed.j1+j1, i2, extended_seed.j2+j2, extended_seed.energy + hybridE_pq(i1,i2) + hybridE_right(j1,j2), true );
+						PredictorMfe::updateOptima( i1, extended_seed.j1+j1, i2, extended_seed.j2+j2, extended_seed.energy + hybridE_left(i1,i2) + hybridE_right(j1,j2), true );
 					} // j2
 				} // i2
 			} // j1
@@ -325,23 +325,23 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 				seedE = extended_seed.energy;
 
 				// traceback for full extension
-				hybridE_pq.resize( extended_seed.i1+1, extended_seed.i2+1 );
+				hybridE_left.resize( extended_seed.i1+1, extended_seed.i2+1 );
 				fillHybridE( extended_seed.i1, extended_seed.i2, outConstraint, 0, 0 );
 				hybridE_right.resize( j1-sj1+1, j2-sj2+1 );
 				fillHybridE_right( sj1, sj2, outConstraint, j1, j2 );
 
 				if ( E_equal( fullE,
-						(energy.getE(i1, j1, i2, j2, seedE + hybridE_pq( i1, i2 ) + hybridE_right( j1-sj1, j2-sj2 )))))
+						(energy.getE(i1, j1, i2, j2, seedE + hybridE_left( i1, i2 ) + hybridE_right( j1-sj1, j2-sj2 )))))
 				{
 					// found seed -> traceback
 					// the currently traced value for i1-si1, i2-si2
-					E_type curE = hybridE_pq(i1,i2);
+					E_type curE = hybridE_left(i1,i2);
 
 					// trace back left
 					while( i1 != extended_seed.i1 ) {
 
 						// check if just internal loop
-						if ( E_equal( curE, (energy.getE_interLeft(i1,extended_seed.i1,i2,extended_seed.i2) + hybridE_pq(extended_seed.i1,extended_seed.i2)) ) )
+						if ( E_equal( curE, (energy.getE_interLeft(i1,extended_seed.i1,i2,extended_seed.i2) + hybridE_left(extended_seed.i1,extended_seed.i2)) ) )
 						{
 							break;
 						}
@@ -354,10 +354,10 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 							for (k1=std::min(extended_seed.i1-1,i1+energy.getMaxInternalLoopSize1()+1); traceNotFound && k1>i1; k1--) {
 							for (k2=std::min(extended_seed.i2-1,i2+energy.getMaxInternalLoopSize2()+1); traceNotFound && k2>i2; k2--) {
 								// check if (k1,k2) are valid left boundary
-								if ( E_isNotINF( hybridE_pq(k1,k2) ) ) {
-									// LOG(DEBUG) << (energy.getE_interLeft(i1,k1,i2,k2) + hybridE_pq(k1,k2));
+								if ( E_isNotINF( hybridE_left(k1,k2) ) ) {
+									// LOG(DEBUG) << (energy.getE_interLeft(i1,k1,i2,k2) + hybridE_left(k1,k2));
 									if ( E_equal( curE,
-											(energy.getE_interLeft(i1,k1,i2,k2) + hybridE_pq(k1,k2)) ) )
+											(energy.getE_interLeft(i1,k1,i2,k2) + hybridE_left(k1,k2)) ) )
 									{
 										// stop searching
 										traceNotFound = false;
@@ -366,7 +366,7 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 										// trace right part of split
 										i1=k1;
 										i2=k2;
-										curE = hybridE_pq(i1,i2);
+										curE = hybridE_left(i1,i2);
 									}
 								}
 							}
