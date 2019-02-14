@@ -123,15 +123,12 @@ protected:
 	 * @param i1 end of the interaction within seq 1
 	 * @param i2 end of the interaction within seq 2
 	 * @param outConstraint constrains the interactions reported to the output handler
-	 * @param j1init largest value for j1
-	 * @param j2init largest value for j2
 	 *
 	 */
 	void
 	fillHybridE_right( const size_t i1, const size_t i2
 				, const OutputConstraint & outConstraint
-				, const size_t j1init, const size_t j2init, const size_t si1, const size_t si2
-				);
+				, const size_t si1, const size_t si2 );
 
 	/**
 	 * Computes all entries of the hybridE matrix for interactions ending in
@@ -140,14 +137,11 @@ protected:
    * @param j1 end of the interaction within seq 1
 	 * @param j2 end of the interaction within seq 2
 	 * @param outConstraint constrains the interactions reported to the output handler
-	 * @param i1init smallest value for i1
-	 * @param i2init smallest value for i2
 	 *
 	 */
 	void
-	fillHybridE( const size_t j1, const size_t j2
-				, const OutputConstraint & outConstraint
-				, const size_t i1init, const size_t i2init );
+	fillHybridE_left( const size_t j1, const size_t j2
+				, const OutputConstraint & outConstraint );
 
 	/**
 	 * Identifies the next best interaction with an energy equal to or higher
