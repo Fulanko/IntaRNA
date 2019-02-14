@@ -86,12 +86,11 @@ protected:
 	//! access to the output handler of the super class
 	using PredictorMfe2d::output;
 
-	//! energy of all interaction hybrids that end in position p (seq1) and
-	//! q (seq2) and do not necessarily contain a seed interaction
-	using PredictorMfe2d::hybridE_pq;
-
 	//! the seed handler (with idx offset)
 	SeedHandlerIdxOffset seedHandler;
+
+	//! energy of all interaction hybrids that start on the left side of the seed
+	E2dMatrix hybridE_left;
 
 	//! energy of all interaction hybrids that start on the right side of the seed
 	E2dMatrix hybridE_right;

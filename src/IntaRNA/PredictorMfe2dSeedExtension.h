@@ -79,12 +79,11 @@ protected:
 	//! access to the output handler of the super class
 	using PredictorMfe2d::output;
 
-	//! energy of all interaction hybrids that end in position p (seq1) and
-	//! q (seq2) and do not necessarily contain a seed interaction
-	using PredictorMfe2d::hybridE_pq;
-
 	//! the seed handler (with idx offset)
 	SeedHandlerIdxOffset seedHandler;
+
+	//! energy of all interaction hybrids that start on the left side of the seed
+	E2dMatrix hybridE_left;
 
 	//! energy of all interaction hybrids that start on the right side of the seed
 	E2dMatrix hybridE_right;
@@ -112,18 +111,27 @@ protected:
 	 * Computes all entries of the hybridE matrix for interactions starting in
 	 * i1 and i2 and report all valid interactions to updateOptima()
 	 *
+	 * @param i1 start of the interaction within seq 1
+	 * @param i2 start of the interaction within seq 2
+	 * @param outConstraint constrains the interactions reported to the output handler
+	 *
+	 */
+	void
+	fillHybridE_left( const size_t i1, const size_t i2
+						, const OutputConstraint & outConstraint);
+
+	/**
+	 * Computes all entries of the hybridE matrix for interactions starting in
+	 * i1 and i2 and report all valid interactions to updateOptima()
+	 *
 	 * @param i1 end of the interaction within seq 1
 	 * @param i2 end of the interaction within seq 2
 	 * @param outConstraint constrains the interactions reported to the output handler
-	 * @param j1init largest value for j1
-	 * @param j2init largest value for j2
 	 *
 	 */
 	void
 	fillHybridE_right( const size_t i1, const size_t i2
-				, const OutputConstraint & outConstraint
-				, const size_t j1init, const size_t j2init
-				);
+				, const OutputConstraint & outConstraint);
 
 	/**
 	 * Fills a given interaction (boundaries given) with the according
