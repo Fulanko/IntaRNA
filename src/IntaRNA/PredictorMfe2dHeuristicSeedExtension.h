@@ -120,8 +120,8 @@ protected:
 	 * Computes all entries of the hybridE matrix for interactions starting in
 	 * i1 and i2 and report all valid interactions to updateOptima()
 	 *
-	 * @param i1 end of the interaction within seq 1
-	 * @param i2 end of the interaction within seq 2
+	 * @param i1 start of the interaction within seq 1
+	 * @param i2 start of the interaction within seq 2
 	 * @param outConstraint constrains the interactions reported to the output handler
 	 *
 	 */
@@ -134,8 +134,8 @@ protected:
 	 * Computes all entries of the hybridE matrix for interactions ending in
 	 * p=j1 and q=j2 and report all valid interactions to updateOptima()
 	 *
-   * @param j1 end of the interaction within seq 1
-	 * @param j2 end of the interaction within seq 2
+   * @param j1 start of the interaction within seq 1
+	 * @param j2 start of the interaction within seq 2
 	 * @param outConstraint constrains the interactions reported to the output handler
 	 *
 	 */
