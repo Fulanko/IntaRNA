@@ -213,12 +213,13 @@ fillHybridZ_left( const size_t j1orig, const size_t j2orig
 			}
 
 			// update mfe if needed
-	 	  const size_t sl1 = seedHandler.getSeedLength1(j1orig, j2orig)-1;
-	 	  const size_t sl2 = seedHandler.getSeedLength2(j1orig, j2orig)-1;
-	 	  const size_t sj1 = j1orig+sl1;
-	 	  const size_t sj2 = j2orig+sl2;
-	 	  PredictorMfe2d::updateOptima( j1orig-std::min(j1orig, hybridZ_left.size1()),j1opt,j2orig-std::min(j2orig, hybridZ_left.size2()),j2opt, energy.getE(hybridZ_right(j1opt-sj1, j2opt-sj2) * hybridZ_left(j1orig-i1,j2orig-i2) * energy.getBoltzmannWeight(seedHandler.getSeedE(j1orig, j2orig))), true );
-
+			if ( ! Z_equal(hybridZ_left(j1orig-i1,j2orig-i2), 0.0) ) {
+		 	  const size_t sl1 = seedHandler.getSeedLength1(j1orig, j2orig)-1;
+		 	  const size_t sl2 = seedHandler.getSeedLength2(j1orig, j2orig)-1;
+		 	  const size_t sj1 = j1orig+sl1;
+		 	  const size_t sj2 = j2orig+sl2;
+		 	  PredictorMfe2d::updateOptima( i1,j1opt,i2,j2opt, energy.getE(hybridZ_right(j1opt-sj1, j2opt-sj2) * hybridZ_left(j1orig-i1,j2orig-i2) * energy.getBoltzmannWeight(seedHandler.getSeedE(j1orig, j2orig))), true );
+      }
 		}
 	}
 
