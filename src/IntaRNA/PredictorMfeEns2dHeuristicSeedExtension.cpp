@@ -99,12 +99,11 @@ predict( const IndexRange & r1, const IndexRange & r2
 		// update mfe for seed only
 		PredictorMfe2d::updateOptima( si1,sj1,si2,sj2, energy.getE_init() + seedHandler.getSeedE(si1, si2), true );
 
-		// ER (min size*() == 1 == right-most bp of seed)
+		// ER
 		hybridZ_right.resize( std::min(interaction_size1-sj1, maxMatrixLen1), std::min(interaction_size2-sj2, maxMatrixLen2) );
 		fillHybridZ_right(sj1, sj2, outConstraint, si1, si2);
 
 		// EL
-		// has to be resized based on interaction_size* and sl* (index shift needed) and ranges
 		hybridZ_left.resize( std::min(si1+1, maxMatrixLen1), std::min(si2+1, maxMatrixLen2) );
 		fillHybridZ_left(si1, si2, outConstraint);
 
@@ -170,20 +169,16 @@ fillHybridZ_right( const size_t i1, const size_t i2
 
 void
 PredictorMfeEns2dHeuristicSeedExtension::
-fillHybridZ_left( const size_t j1orig, const size_t j2orig
+fillHybridZ_left( const size_t j1, const size_t j2
 			, const OutputConstraint & outConstraint )
 {
 
 #if INTARNA_IN_DEBUG_MODE
 	// check indices
-	if (!energy.areComplementary(j1orig,j2orig) )
-		throw std::runtime_error("PredictorMfeEns2dSeedExtension::fillHybridZ_left("+toString(j1orig)+","+toString(j2orig)+",..) are not complementary");
+	if (!energy.areComplementary(j1,j2) )
+		throw std::runtime_error("PredictorMfeEns2dSeedExtension::fillHybridZ_left("+toString(j1)+","+toString(j2)+",..) are not complementary");
 #endif
 
-	// NOTE: indices not in global indexing but in local hybrid_pq matrix
-	const size_t j1 = hybridZ_left.size1()-1, j2 = hybridZ_left.size2()-1;
-	// compute shift to global sequence indexing
-	const size_t shift1 = j1orig-j1, shift2 = j2orig-j2;
 	// global vars to avoid reallocation
 	size_t i1,i2,k1,k2;
 
@@ -195,7 +190,7 @@ fillHybridZ_left( const size_t j1orig, const size_t j2orig
 			hybridZ_left(j1-i1,j2-i2) = i1==j1 && i2==j2 ? energy.getBoltzmannWeight(energy.getE_init()) : 0.0;
 
 			// check if complementary (use global sequence indexing)
-			if( i1<j1 && i2<j2 && energy.areComplementary(shift1+i1,shift2+i2) ) {
+			if( i1<j1 && i2<j2 && energy.areComplementary(i1,i2) ) {
 
 				// check all combinations of decompositions into (i1,i2)..(k1,k2)-(j1,j2)
 				for (k1=i1; k1++ < j1; ) {
@@ -206,19 +201,19 @@ fillHybridZ_left( const size_t j1orig, const size_t j2orig
 						if (k2-i2 > energy.getMaxInternalLoopSize2()+1) break;
 						// check if (k1,k2) are valid left boundary
 						if ( ! Z_equal(hybridZ_left(j1-k1,j2-k2), 0.0) ) {
-							hybridZ_left(j1-i1,j2-i2) += energy.getBoltzmannWeight(energy.getE_interLeft(shift1+i1,shift1+k1,shift2+i2,shift2+k2)) * hybridZ_left(j1-k1,j2-k2);
+							hybridZ_left(j1-i1,j2-i2) += energy.getBoltzmannWeight(energy.getE_interLeft(i1,k1,i2,k2)) * hybridZ_left(j1-k1,j2-k2);
 						}
 					} // k2
 				} // k1
 			}
 
 			// update mfe if needed
-			if ( ! Z_equal(hybridZ_left(j1orig-i1,j2orig-i2), 0.0) ) {
-		 	  const size_t sl1 = seedHandler.getSeedLength1(j1orig, j2orig)-1;
-		 	  const size_t sl2 = seedHandler.getSeedLength2(j1orig, j2orig)-1;
-		 	  const size_t sj1 = j1orig+sl1;
-		 	  const size_t sj2 = j2orig+sl2;
-		 	  PredictorMfe2d::updateOptima( i1,j1opt,i2,j2opt, energy.getE(hybridZ_right(j1opt-sj1, j2opt-sj2) * hybridZ_left(j1orig-i1,j2orig-i2) * energy.getBoltzmannWeight(seedHandler.getSeedE(j1orig, j2orig))), true );
+			if ( ! Z_equal(hybridZ_left(j1-i1,j2-i2), 0.0) ) {
+		 	  const size_t sl1 = seedHandler.getSeedLength1(j1, j2)-1;
+		 	  const size_t sl2 = seedHandler.getSeedLength2(j1, j2)-1;
+		 	  const size_t sj1 = j1+sl1;
+		 	  const size_t sj2 = j2+sl2;
+		 	  PredictorMfe2d::updateOptima( i1,j1opt,i2,j2opt, energy.getE(hybridZ_right(j1opt-sj1, j2opt-sj2) * hybridZ_left(j1-i1,j2-i2) * energy.getBoltzmannWeight(seedHandler.getSeedE(j1, j2))), true );
       }
 		}
 	}
