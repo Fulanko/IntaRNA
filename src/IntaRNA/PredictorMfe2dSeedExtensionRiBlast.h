@@ -19,20 +19,23 @@ namespace IntaRNA {
  */
 class PredictorMfe2dSeedExtensionRiBlast: public PredictorMfe2d {
 
-struct extended_seed {
-	size_t i1;
-	size_t j1;
-	size_t i2;
-	size_t j2;
-	E_type energy;
-};
-
 protected:
 
 	//! matrix type to hold the mfe energies for interaction site starts
 	typedef PredictorMfe2d::E2dMatrix E2dMatrix;
 
 public:
+
+	struct ExtendedSeed {
+		size_t i1;
+		size_t j1;
+		size_t i2;
+		size_t j2;
+		E_type energy;
+	};
+
+	const int parallelDropOutLength = 5;
+	const int thoroughDropOutLength = 16;
 
 	/**
 	 * Constructs a predictor and stores the energy and output handler
@@ -117,19 +120,26 @@ protected:
 	/**
 	 * linearly extends given seed to left and right until energy stops improving
 	 *
-	 * @param i1 the index of the first sequence interacting with i2
-   * @param j1 the index of the first sequence interacting with j2
-	 * @param i2 the index of the second sequence interacting with i1
-	 * @param j2 the index of the second sequence interacting with j1
-	 * @param seedE seed energy
+	 * @param seed
 	 * @param interaction_size1
 	 * @param interaction_size2
 	 */
 	virtual
-	extended_seed // todo ggf als in/out argument verwenden statt i1,j1,...
-	parallelExtension( const size_t i1, const size_t j1
-		  , const size_t i2, const size_t j2
-		  , const E_type seedE, const size_t interaction_size1, size_t interaction_size2 );
+	void
+	parallelExtension( ExtendedSeed & seed, const size_t interaction_size1, size_t interaction_size2 );
+
+	/**
+	 * Computes all entries of the hybridE matrix for interactions starting in
+	 * i1 and i2 and report all valid interactions to updateOptima()
+	 *
+	 * @param j1 start of the interaction within seq 1
+	 * @param j2 start of the interaction within seq 2
+	 * @param outConstraint constrains the interactions reported to the output handler
+	 *
+	 */
+	void
+	fillHybridE_left( const size_t j1, const size_t j2
+						, const OutputConstraint & outConstraint);
 
 	/**
 	 * Computes all entries of the hybridE matrix for interactions starting in
@@ -138,14 +148,11 @@ protected:
 	 * @param i1 end of the interaction within seq 1
 	 * @param i2 end of the interaction within seq 2
 	 * @param outConstraint constrains the interactions reported to the output handler
-	 * @param j1init largest value for j1
-	 * @param j2init largest value for j2
 	 *
 	 */
 	void
 	fillHybridE_right( const size_t i1, const size_t i2
 				, const OutputConstraint & outConstraint
-				, const size_t j1init, const size_t j2init
 				);
 
 	/**

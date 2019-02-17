@@ -89,31 +89,43 @@ predict( const IndexRange & r1, const IndexRange & r2
 		if (sj1 > interaction_size1 || sj2 > interaction_size2)
 			continue;
 
-		extended_seed extended_seed = parallelExtension(si1, sj1, si2, sj2, seedE, interaction_size1, interaction_size2 );
+		ExtendedSeed extension;
+		extension.i1 = si1;
+		extension.i2 = si2;
+		extension.j1 = sj1;
+		extension.j2 = sj2;
+		extension.energy = seedE;
 
-		sl1 = extended_seed.j1 - extended_seed.i1;
-		sl2 = extended_seed.j2 - extended_seed.i2;
+		parallelExtension(extension, interaction_size1, interaction_size2 );
+
+		std::cout << extension.i1 << ":" << extension.i2 << ":" << extension.j1 << ":" << extension.j2 << "=" << extension.energy << std::endl;
+
+		sl1 = extension.j1 - extension.i1;
+		sl2 = extension.j2 - extension.i2;
+
+		const size_t maxMatrixLen1 = energy.getAccessibility1().getMaxLength()-sl1;
+		const size_t maxMatrixLen2 = energy.getAccessibility2().getMaxLength()-sl2;
 
 		// EL
-		hybridE_left.resize( extended_seed.i1+1, extended_seed.i2+1 );
-		fillHybridE(extended_seed.i1, extended_seed.i2, outConstraint, 0, 0);
+		hybridE_left.resize( std::min(extension.i1+1, maxMatrixLen1), std::min(extension.i2+1, maxMatrixLen2) );
+		fillHybridE_left(extension.i1, extension.i2, outConstraint);
 
 		// ER
-		hybridE_right.resize( interaction_size1-extended_seed.j1, interaction_size2-extended_seed.j2);
-		fillHybridE_right(extended_seed.j1, extended_seed.j2, outConstraint, interaction_size1-1, interaction_size2-1);
+		hybridE_right.resize( std::min(interaction_size1-extension.j1, maxMatrixLen1), std::min(interaction_size2-extension.j2, maxMatrixLen2) );
+		fillHybridE_right(extension.j1, extension.j2, outConstraint);
 
 		// update Optimum for all boundary combinations
-		for (int i1 = 0; i1<=extended_seed.i1; i1++) {
+		for (int i1 = 0; i1 < hybridE_left.size1(); i1++) {
 			// ensure max interaction length in seq 1
 			for (int j1 = 0; j1 < hybridE_right.size1() ; j1++) {
-				if (extended_seed.i1-i1+sl1+j1 > energy.getAccessibility1().getMaxLength()) continue;
-				for (int i2 = 0; i2<=extended_seed.i2; i2++) {
+				if (extension.j1+j1-extension.i1+i1 > energy.getAccessibility1().getMaxLength()) continue;
+				for (int i2 = 0; i2 < hybridE_left.size2(); i2++) {
 					if (E_isINF(hybridE_left(i1,i2))) continue;
 					// ensure max interaction length in seq 2
 					for (int j2 = 0; j2 < hybridE_right.size2() ; j2++) {
-						if (extended_seed.i2-i2+sl2+j2 > energy.getAccessibility2().getMaxLength()) continue;
+						if (extension.j2+j2-extension.i2+i2 > energy.getAccessibility2().getMaxLength()) continue;
 						if (E_isINF(hybridE_right(j1,j2))) continue;
-						PredictorMfe::updateOptima( i1, extended_seed.j1+j1, i2, extended_seed.j2+j2, extended_seed.energy + hybridE_left(i1,i2) + hybridE_right(j1,j2), true );
+						PredictorMfe::updateOptima( extension.i1-i1, extension.j1+j1, extension.i2-i2, extension.j2+j2, extension.energy + hybridE_left(i1,i2) + hybridE_right(j1,j2), true );
 					} // j2
 				} // i2
 			} // j1
@@ -129,67 +141,107 @@ predict( const IndexRange & r1, const IndexRange & r2
 
 ////////////////////////////////////////////////////////////////////////////
 
-PredictorMfe2dSeedExtensionRiBlast::extended_seed
+void
 PredictorMfe2dSeedExtensionRiBlast::
-parallelExtension( const size_t i1, const size_t j1
-	   	, const size_t i2, const size_t j2
-	  	, const E_type seedE
+parallelExtension( PredictorMfe2dSeedExtensionRiBlast::ExtendedSeed & seed
 	  	, const size_t interaction_size1, size_t interaction_size2
 	  	)
 {
 
-	E_type curMinE = seedE;
+	size_t i1min = seed.i1;
+	size_t i2min = seed.i2;
 
 	// extend left
-	E_type tempMinE = seedE;
-	size_t k = 1;
-	size_t k_last = 1;
-	size_t i1min = i1;
-	size_t i2min = i2;
-	while (i1 >= k && i2 >= k) {
+	while (seed.i1 > 1 && seed.i2 > 1) {
 		// todo acc1/acc2 maxLength() termination
-		if (energy.areComplementary(i1-k,i2-k)) {
-			// todo reference t i1min i2min missing
-			E_type newEnergy = tempMinE + energy.getE_interLeft(i1-k_last,i1,i2-k_last,i2);
-			if (newEnergy < curMinE) {
-				curMinE = newEnergy;
-				i1min = i1-k;
-				i2min = i2-k;
-				k_last = k;
+		if (energy.areComplementary(seed.i1-1,seed.i2-1)) {
+			E_type newEnergy = seed.energy + energy.getE_interLeft(seed.i1-1,i1min,seed.i2-1,i2min);
+			if (newEnergy < seed.energy) {
+				seed.energy = newEnergy;
+				i1min = seed.i1-1;
+				i2min = seed.i2-1;
 			}
-			tempMinE = newEnergy;
 		}
-		k++;
+		if (i1min-(seed.i1-1) >= parallelDropOutLength) {
+			break;
+		}
+		seed.i1--;
+		seed.i2--;
 	}
+	seed.i1 = i1min;
+	seed.i2 = i2min;
+
+	size_t j1min = seed.j1;
+	size_t j2min = seed.j2;
 
 	// extend right
-	k = 1;
-	k_last = k;
-	size_t j1max = j1;
-	size_t j2max = j2;
-	while (j1+k < interaction_size1 && j2+k < interaction_size2) {
+	while (seed.j1 < interaction_size1-1 && seed.j2 < interaction_size2-1) {
 		// todo acc1/acc2 maxLength() termination
-		if (energy.areComplementary(j1+k,j2+k)) {
-			E_type newEnergy = tempMinE + energy.getE_interLeft(j1,j1+k_last,j2,j2+k_last);
-			if (newEnergy < curMinE) {
-				curMinE = newEnergy;
-				j1max = j1+k;
-				j2max = j2+k;
-				k_last = k;
+		if (energy.areComplementary(seed.j1+1,seed.j2+1)) {
+			E_type newEnergy = seed.energy + energy.getE_interLeft(j1min,seed.j1+1,j2min,seed.j2+1);
+			if (newEnergy < seed.energy) {
+				seed.energy = newEnergy;
+				j1min = seed.j1+1;
+				j2min = seed.j2+1;
 			}
-			tempMinE = newEnergy;
 		}
-		k++;
+		if (seed.j1+1-i1min >= parallelDropOutLength) {
+			break;
+		}
+		seed.j1++;
+		seed.j2++;
 	}
+	seed.j1 = j1min;
+	seed.j2 = j2min;
 
-	extended_seed extension;
-	extension.i1 = i1min;
-	extension.j1 = j1max;
-	extension.i2 = i2min;
-	extension.j2 = j2max;
-	extension.energy = curMinE;
+}
 
-	return extension;
+////////////////////////////////////////////////////////////////////////////
+
+void
+PredictorMfe2dSeedExtensionRiBlast::
+fillHybridE_left( const size_t j1, const size_t j2
+			, const OutputConstraint & outConstraint )
+{
+
+	// global vars to avoid reallocation
+	size_t i1,i2,k1,k2;
+	//////////  FIRST ROUND : COMPUTE HYBRIDIZATION ENERGIES ONLY  ////////////
+
+	// current minimal value
+	E_type curMinE = E_INF;
+	// iterate over all window starts j1 (seq1) and j2 (seq2)
+	for (i1=j1; j1-i1 < hybridE_left.size1(); i1--) {
+		// screen for right boundaries in seq2
+		for (i2=j2; j2-i2 < hybridE_left.size2(); i2--) {
+			// init current cell (e_init if just left (i1,i2) base pair)
+			hybridE_left(j1-i1,j2-i2) = i1==j1 && i2==j2 ? energy.getE_init() : E_INF;
+			// check if complementary
+			if( i1<j1 && i2<j2 && energy.areComplementary(i1,i2) ) {
+				curMinE = E_INF;
+
+				// check all combinations of decompositions into (i1,i2)..(k1,k2)-(j1,j2)
+				for (k1=i1; k1++ < j1; ) {
+					// ensure maximal loop length
+					if (k1-i1 > energy.getMaxInternalLoopSize1()+1) break;
+				for (k2=i2; k2++ < j2; ) {
+					// ensure maximal loop length
+					if (k2-i2 > energy.getMaxInternalLoopSize2()+1) break;
+					// check if (k1,k2) are valid left boundary
+					if ( E_isNotINF( hybridE_left(j1-k1,j2-k2) ) ) {
+						curMinE = std::min( curMinE,
+								(energy.getE_interLeft(i1,k1,i2,k2)
+										+ hybridE_left(j1-k1,j2-k2) )
+								);
+					}
+				} // k2
+			  } // k1
+
+				// store value
+				hybridE_left(j1-i1,j2-i2) = curMinE;
+			}
+		}
+	}
 
 }
 
@@ -198,8 +250,7 @@ parallelExtension( const size_t i1, const size_t j1
 void
 PredictorMfe2dSeedExtensionRiBlast::
 fillHybridE_right( const size_t i1, const size_t i2
-			, const OutputConstraint & outConstraint
-			, const size_t j1max, const size_t j2max )
+			, const OutputConstraint & outConstraint )
 {
 
 	// global vars to avoid reallocation
@@ -209,10 +260,9 @@ fillHybridE_right( const size_t i1, const size_t i2
 	// current minimal value
 	E_type curMinE = E_INF;
 	// iterate over all window starts j1 (seq1) and j2 (seq2)
-	// todo outer loop = length sum of both subsequences; j1 computed based on length and j2
-	for (j1=i1; j1 <= j1max; j1++ ) {
+	for (j1=i1; j1-i1 < hybridE_right.size1(); j1++) {
 		// screen for right boundaries in seq2
-		for (j2=i2; j2 <= j2max; j2++ ) {
+		for (j2=i2; j2-i2 < hybridE_right.size2(); j2++) {
 
 			// init current cell (0 if just left (i1,i2) base pair)
 			hybridE_right(j1-i1,j2-i2) = i1==j1 && i2==j2 ? 0 : E_INF;
@@ -247,6 +297,7 @@ fillHybridE_right( const size_t i1, const size_t i2
 }
 
 ////////////////////////////////////////////////////////////////////////////
+
 
 void
 PredictorMfe2dSeedExtensionRiBlast::
@@ -308,56 +359,65 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 				size_t sj1 = si1+sl1;
 				size_t sj2 = si2+sl2;
 
-				extended_seed extended_seed = parallelExtension(si1, sj1, si2, sj2, seedE, j1+1, j2+1);
+				ExtendedSeed extension;
+				extension.i1 = si1;
+				extension.i2 = si2;
+				extension.j1 = sj1;
+				extension.j2 = sj2;
+				extension.energy = seedE;
+
+				parallelExtension(extension, j1+1, j2+1);
 
 				// traceback for parallel extension
-				for (size_t k = 0; k < si1 - extended_seed.i1; k++) {
+				for (size_t k = 0; k < si1 - extension.i1; k++) {
 					interaction.basePairs.push_back( energy.getBasePair(si1-k,si2-k) );
 				}
-				for (size_t k = 0; k < extended_seed.j1 - sj1; k++) {
+				for (size_t k = 0; k < extension.j1 - sj1; k++) {
 					interaction.basePairs.push_back( energy.getBasePair(sj1+k,sj2+k) );
 				}
 
-				sl1 = extended_seed.j1 - extended_seed.i1;
-				sl2 = extended_seed.j2 - extended_seed.i2;
-				sj1 = extended_seed.j1;
-				sj2 = extended_seed.j2;
-				seedE = extended_seed.energy;
+				sl1 = extension.j1 - extension.i1;
+				sl2 = extension.j2 - extension.i2;
+				sj1 = extension.j1;
+				sj2 = extension.j2;
+				seedE = extension.energy;
+				const size_t maxMatrixLen1 = energy.getAccessibility1().getMaxLength()-sl1;
+				const size_t maxMatrixLen2 = energy.getAccessibility2().getMaxLength()-sl2;
 
 				// traceback for full extension
-				hybridE_left.resize( extended_seed.i1+1, extended_seed.i2+1 );
-				fillHybridE( extended_seed.i1, extended_seed.i2, outConstraint, 0, 0 );
-				hybridE_right.resize( j1-sj1+1, j2-sj2+1 );
-				fillHybridE_right( sj1, sj2, outConstraint, j1, j2 );
+				hybridE_left.resize( std::min(extension.i1+1, maxMatrixLen1), std::min(extension.i2+1, maxMatrixLen2) );
+				fillHybridE_left(extension.i1, extension.i2, outConstraint);
+				hybridE_right.resize( std::min(j1-extension.j1+1, maxMatrixLen1), std::min(j2-extension.j2+1, maxMatrixLen2) );
+				fillHybridE_right(extension.j1, extension.j2, outConstraint);
 
 				if ( E_equal( fullE,
-						(energy.getE(i1, j1, i2, j2, seedE + hybridE_left( i1, i2 ) + hybridE_right( j1-sj1, j2-sj2 )))))
+						(energy.getE(i1, j1, i2, j2, seedE + hybridE_left( extension.i1-i1, extension.i2-i2 ) + hybridE_right( j1-sj1, j2-sj2 )))))
 				{
 					// found seed -> traceback
 					// the currently traced value for i1-si1, i2-si2
-					E_type curE = hybridE_left(i1,i2);
+					E_type curE = hybridE_left(extension.i1-i1,extension.i2-i2);
 
 					// trace back left
-					while( i1 != extended_seed.i1 ) {
+					while( i1 != extension.i1 ) {
 
 						// check if just internal loop
-						if ( E_equal( curE, (energy.getE_interLeft(i1,extended_seed.i1,i2,extended_seed.i2) + hybridE_left(extended_seed.i1,extended_seed.i2)) ) )
+						if ( E_equal( curE, (energy.getE_interLeft(i1,extension.i1,i2,extension.i2) + hybridE_left(0,0)) ) )
 						{
 							break;
 						}
 						// check all interval splits
-						if ( (extended_seed.i1-i1) > 1 && (extended_seed.i2-i2) > 1) {
+						if ( (extension.i1-i1) > 1 && (extension.i2-i2) > 1) {
 							// temp variables
 							size_t k1,k2;
 							bool traceNotFound = true;
 							// check all combinations of decompositions into (i1,i2)..(k1,k2)-(j1,j2)
-							for (k1=std::min(extended_seed.i1-1,i1+energy.getMaxInternalLoopSize1()+1); traceNotFound && k1>i1; k1--) {
-							for (k2=std::min(extended_seed.i2-1,i2+energy.getMaxInternalLoopSize2()+1); traceNotFound && k2>i2; k2--) {
+							for (k1=std::min(extension.i1-1,i1+energy.getMaxInternalLoopSize1()+1); traceNotFound && k1>i1; k1--) {
+							for (k2=std::min(extension.i2-1,i2+energy.getMaxInternalLoopSize2()+1); traceNotFound && k2>i2; k2--) {
 								// check if (k1,k2) are valid left boundary
-								if ( E_isNotINF( hybridE_left(k1,k2) ) ) {
+								if ( E_isNotINF( hybridE_left(extension.i1-k1,extension.i2-k2) ) ) {
 									// LOG(DEBUG) << (energy.getE_interLeft(i1,k1,i2,k2) + hybridE_left(k1,k2));
 									if ( E_equal( curE,
-											(energy.getE_interLeft(i1,k1,i2,k2) + hybridE_left(k1,k2)) ) )
+											(energy.getE_interLeft(i1,k1,i2,k2) + hybridE_left(extension.i1-k1,extension.i2-k2)) ) )
 									{
 										// stop searching
 										traceNotFound = false;
@@ -366,7 +426,7 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 										// trace right part of split
 										i1=k1;
 										i2=k2;
-										curE = hybridE_left(i1,i2);
+										curE = hybridE_left(extension.i1-i1,extension.i2-i2);
 									}
 								}
 							}
@@ -376,10 +436,10 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 				  } // traceback left
 
 					// trace seed
-					if (extended_seed.i1 > i1 && extended_seed.i2 > i2) {
-						interaction.basePairs.push_back( energy.getBasePair(extended_seed.i1,extended_seed.i2) );
+					if (extension.i1 > i1 && extension.i2 > i2) {
+						interaction.basePairs.push_back( energy.getBasePair(extension.i1,extension.i2) );
 					}
-					seedHandler.traceBackSeed( interaction, extended_seed.i1, extended_seed.i2 );
+					seedHandler.traceBackSeed( interaction, extension.i1, extension.i2 );
 					if (sj1 < j1 && sj2 < j2) {
 						interaction.basePairs.push_back( energy.getBasePair(sj1,sj2) );
 					}
