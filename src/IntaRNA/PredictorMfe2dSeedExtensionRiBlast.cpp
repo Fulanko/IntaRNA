@@ -95,14 +95,16 @@ predict( const IndexRange & r1, const IndexRange & r2
 		extension.j1 = sj1;
 		extension.j2 = sj2;
 		extension.energy = seedE;
+		size_t maxMatrixLen1 = energy.getAccessibility1().getMaxLength()-sl1;
+		size_t maxMatrixLen2 = energy.getAccessibility2().getMaxLength()-sl2;
 
-		parallelExtension(extension, interaction_size1, interaction_size2 );
+		parallelExtension(extension, std::min(interaction_size1-extension.j1, maxMatrixLen1), std::min(interaction_size2-extension.j2, maxMatrixLen2) );
 
+		// update constraints
 		sl1 = extension.j1 - extension.i1;
 		sl2 = extension.j2 - extension.i2;
-
-		const size_t maxMatrixLen1 = energy.getAccessibility1().getMaxLength()-sl1;
-		const size_t maxMatrixLen2 = energy.getAccessibility2().getMaxLength()-sl2;
+    maxMatrixLen1 = energy.getAccessibility1().getMaxLength()-sl1;
+		maxMatrixLen2 = energy.getAccessibility2().getMaxLength()-sl2;
 
 		// EL
 		hybridE_left.resize( std::min(extension.i1+1, maxMatrixLen1), std::min(extension.i2+1, maxMatrixLen2) );
@@ -152,7 +154,7 @@ predict( const IndexRange & r1, const IndexRange & r2
 void
 PredictorMfe2dSeedExtensionRiBlast::
 parallelExtension( PredictorMfe2dSeedExtensionRiBlast::ExtendedSeed & seed
-	  	, const size_t interaction_size1, size_t interaction_size2
+	  	, const size_t max_extension1, size_t max_extension2
 	  	)
 {
 
@@ -183,7 +185,7 @@ parallelExtension( PredictorMfe2dSeedExtensionRiBlast::ExtendedSeed & seed
 	size_t j2min = seed.j2;
 
 	// extend right
-	while (seed.j1 < interaction_size1-1 && seed.j2 < interaction_size2-1) {
+	while (seed.j1 < max_extension1-1 && seed.j2 < max_extension2-1) {
 		// todo acc1/acc2 maxLength() termination
 		if (energy.areComplementary(seed.j1+1,seed.j2+1)) {
 			E_type newEnergy = seed.energy + energy.getE_interLeft(j1min,seed.j1+1,j2min,seed.j2+1);

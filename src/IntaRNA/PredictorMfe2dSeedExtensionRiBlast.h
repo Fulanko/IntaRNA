@@ -121,12 +121,12 @@ protected:
 	 * linearly extends given seed to left and right until energy stops improving
 	 *
 	 * @param seed
-	 * @param interaction_size1
-	 * @param interaction_size2
+	 * @param max_extension1
+	 * @param max_extension2
 	 */
 	virtual
 	void
-	parallelExtension( ExtendedSeed & seed, const size_t interaction_size1, size_t interaction_size2 );
+	parallelExtension( ExtendedSeed & seed, const size_t max_extension1, size_t max_extension2 );
 
 	/**
 	 * Computes all entries of the hybridE matrix for interactions starting in
