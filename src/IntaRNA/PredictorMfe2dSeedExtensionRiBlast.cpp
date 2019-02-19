@@ -98,8 +98,6 @@ predict( const IndexRange & r1, const IndexRange & r2
 
 		parallelExtension(extension, interaction_size1, interaction_size2 );
 
-		std::cout << extension.i1 << ":" << extension.i2 << ":" << extension.j1 << ":" << extension.j2 << "=" << extension.energy << std::endl;
-
 		sl1 = extension.j1 - extension.i1;
 		sl2 = extension.j2 - extension.i2;
 
@@ -108,10 +106,20 @@ predict( const IndexRange & r1, const IndexRange & r2
 
 		// EL
 		hybridE_left.resize( std::min(extension.i1+1, maxMatrixLen1), std::min(extension.i2+1, maxMatrixLen2) );
+		for (size_t i = 0; i < hybridE_left.size1(); i++) {
+			for (size_t j = 0; j < hybridE_left.size2(); j++) {
+				hybridE_left(i, j) = E_INF;
+			}
+		}
 		fillHybridE_left(extension.i1, extension.i2, outConstraint);
 
 		// ER
 		hybridE_right.resize( std::min(interaction_size1-extension.j1, maxMatrixLen1), std::min(interaction_size2-extension.j2, maxMatrixLen2) );
+		for (size_t i = 0; i < hybridE_right.size1(); i++) {
+			for (size_t j = 0; j < hybridE_right.size2(); j++) {
+				hybridE_right(i, j) = E_INF;
+			}
+		}
 		fillHybridE_right(extension.j1, extension.j2, outConstraint);
 
 		// update Optimum for all boundary combinations
@@ -210,37 +218,43 @@ fillHybridE_left( const size_t j1, const size_t j2
 
 	// current minimal value
 	E_type curMinE = E_INF;
-	// iterate over all window starts j1 (seq1) and j2 (seq2)
-	for (i1=j1; j1-i1 < hybridE_left.size1(); i1--) {
-		// screen for right boundaries in seq2
-		for (i2=j2; j2-i2 < hybridE_left.size2(); i2--) {
+	size_t length = 1;
+	while (length < 1+std::min(hybridE_left.size1(), hybridE_left.size2())) {
+	  for (i1 = 0; i1 < length; i1++) {
+			i2 = length-i1-1;
+
 			// init current cell (e_init if just left (i1,i2) base pair)
-			hybridE_left(j1-i1,j2-i2) = i1==j1 && i2==j2 ? energy.getE_init() : E_INF;
+			hybridE_left(i1,i2) = i1==0 && i2==0 ? energy.getE_init() : E_INF;
+
 			// check if complementary
-			if( i1<j1 && i2<j2 && energy.areComplementary(i1,i2) ) {
+			if( i1>0 && i2>0 && energy.areComplementary(j1-i1,j2-i2) ) {
 				curMinE = E_INF;
 
 				// check all combinations of decompositions into (i1,i2)..(k1,k2)-(j1,j2)
-				for (k1=i1; k1++ < j1; ) {
+				for (k1=i1; k1-- > 0; ) {
 					// ensure maximal loop length
-					if (k1-i1 > energy.getMaxInternalLoopSize1()+1) break;
-				for (k2=i2; k2++ < j2; ) {
+					if (i1-k1 > energy.getMaxInternalLoopSize1()+1) break;
+				for (k2=i2; k2-- > 0; ) {
 					// ensure maximal loop length
-					if (k2-i2 > energy.getMaxInternalLoopSize2()+1) break;
+					if (i2-k2 > energy.getMaxInternalLoopSize2()+1) break;
 					// check if (k1,k2) are valid left boundary
-					if ( E_isNotINF( hybridE_left(j1-k1,j2-k2) ) ) {
+					if ( E_isNotINF( hybridE_left(k1,k2) ) ) {
 						curMinE = std::min( curMinE,
-								(energy.getE_interLeft(i1,k1,i2,k2)
-										+ hybridE_left(j1-k1,j2-k2) )
+								(energy.getE_interLeft(j1-i1,j1-k1,j2-i2,j2-k2)
+										+ hybridE_left(k1,k2) )
 								);
 					}
 				} // k2
 			  } // k1
 
 				// store value
-				hybridE_left(j1-i1,j2-i2) = curMinE;
+				hybridE_left(i1,i2) = curMinE;
 			}
 		}
+		if (length >= thoroughDropOutLength) {
+			break;
+		}
+		length++;
 	}
 
 }
@@ -259,39 +273,43 @@ fillHybridE_right( const size_t i1, const size_t i2
 
 	// current minimal value
 	E_type curMinE = E_INF;
-	// iterate over all window starts j1 (seq1) and j2 (seq2)
-	for (j1=i1; j1-i1 < hybridE_right.size1(); j1++) {
-		// screen for right boundaries in seq2
-		for (j2=i2; j2-i2 < hybridE_right.size2(); j2++) {
+	size_t length = 1;
+	while (length < 1+std::min(hybridE_right.size1(), hybridE_right.size2())) {
+	  for (j1 = 0; j1 < length; j1++) {
+			j2 = length-j1-1;
 
 			// init current cell (0 if just left (i1,i2) base pair)
-			hybridE_right(j1-i1,j2-i2) = i1==j1 && i2==j2 ? 0 : E_INF;
+			hybridE_right(j1,j2) = j1==0 && j2==0 ? 0 : E_INF;
 
 			// check if complementary
-			if( i1<j1 && i2<j2 && energy.areComplementary(j1,j2) ) {
+			if( j1>i1 && j2>i2 && energy.areComplementary(i1+j1,i2+j2) ) {
 				curMinE = E_INF;
 
 				// check all combinations of decompositions into (i1,i2)..(k1,k2)-(j1,j2)
-				for (k1=j1; k1-- > i1; ) {
+				for (k1=j1; k1-- > 0; ) {
 					// ensure maximal loop length
 					if (j1-k1 > energy.getMaxInternalLoopSize1()+1) break;
-				for (k2=j2; k2-- > i2; ) {
+				for (k2=j2; k2-- > 0; ) {
 					// ensure maximal loop length
 					if (j2-k2 > energy.getMaxInternalLoopSize2()+1) break;
 					// check if (k1,k2) are valid left boundary
-					if ( E_isNotINF( hybridE_right(k1-i1,k2-i2) ) ) {
+					if ( E_isNotINF( hybridE_right(k1,k2) ) ) {
 						curMinE = std::min( curMinE,
-								(energy.getE_interLeft(k1,j1,k2,j2)
-										+ hybridE_right(k1-i1,k2-i2) )
+								(energy.getE_interLeft(i1+k1,i1+j1,i2+k2,i2+j2)
+										+ hybridE_right(k1,k2) )
 								);
 					}
 				} // k2
 			  } // k1
 
 				// store value
-				hybridE_right(j1-i1,j2-i2) = curMinE;
+				hybridE_right(j1,j2) = curMinE;
 			}
 		}
+		if (length >= thoroughDropOutLength) {
+			break;
+		}
+		length++;
 	}
 
 }
@@ -368,14 +386,6 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 
 				parallelExtension(extension, j1+1, j2+1);
 
-				// traceback for parallel extension
-				for (size_t k = 0; k < si1 - extension.i1; k++) {
-					interaction.basePairs.push_back( energy.getBasePair(si1-k,si2-k) );
-				}
-				for (size_t k = 0; k < extension.j1 - sj1; k++) {
-					interaction.basePairs.push_back( energy.getBasePair(sj1+k,sj2+k) );
-				}
-
 				sl1 = extension.j1 - extension.i1;
 				sl2 = extension.j2 - extension.i2;
 				sj1 = extension.j1;
@@ -386,8 +396,18 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 
 				// traceback for full extension
 				hybridE_left.resize( std::min(extension.i1+1, maxMatrixLen1), std::min(extension.i2+1, maxMatrixLen2) );
+				for (size_t i = 0; i < hybridE_left.size1(); i++) {
+					for (size_t j = 0; j < hybridE_left.size2(); j++) {
+						hybridE_left(i, j) = E_INF;
+					}
+				}
 				fillHybridE_left(extension.i1, extension.i2, outConstraint);
 				hybridE_right.resize( std::min(j1-extension.j1+1, maxMatrixLen1), std::min(j2-extension.j2+1, maxMatrixLen2) );
+				for (size_t i = 0; i < hybridE_right.size1(); i++) {
+					for (size_t j = 0; j < hybridE_right.size2(); j++) {
+						hybridE_right(i, j) = E_INF;
+					}
+				}
 				fillHybridE_right(extension.j1, extension.j2, outConstraint);
 
 				if ( E_equal( fullE,
@@ -436,12 +456,14 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 				  } // traceback left
 
 					// trace seed
-					if (extension.i1 > i1 && extension.i2 > i2) {
-						interaction.basePairs.push_back( energy.getBasePair(extension.i1,extension.i2) );
-					}
-					seedHandler.traceBackSeed( interaction, extension.i1, extension.i2 );
-					if (sj1 < j1 && sj2 < j2) {
-						interaction.basePairs.push_back( energy.getBasePair(sj1,sj2) );
+					size_t i = extension.i1;
+					size_t j = extension.i2;
+					while (i < extension.j1 && j < extension.j2) {
+						if (i > i1 && i < j1 && j > i2 && j < j2) {
+						  interaction.basePairs.push_back( energy.getBasePair(i, j) );
+					  }
+						i++;
+						j++;
 					}
 
 					// the currently traced value for sj1-j1, sj2-j2
