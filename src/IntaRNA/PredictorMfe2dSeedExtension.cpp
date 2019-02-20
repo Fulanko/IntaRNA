@@ -14,6 +14,7 @@ PredictorMfe2dSeedExtension(
  :
 	PredictorMfe2d(energy,output,predTracker)
 	, seedHandler(seedHandlerInstance)
+	, hybridE_left( 0,0 )
 	, hybridE_right( 0,0 )
 {
 	assert( seedHandler.getConstraint().getBasePairs() > 1 );
