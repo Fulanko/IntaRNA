@@ -213,7 +213,11 @@ fillHybridZ_left( const size_t j1, const size_t j2
 		 	  const size_t sl2 = seedHandler.getSeedLength2(j1, j2)-1;
 		 	  const size_t sj1 = j1+sl1;
 		 	  const size_t sj2 = j2+sl2;
-		 	  PredictorMfe2d::updateOptima( i1,j1opt,i2,j2opt, energy.getE(hybridZ_right(j1opt-sj1, j2opt-sj2) * hybridZ_left(j1-i1,j2-i2) * energy.getBoltzmannWeight(seedHandler.getSeedE(j1, j2))), true );
+		 	  PredictorMfe2d::updateOptima( i1,j1opt,i2,j2opt,
+		 			  (energy.getE(hybridZ_right(j1opt-sj1, j2opt-sj2))
+		 					  + energy.getE(hybridZ_left(j1-i1,j2-i2))
+		 					  + seedHandler.getSeedE(j1, j2))
+		 				, true );
       }
 		}
 	}
