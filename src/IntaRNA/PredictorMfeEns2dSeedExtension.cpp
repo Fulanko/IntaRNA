@@ -116,12 +116,10 @@ predict( const IndexRange & r1, const IndexRange & r2
 						if (sj2+j2-si2+i2 > energy.getAccessibility2().getMaxLength()) continue;
 						// check complementarity of boundary
 						if (Z_equal(hybridZ_right(j1,j2),0.0)) continue;
-						// compute full partition function
-						Z_type fullZ = seedZ * hybridZ_left(i1,i2) * hybridZ_right(j1,j2);
+						// compute overall ensemble energy
+						E_type fullE = seedE + energy.getE(hybridZ_left(i1,i2)) + energy.getE(hybridZ_right(j1,j2));
 						// update ensemble mfe
-						if (! Z_equal(fullZ, 0.0)) {
-							PredictorMfe::updateOptima( si1-i1, sj1+j1, si2-i2, sj2+j2, energy.getE(fullZ), true );
-						}
+						PredictorMfe::updateOptima( si1-i1, sj1+j1, si2-i2, sj2+j2, fullE, true );
 					} // dj2
 				} // di2
 			} // dj1
