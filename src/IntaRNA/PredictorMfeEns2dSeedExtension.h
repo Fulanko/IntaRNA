@@ -28,9 +28,6 @@ protected:
   //! using sqrt(representable positive value closest to zero)
 	#define Z_precisionEpsilon 0.0001
 
-	//! check if two energies are equal according to some epsilon
-	#define Z_equal( e1, e2 ) ( std::abs((e1)-(e2)) < Z_precisionEpsilon )
-
 	//! check if a given energy is NOT set to Z_INF
 	#define Z_isNotINF( e ) ( std::numeric_limits<Z_type>::max() >= e )
 
