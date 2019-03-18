@@ -75,13 +75,12 @@ predict( const IndexRange & r1, const IndexRange & r2
 	// initialize mfe interaction for updates
 	initOptima( outConstraint );
 
-	for (size_t si1 = 0; si1 <= interaction_size1-seedHandler.getConstraint().getBasePairs(); si1++) {
-	for (size_t si2 = 0; si2 <= interaction_size2-seedHandler.getConstraint().getBasePairs(); si2++) {
+	size_t si1 = RnaSequence::lastPos, si2 = RnaSequence::lastPos;
+	while( seedHandler.updateToNextSeed(si1,si2
+			, r1.from, r2.to+1-seedHandler.getConstraint().getBasePairs()
+			, r2.from, r2.to+1-seedHandler.getConstraint().getBasePairs()) )
+	{
 		E_type seedE = seedHandler.getSeedE(si1, si2);
-		// check if valid left seed base pair
-		if (E_isINF(seedE))
-		  continue;
-
 		const size_t sl1 = seedHandler.getSeedLength1(si1, si2)-1;
 		const size_t sl2 = seedHandler.getSeedLength2(si1, si2)-1;
 		const size_t sj1 = si1+sl1;
@@ -107,8 +106,7 @@ predict( const IndexRange & r1, const IndexRange & r2
 		hybridZ_left.resize( std::min(si1+1, maxMatrixLen1), std::min(si2+1, maxMatrixLen2) );
 		fillHybridZ_left(si1, si2, outConstraint);
 
-	} // si2
-	} // si1
+	} // si1 / si2
 
 	// report mfe interaction
 	reportOptima( outConstraint );

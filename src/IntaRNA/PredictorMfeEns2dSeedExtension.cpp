@@ -75,12 +75,12 @@ predict( const IndexRange & r1, const IndexRange & r2
 	// initialize mfe interaction for updates
 	initOptima( outConstraint );
 
-	for (size_t si1 = 0; si1 <= interaction_size1-seedHandler.getConstraint().getBasePairs(); si1++) {
-	for (size_t si2 = 0; si2 <= interaction_size2-seedHandler.getConstraint().getBasePairs(); si2++) {
+	size_t si1 = RnaSequence::lastPos, si2 = RnaSequence::lastPos;
+	while( seedHandler.updateToNextSeed(si1,si2
+			, r1.from, r2.to+1-seedHandler.getConstraint().getBasePairs()
+			, r2.from, r2.to+1-seedHandler.getConstraint().getBasePairs()) )
+	{
 		E_type seedE = seedHandler.getSeedE(si1, si2);
-		// check if valid left seed base pair
-		if (E_isINF(seedE))
-		  continue;
 		const Z_type seedZ = energy.getBoltzmannWeight( seedE );
 
 		const size_t sl1 = seedHandler.getSeedLength1(si1, si2)-1;
@@ -125,8 +125,7 @@ predict( const IndexRange & r1, const IndexRange & r2
 			} // dj1
 		} // di1
 
-	} // si2
-	} // si1
+	} // si1 / si2
 
 	// report mfe interaction
 	reportOptima( outConstraint );
@@ -277,52 +276,55 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 
 	E_type fullE = interaction.energy;
 
-	for (size_t si1 = i1; si1 <= j1+1-seedHandler.getConstraint().getBasePairs(); si1++) {
-		for (size_t si2 = i2; si2 <= j2+1-seedHandler.getConstraint().getBasePairs(); si2++) {
-			E_type seedE = seedHandler.getSeedE(si1, si2);
-			if ( E_isNotINF( seedE ) ) {
+	size_t si1 = RnaSequence::lastPos, si2 = RnaSequence::lastPos;
+	while( seedHandler.updateToNextSeed(si1,si2
+			, i1,j1+1-seedHandler.getConstraint().getBasePairs()
+			, i2,j2+1-seedHandler.getConstraint().getBasePairs() ) )
+	{
+		E_type seedE = seedHandler.getSeedE(si1, si2);
 
-				const size_t sl1 = seedHandler.getSeedLength1(si1, si2)-1;
-				const size_t sl2 = seedHandler.getSeedLength2(si1, si2)-1;
-				const size_t sj1 = si1+sl1;
-				const size_t sj2 = si2+sl2;
-				const size_t maxMatrixLen1 = energy.getAccessibility1().getMaxLength()-sl1;
-				const size_t maxMatrixLen2 = energy.getAccessibility2().getMaxLength()-sl2;
+		const size_t sl1 = seedHandler.getSeedLength1(si1, si2)-1;
+		const size_t sl2 = seedHandler.getSeedLength2(si1, si2)-1;
+		const size_t sj1 = si1+sl1;
+		const size_t sj2 = si2+sl2;
+		const size_t maxMatrixLen1 = energy.getAccessibility1().getMaxLength()-sl1;
+		const size_t maxMatrixLen2 = energy.getAccessibility2().getMaxLength()-sl2;
 
-				// compute auxiliary matrices for seed check
-				hybridZ_left.resize( std::min(si1+1, maxMatrixLen1), std::min(si2+1, maxMatrixLen2) );
-				fillHybridZ_left( si1, si2, outConstraint );
-				hybridZ_right.resize( std::min(j1-sj1+1, maxMatrixLen1), std::min(j2-sj2+1, maxMatrixLen2) );
-				fillHybridZ_right( sj1, sj2, outConstraint );
+		// compute auxiliary matrices for seed check
+		hybridZ_left.resize( std::min(si1+1, maxMatrixLen1), std::min(si2+1, maxMatrixLen2) );
+		fillHybridZ_left( si1, si2, outConstraint );
+		hybridZ_right.resize( std::min(j1-sj1+1, maxMatrixLen1), std::min(j2-sj2+1, maxMatrixLen2) );
+		fillHybridZ_right( sj1, sj2, outConstraint );
 
-				// check if we found the right seed for the interaction energy
-				if ( E_equal( fullE,
-						(energy.getE(i1, j1, i2, j2, energy.getE(energy.getBoltzmannWeight(seedE) * hybridZ_left( si1-i1, si2-i2 ) * hybridZ_right( j1-sj1, j2-sj2 ))))))
-				{
-					// found seed -> traceback seed base pairs
-					if (si1 > i1 && si2 > i2) {
-						interaction.basePairs.push_back( energy.getBasePair(si1,si2) );
-					}
-					// store seed information
-					interaction.setSeedRange(
-									energy.getBasePair(si1,si2),
-									energy.getBasePair(sj1,sj2),
-									energy.getE(si1,sj1,si2,sj2,seedE)+energy.getE_init());
-					// trace seed base pairs
-					seedHandler.traceBackSeed( interaction, si1, si2 );
-					if (sj1 < j1 && sj2 < j2) {
-						interaction.basePairs.push_back( energy.getBasePair(sj1,sj2) );
-					}
-					// sort output interaction
-					interaction.sort();
-
-					// stop searching for seeds
-					return;
-				}
+		// check if we found the right seed for the interaction energy
+		if ( E_equal( fullE,
+				(energy.getE(i1, j1, i2, j2, energy.getE(energy.getBoltzmannWeight(seedE) * hybridZ_left( si1-i1, si2-i2 ) * hybridZ_right( j1-sj1, j2-sj2 ))))))
+		{
+			// found seed -> traceback seed base pairs
+			if (si1 > i1 && si2 > i2) {
+				interaction.basePairs.push_back( energy.getBasePair(si1,si2) );
 			}
+			// store seed information
+			interaction.setSeedRange(
+							energy.getBasePair(si1,si2),
+							energy.getBasePair(sj1,sj2),
+							energy.getE(si1,sj1,si2,sj2,seedE)+energy.getE_init());
+			// trace seed base pairs
+			seedHandler.traceBackSeed( interaction, si1, si2 );
+			if (sj1 < j1 && sj2 < j2) {
+				interaction.basePairs.push_back( energy.getBasePair(sj1,sj2) );
+			}
+			// sort output interaction
+			interaction.sort();
 
-		} // si2
-	} // si1
+			// TODO add all seeds to interaction
+			// seedHandler.addSeeds( interaction );
+
+			// stop searching for seeds
+			return;
+		}
+
+	} // si1 / si2
 
 }
 

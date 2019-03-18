@@ -282,9 +282,7 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 			, i1,j1+1-seedHandler.getConstraint().getBasePairs()
 			, i2,j2+1-seedHandler.getConstraint().getBasePairs() ) )
 	{
-
 			E_type seedE = seedHandler.getSeedE(si1, si2);
-
 			const size_t sl1 = seedHandler.getSeedLength1(si1, si2)-1;
 			const size_t sl2 = seedHandler.getSeedLength2(si1, si2)-1;
 			const size_t sj1 = si1+sl1;
