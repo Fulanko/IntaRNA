@@ -389,9 +389,7 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 				}  // traceback right
 
 				interaction.sort();
-
-				// TODO add all seeds to interaction
-				// seedHandler.addSeeds( interaction );
+				seedHandler.addSeeds( interaction );
 
 				// stop searching for seeds
 				return;

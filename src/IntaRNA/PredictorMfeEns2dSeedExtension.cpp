@@ -316,9 +316,7 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 			}
 			// sort output interaction
 			interaction.sort();
-
-			// TODO add all seeds to interaction
-			// seedHandler.addSeeds( interaction );
+			seedHandler.addSeeds( interaction );
 
 			// stop searching for seeds
 			return;

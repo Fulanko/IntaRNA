@@ -47,7 +47,6 @@ extern "C" {
 #include "IntaRNA/PredictorMfe2dSeed.h"
 #include "IntaRNA/PredictorMfe4dSeed.h"
 #include "IntaRNA/PredictorMfe2dSeedExtension.h"
-#include "IntaRNA/PredictorMfe4dSeedExtension.h"
 #include "IntaRNA/PredictorMfe2dSeedExtensionRiBlast.h"
 #include "IntaRNA/PredictorMfeEns2dSeedExtension.h"
 #include "IntaRNA/PredictorMfe2dHeuristicSeedExtension.h"
@@ -2044,7 +2043,7 @@ getPredictor( const InteractionEnergy & energy, OutputHandler & output ) const
 			case 'H' :  return new PredictorMfe2dHeuristicSeedExtension( energy, output, predTracker, getSeedHandler( energy ) );
 			case 'M' :  return new PredictorMfe2dSeedExtension( energy, output, predTracker, getSeedHandler( energy ) );
 			case 'R' :  return new PredictorMfe2dSeedExtensionRiBlast( energy, output, predTracker, getSeedHandler( energy ) );
-			case 'E' :  return new PredictorMfe4dSeedExtension( energy, output, predTracker, getSeedHandler( energy ) );
+			case 'E' :  INTARNA_NOT_IMPLEMENTED("mode "+toString(predMode.val)+" not implemented"); return NULL;
 			}
 		} break;
 		// single-site min ensemble energy interactions via seed extension (contain only interior loops)
