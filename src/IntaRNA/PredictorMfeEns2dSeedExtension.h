@@ -2,7 +2,7 @@
 #ifndef INTARNA_PREDICTORMFEENS2DSEEDEXTENSION_H_
 #define INTARNA_PREDICTORMFEENS2DSEEDEXTENSION_H_
 
-#include "IntaRNA/PredictorMfe2d.h"
+#include "IntaRNA/PredictorMfeEns.h"
 #include "IntaRNA/SeedHandlerIdxOffset.h"
 
 namespace IntaRNA {
@@ -17,7 +17,7 @@ namespace IntaRNA {
  * @author Martin Mann
  *
  */
-class PredictorMfeEns2dSeedExtension: public PredictorMfe2d {
+class PredictorMfeEns2dSeedExtension: public PredictorMfeEns {
 
 protected:
 
@@ -87,10 +87,10 @@ protected:
 
 
 	//! access to the interaction energy handler of the super class
-	using PredictorMfe2d::energy;
+	using PredictorMfeEns::energy;
 
 	//! access to the output handler of the super class
-	using PredictorMfe2d::output;
+	using PredictorMfeEns::output;
 
 	//! partition function of all interaction hybrids that start on the left side of the seed including E_init
 	Z2dMatrix hybridZ_left;

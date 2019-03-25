@@ -19,11 +19,6 @@ namespace IntaRNA {
  */
 class PredictorMfeEns2dHeuristicSeedExtension: public PredictorMfeEns2dSeedExtension {
 
-protected:
-
-	//! matrix type to hold the mfe energies for interaction site starts
-	typedef PredictorMfeEns2dSeedExtension::E2dMatrix E2dMatrix;
-
 public:
 
 
@@ -78,10 +73,6 @@ protected:
 
 	//! access to the output handler of the super class
 	using PredictorMfeEns2dSeedExtension::output;
-
-	//! energy of all interaction hybrids that end in position p (seq1) and
-	//! q (seq2) and do not necessarily contain a seed interaction
-	using PredictorMfeEns2dSeedExtension::hybridE_pq;
 
 	//! the seed handler (with idx offset)
 	using PredictorMfeEns2dSeedExtension::seedHandler;

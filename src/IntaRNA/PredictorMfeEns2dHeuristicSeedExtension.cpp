@@ -96,7 +96,7 @@ predict( const IndexRange & r1, const IndexRange & r2
 		j2opt = sj2;
 
 		// update mfe for seed only
-		PredictorMfe2d::updateOptima( si1,sj1,si2,sj2, energy.getE_init() + seedHandler.getSeedE(si1, si2), true );
+		PredictorMfeEns::updateOptima( si1,sj1,si2,sj2, energy.getE_init() + seedHandler.getSeedE(si1, si2), true );
 
 		// ER
 		hybridZ_right.resize( std::min(interaction_size1-sj1, maxMatrixLen1), std::min(interaction_size2-sj2, maxMatrixLen2) );
@@ -211,7 +211,7 @@ fillHybridZ_left( const size_t j1, const size_t j2
 		 	  const size_t sl2 = seedHandler.getSeedLength2(j1, j2)-1;
 		 	  const size_t sj1 = j1+sl1;
 		 	  const size_t sj2 = j2+sl2;
-		 	  PredictorMfe2d::updateOptima( i1,j1opt,i2,j2opt,
+		 	  PredictorMfeEns::updateOptima( i1,j1opt,i2,j2opt,
 		 			  (energy.getE(hybridZ_right(j1opt-sj1, j2opt-sj2))
 		 					  + energy.getE(hybridZ_left(j1-i1,j2-i2))
 		 					  + seedHandler.getSeedE(j1, j2))

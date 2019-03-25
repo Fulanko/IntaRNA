@@ -12,7 +12,7 @@ PredictorMfeEns2dSeedExtension(
 		, PredictionTracker * predTracker
 		, SeedHandler * seedHandlerInstance )
  :
-	PredictorMfe2d(energy,output,predTracker)
+	PredictorMfeEns(energy,output,predTracker)
 	, seedHandler(seedHandlerInstance)
 	, hybridZ_right( 0,0 )
 {
