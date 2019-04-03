@@ -77,8 +77,8 @@ predict( const IndexRange & r1, const IndexRange & r2
 
 	size_t si1 = RnaSequence::lastPos, si2 = RnaSequence::lastPos;
 	while( seedHandler.updateToNextSeed(si1,si2
-			, r1.from, r2.to+1-seedHandler.getConstraint().getBasePairs()
-			, r2.from, r2.to+1-seedHandler.getConstraint().getBasePairs()) )
+			, 0, interaction_size1+1-seedHandler.getConstraint().getBasePairs()
+			, 0, interaction_size2+1-seedHandler.getConstraint().getBasePairs()) )
 	{
 		E_type seedE = seedHandler.getSeedE(si1, si2);
 		const size_t sl1 = seedHandler.getSeedLength1(si1, si2)-1;
