@@ -97,6 +97,8 @@ predict( const IndexRange & r1, const IndexRange & r2
 		hybridZ_left.resize( std::min(si1+1, maxMatrixLen1), std::min(si2+1, maxMatrixLen2) );
 		fillHybridZ_left(si1, si2, outConstraint);
 
+		//printMatrix(hybridZ_left);
+
 		// ER
 		hybridZ_right.resize( std::min(interaction_size1-sj1, maxMatrixLen1), std::min(interaction_size2-sj2, maxMatrixLen2) );
 		fillHybridZ_right(sj1, sj2, outConstraint);
@@ -120,6 +122,15 @@ predict( const IndexRange & r1, const IndexRange & r2
 						E_type fullE = seedE + energy.getE(hybridZ_left(i1,i2)) + energy.getE(hybridZ_right(j1,j2));
 						// update ensemble mfe
 						PredictorMfe::updateOptima( si1-i1, sj1+j1, si2-i2, sj2+j2, fullE, true );
+						// update Z
+						updateZ(si1-i1, sj1+j1, si2-i2, sj2+j2, fullE, true);
+						// store partial Z
+						size_t key = getHashKey(si1-i1, sj1+j1, si2-i2, sj2+j2);
+						if ( Z_partitions.find(key) == Z_partitions.end() ) {
+						  Z_partitions[key] = fullE;
+						} else {
+						  Z_partitions[key] += fullE;
+						}
 					} // dj2
 				} // di2
 			} // dj1
@@ -127,9 +138,29 @@ predict( const IndexRange & r1, const IndexRange & r2
 
 	} // si1 / si2
 
+	std::cout << "Z: " << getHybridZ() << std::endl;
+	for (std::unordered_map<size_t, Z_type >::const_iterator it = Z_partitions.begin(); it != Z_partitions.end(); ++it)
+  {
+    std::cout << it->first << " " << it->second << "\n";
+  }
+
 	// report mfe interaction
 	reportOptima( outConstraint );
 
+}
+
+////////////////////////////////////////////////////////////////////////////
+
+size_t
+PredictorMfeEns2dSeedExtension::
+getHashKey( const size_t i1, const size_t j1, const size_t i2, const size_t j2) {
+	size_t maxLength = std::max(energy.getAccessibility1().getMaxLength(), energy.getAccessibility2().getMaxLength());
+	size_t key = 0;
+	key += i1 + pow(maxLength, 0);
+	key += j1 + pow(maxLength, 1);
+	key += i2 + pow(maxLength, 2);
+	key += j2 + pow(maxLength, 3);
+	return key;
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -147,11 +178,15 @@ fillHybridZ_left( const size_t j1, const size_t j2
 
 	// global vars to avoid reallocation
 	size_t i1,i2,k1,k2;
+	std::cout << "fill left" << std::endl;
+
+	// position of last seen complementary seed
+	size_t last_si1 = j1;
+	size_t last_si2 = j2;
 
 	// iterate over all window starts i1 (seq1) and i2 (seq2)
 	for (i1=j1; j1-i1 < hybridZ_left.size1(); i1-- ) {
 		for (i2=j2; j2-i2 < hybridZ_left.size2(); i2-- ) {
-
 			// init current cell (0 if not just right-most (j1,j2) base pair)
 			hybridZ_left(j1-i1,j2-i2) = i1==j1 && i2==j2 ? energy.getBoltzmannWeight(energy.getE_init()) : 0.0;
 
@@ -171,6 +206,22 @@ fillHybridZ_left( const size_t j1, const size_t j2
 						}
 					} // k2
 				} // k1
+
+				// subtract seeds in left matrix
+				E_type seedE = seedHandler.getSeedE(i1, i2);
+				if (E_isNotINF(seedE)) {
+					std::cout << "Complementary SEED at " << i1 << ":" << i2 << "= " << seedE << std::endl;
+					const size_t sl1 = seedHandler.getSeedLength1(i1, i2)-1;
+					const size_t sl2 = seedHandler.getSeedLength2(i1, i2)-1;
+					const size_t sj1 = std::min(i1+sl1, last_si1);
+					const size_t sj2 = std::min(i2+sl2, last_si2);
+					std::cout << hybridZ_left(j1-i1,j2-i2) << std::endl;
+					std::cout << "sub: " << energy.getBoltzmannWeight(energy.getE_interLeft(i1,sj1,i2,sj2)) * hybridZ_left(j1-sj1,j2-sj2) << std::endl;
+					hybridZ_left(j1-i1,j2-i2) -= energy.getBoltzmannWeight(energy.getE_interLeft(i1,sj1,i2,sj2)) * hybridZ_left(j1-sj1,j2-sj2);
+					std::cout << hybridZ_left(j1-i1,j2-i2) << std::endl;
+					last_si1 = i1;
+					last_si2 = i2;
+				}
 			}
 		}
 	}
@@ -234,6 +285,7 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 	if (interaction.basePairs.size() < 2) {
 		return;
 	}
+	std::cout << "===========================================================\n";
 
 #if INTARNA_IN_DEBUG_MODE
 	// sanity checks

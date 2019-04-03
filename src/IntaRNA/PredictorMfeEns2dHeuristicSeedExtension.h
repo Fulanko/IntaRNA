@@ -77,6 +77,10 @@ protected:
 	//! the seed handler (with idx offset)
 	using PredictorMfeEns2dSeedExtension::seedHandler;
 
+	//! energy of all interaction hybrids that end in position p (seq1) and
+	//! q (seq2) and do not necessarily contain a seed interaction
+	using PredictorMfeEns2dSeedExtension::hybridZ_left;
+
 	//! energy of all interaction hybrids that start in position p (seq1) and
 	//! q (seq2)
 	using PredictorMfeEns2dSeedExtension::hybridZ_right;

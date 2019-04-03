@@ -101,24 +101,33 @@ protected:
 	//! partition function of all interaction hybrids that start on the right side of the seed excluding E_init
 	Z2dMatrix hybridZ_right;
 
+	//
+	std::unordered_map<size_t, Z_type> Z_partitions;
+
 protected:
 
 	/**
-	 * does nothing but to ignore the calls from fillHybridE()
+	 * Updates the overall hybridization partition function
+	 * and the mfe information.
+	 *
+	 * Note: if called multiple time for the same boundaries then the
+	 * reported partition functions have to represent disjoint interaction sets!
 	 *
 	 * @param i1 the index of the first sequence interacting with i2
 	 * @param j1 the index of the first sequence interacting with j2
 	 * @param i2 the index of the second sequence interacting with i1
 	 * @param j2 the index of the second sequence interacting with j1
-	 * @param energy ignored
-	 * @param isHybridE ignored
+	 * @param partFunct the partition function of the interaction
+	 * @param isHybridZ whether or not the given Z is only covering
+	 *        hybridization energy terms (init+loops) or the total
+	 *        interaction energy
 	 */
 	virtual
 	void
-	updateOptima( const size_t i1, const size_t j1
-			, const size_t i2, const size_t j2
-			, const E_type energy
-			, const bool isHybridE );
+	updateZ( const size_t i1, const size_t j1
+				, const size_t i2, const size_t j2
+				, const Z_type partFunct
+				, const bool isHybridZ );
 
 	/**
 	 * Computes all entries of the hybridE matrix for interactions ending in
@@ -174,6 +183,18 @@ protected:
 	void
 	getNextBest( Interaction & curBest );
 
+	/**
+	 * Returns a unique integer key for given seed and base_pair using maxLength constraints
+	 * @param i1 the index of the first sequence interacting with i2
+	 * @param j1 the index of the first sequence interacting with j2
+	 * @param i2 the index of the second sequence interacting with i1
+	 * @param j2 the index of the second sequence interacting with j1
+	 */
+	size_t getHashKey( const size_t i1, const size_t j1, const size_t i2, const size_t j2 );
+
+	void
+	printMatrix( const Z2dMatrix & matrix );
+
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -183,12 +204,32 @@ protected:
 inline
 void
 PredictorMfeEns2dSeedExtension::
-updateOptima( const size_t i1, const size_t j1
+updateZ( const size_t i1, const size_t j1
 		, const size_t i2, const size_t j2
-		, const E_type energy
-		, const bool isHybridE )
+		, const Z_type partZ
+		, const bool isHybridZ )
 {
-	// do nothing and ignore calls from fillHybridE()
+	// update overall hybridization partition function
+	if (isHybridZ) {
+		overallZhybrid += partZ;
+	} else {
+		// remove ED, dangling end contributions, etc. before adding
+		overallZhybrid += ( partZ / energy.getBoltzmannWeight(energy.getE(i1,j1,i2,j2, E_type(0))) );
+	}
+}
+
+inline
+void
+PredictorMfeEns2dSeedExtension::
+printMatrix( const Z2dMatrix & matrix )
+{
+	for (int i = 0; i < matrix.size1(); i++) {
+		std::cout << "| ";
+		for (int j = 0; j < matrix.size2(); j++) {
+			std::cout << matrix(i, j) << " | ";
+		}
+		std::cout << std::endl;
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
