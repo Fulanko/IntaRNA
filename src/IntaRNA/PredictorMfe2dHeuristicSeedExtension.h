@@ -99,7 +99,7 @@ protected:
 protected:
 
 	/**
-	 * does nothing but to ignore the calls from fillHybridE()
+	 * updates the mfe and j1opt/j2opt
 	 *
 	 * @param i1 the index of the first sequence interacting with i2
 	 * @param j1 the index of the first sequence interacting with j2
@@ -113,8 +113,7 @@ protected:
 	updateOptima( const size_t i1, const size_t j1
 			, const size_t i2, const size_t j2
 			, const E_type energy
-			, const bool isHybridE
-		  , const size_t si1, const size_t si2 );
+			, const bool isHybridE );
 
 	/**
 	 * Computes all entries of the hybridE matrix for interactions starting in
@@ -172,11 +171,12 @@ PredictorMfe2dHeuristicSeedExtension::
 updateOptima( const size_t i1, const size_t j1
 		, const size_t i2, const size_t j2
 		, const E_type energy
-		, const bool isHybridE
-	  , const size_t si1, const size_t si2 )
+		, const bool isHybridE )
 {
+	PredictorMfe2dSeedExtension::updateOptima(i1,j1,i2,j2,energy,isHybridE);
+
 	// store boundaries and energy of the optimal right extension
-	E_type fullE = energy + this->energy.getED1(si1, j1) + this->energy.getED2(si2, j2);
+	E_type fullE = isHybridE ? this->energy.getE(i1,j1,i2,j2,energy) : energy;
 	if (fullE < energy_opt) {
 		energy_opt = fullE;
 		j1opt = j1;

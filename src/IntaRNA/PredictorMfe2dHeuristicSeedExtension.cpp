@@ -92,16 +92,17 @@ predict( const IndexRange & r1, const IndexRange & r2
 		// init optimal right boundaries
 		j1opt = sj1;
 		j2opt = sj2;
+		energy_opt = E_INF;
 
 		// update mfe for seed only
-		PredictorMfe2d::updateOptima( si1,sj1,si2,sj2, energy.getE_init() + seedHandler.getSeedE(si1, si2), true );
+		updateOptima( si1,sj1,si2,sj2, energy.getE_init() + seedHandler.getSeedE(si1, si2), true );
 
 		// ER
 		hybridE_right.resize( std::min(interaction_size1-sj1, maxMatrixLen1), std::min(interaction_size2-sj2, maxMatrixLen2) );
 		fillHybridE_right(sj1, sj2, outConstraint, si1, si2);
 
-		// EL
-		hybridE_left.resize( std::min(si1+1, maxMatrixLen1), std::min(si2+1, maxMatrixLen2) );
+		// EL for fixed right boundary jopt
+		hybridE_left.resize( std::min(si1+1, maxMatrixLen1-(j1opt-sj1)), std::min(si2+1, maxMatrixLen2-(j2opt-sj2)) );
 		fillHybridE_left(si1, si2, outConstraint);
 
 	} // si1 / si2
@@ -158,7 +159,7 @@ fillHybridE_right( const size_t i1, const size_t i2
 				// store value
 				hybridE_right(j1-i1,j2-i2) = curMinE;
 				// update mfe if needed
-				updateOptima( si1,j1,si2,j2, hybridE_right(j1-i1,j2-i2) + energy.getE_init() + seedHandler.getSeedE(si1, si2), true, si1, si2 );
+				updateOptima( si1,j1,si2,j2, hybridE_right(j1-i1,j2-i2) + energy.getE_init() + seedHandler.getSeedE(si1, si2), true );//, si1, si2 );
 			}
 		}
 	}
