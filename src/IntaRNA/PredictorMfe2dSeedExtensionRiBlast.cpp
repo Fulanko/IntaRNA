@@ -95,8 +95,8 @@ predict( const IndexRange & r1, const IndexRange & r2
 		extension.j1 = sj1;
 		extension.j2 = sj2;
 		extension.energy = seedE;
-		size_t maxMatrixLen1 = energy.getAccessibility1().getMaxLength()-sl1-1;
-		size_t maxMatrixLen2 = energy.getAccessibility2().getMaxLength()-sl2-1;
+		size_t maxMatrixLen1 = energy.getAccessibility1().getMaxLength()-sl1+1;
+		size_t maxMatrixLen2 = energy.getAccessibility2().getMaxLength()-sl2+1;
 
 		parallelExtension(extension, std::min(interaction_size1-extension.j1, maxMatrixLen1), std::min(interaction_size2-extension.j2, maxMatrixLen2) );
 

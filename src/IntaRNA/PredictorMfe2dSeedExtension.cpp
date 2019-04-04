@@ -87,8 +87,8 @@ predict( const IndexRange & r1, const IndexRange & r2
 		const size_t sl2 = seedHandler.getSeedLength2(si1, si2);
 		const size_t sj1 = si1+sl1-1;
 		const size_t sj2 = si2+sl2-1;
-		const size_t maxMatrixLen1 = energy.getAccessibility1().getMaxLength()-sl1-1;
-		const size_t maxMatrixLen2 = energy.getAccessibility2().getMaxLength()-sl2-1;
+		const size_t maxMatrixLen1 = energy.getAccessibility1().getMaxLength()-sl1+1;
+		const size_t maxMatrixLen2 = energy.getAccessibility2().getMaxLength()-sl2+1;
 		// check if seed fits into interaction range
 		if (sj1 > interaction_size1 || sj2 > interaction_size2)
 			continue;
@@ -287,8 +287,8 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 			const size_t sl2 = seedHandler.getSeedLength2(si1, si2);
 			const size_t sj1 = si1+sl1-1;
 			const size_t sj2 = si2+sl2-1;
-			const size_t maxMatrixLen1 = energy.getAccessibility1().getMaxLength()-sl1-1;
-			const size_t maxMatrixLen2 = energy.getAccessibility2().getMaxLength()-sl2-1;
+			const size_t maxMatrixLen1 = energy.getAccessibility1().getMaxLength()-sl1+1;
+			const size_t maxMatrixLen2 = energy.getAccessibility2().getMaxLength()-sl2+1;
 
 			hybridE_left.resize( std::min(si1+1, maxMatrixLen1), std::min(si2+1, maxMatrixLen2) );
 			fillHybridE_left( si1, si2, outConstraint );
