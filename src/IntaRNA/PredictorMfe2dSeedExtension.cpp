@@ -105,12 +105,12 @@ predict( const IndexRange & r1, const IndexRange & r2
 		for (int i1 = 0; i1 < hybridE_left.size1(); i1++) {
 			// ensure max interaction length in seq 1
 			for (int j1 = 0; j1 < hybridE_right.size1(); j1++) {
-				if (sj1+j1-si1+i1 > energy.getAccessibility1().getMaxLength()) continue;
+				if (sj1+j1-si1+i1 >= energy.getAccessibility1().getMaxLength()) continue;
 				for (int i2 = 0; i2 < hybridE_left.size2(); i2++) {
 					if (E_isINF(hybridE_left(i1,i2))) continue;
 					// ensure max interaction length in seq 2
 					for (int j2 = 0; j2 < hybridE_right.size2(); j2++) {
-						if (sj2+j2-si2+i2 > energy.getAccessibility2().getMaxLength()) continue;
+						if (sj2+j2-si2+i2 >= energy.getAccessibility2().getMaxLength()) continue;
 						if (E_isINF(hybridE_right(j1,j2))) continue;
 						PredictorMfe::updateOptima( si1-i1, sj1+j1, si2-i2, sj2+j2, seedE + hybridE_left(i1,i2) + hybridE_right(j1,j2), true );
 					} // j2

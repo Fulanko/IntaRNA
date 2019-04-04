@@ -108,14 +108,14 @@ predict( const IndexRange & r1, const IndexRange & r2
 			// ensure max interaction length in seq 1
 			for (size_t j1 = 0; j1 < hybridZ_right.size1() ; j1++) {
 				// check interaction length
-				if (sj1+j1-si1+i1 > energy.getAccessibility1().getMaxLength()) continue;
+				if (sj1+j1-si1+i1 >= energy.getAccessibility1().getMaxLength()) continue;
 				for (size_t i2 = 0; i2< hybridZ_left.size2(); i2++) {
 					// check complementarity of boundary
 					if ( Z_equal(hybridZ_left(i1,i2), 0.0) ) continue;
 					// ensure max interaction length in seq 2
 					for (size_t j2 = 0; j2 < hybridZ_right.size2() ; j2++) {
 						// check interaction length
-						if (sj2+j2-si2+i2 > energy.getAccessibility2().getMaxLength()) continue;
+						if (sj2+j2-si2+i2 >= energy.getAccessibility2().getMaxLength()) continue;
 						// check complementarity of boundary
 						if (Z_equal(hybridZ_right(j1,j2),0.0)) continue;
 						// compute overall ensemble energy
