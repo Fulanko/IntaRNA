@@ -124,13 +124,6 @@ predict( const IndexRange & r1, const IndexRange & r2
 						PredictorMfe::updateOptima( si1-i1, sj1+j1, si2-i2, sj2+j2, fullE, true );
 						// update Z
 						updateZ(si1-i1, sj1+j1, si2-i2, sj2+j2, fullE, true);
-						// store partial Z
-						size_t key = getHashKey(si1-i1, sj1+j1, si2-i2, sj2+j2);
-						if ( Z_partitions.find(key) == Z_partitions.end() ) {
-						  Z_partitions[key] = fullE;
-						} else {
-						  Z_partitions[key] += fullE;
-						}
 					} // dj2
 				} // di2
 			} // dj1
@@ -147,20 +140,6 @@ predict( const IndexRange & r1, const IndexRange & r2
 	// report mfe interaction
 	reportOptima( outConstraint );
 
-}
-
-////////////////////////////////////////////////////////////////////////////
-
-size_t
-PredictorMfeEns2dSeedExtension::
-getHashKey( const size_t i1, const size_t j1, const size_t i2, const size_t j2) {
-	size_t maxLength = std::max(energy.getAccessibility1().getMaxLength(), energy.getAccessibility2().getMaxLength());
-	size_t key = 0;
-	key += i1 + pow(maxLength, 0);
-	key += j1 + pow(maxLength, 1);
-	key += i2 + pow(maxLength, 2);
-	key += j2 + pow(maxLength, 3);
-	return key;
 }
 
 ////////////////////////////////////////////////////////////////////////////

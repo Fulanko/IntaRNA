@@ -183,15 +183,7 @@ protected:
 	void
 	getNextBest( Interaction & curBest );
 
-	/**
-	 * Returns a unique integer key for given seed and base_pair using maxLength constraints
-	 * @param i1 the index of the first sequence interacting with i2
-	 * @param j1 the index of the first sequence interacting with j2
-	 * @param i2 the index of the second sequence interacting with i1
-	 * @param j2 the index of the second sequence interacting with j1
-	 */
-	size_t getHashKey( const size_t i1, const size_t j1, const size_t i2, const size_t j2 );
-
+	// debug function
 	void
 	printMatrix( const Z2dMatrix & matrix );
 
@@ -215,6 +207,20 @@ updateZ( const size_t i1, const size_t j1
 	} else {
 		// remove ED, dangling end contributions, etc. before adding
 		overallZhybrid += ( partZ / energy.getBoltzmannWeight(energy.getE(i1,j1,i2,j2, E_type(0))) );
+	}
+
+	// store partial Z
+	size_t maxLength = std::max(energy.getAccessibility1().getMaxLength(), energy.getAccessibility2().getMaxLength());
+	size_t key = 0;
+	key += i1 + pow(maxLength, 0);
+	key += j1 + pow(maxLength, 1);
+	key += i2 + pow(maxLength, 2);
+	key += j2 + pow(maxLength, 3);
+	// TODO: check if key overflow
+	if ( Z_partitions.find(key) == Z_partitions.end() ) {
+		Z_partitions[key] = partZ;
+	} else {
+		Z_partitions[key] += partZ;
 	}
 }
 
