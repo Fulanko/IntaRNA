@@ -79,10 +79,10 @@ predict( const IndexRange & r1, const IndexRange & r2
 			, 0, interaction_size2+1-seedHandler.getConstraint().getBasePairs()) )
 	{
 		E_type seedE = seedHandler.getSeedE(si1, si2);
-		const size_t sl1 = seedHandler.getSeedLength1(si1, si2)-1;
-		const size_t sl2 = seedHandler.getSeedLength2(si1, si2)-1;
-		const size_t sj1 = si1+sl1;
-		const size_t sj2 = si2+sl2;
+		const size_t sl1 = seedHandler.getSeedLength1(si1, si2);
+		const size_t sl2 = seedHandler.getSeedLength2(si1, si2);
+		const size_t sj1 = si1+sl1-1;
+		const size_t sj2 = si2+sl2-1;
 		const size_t maxMatrixLen1 = energy.getAccessibility1().getMaxLength()-sl1;
 		const size_t maxMatrixLen2 = energy.getAccessibility2().getMaxLength()-sl2;
 		// check if seed fits into interaction range
@@ -211,10 +211,10 @@ fillHybridE_left( const size_t j1, const size_t j2
 			}
 			// update mfe if needed
 			if ( E_isNotINF( hybridE_left(j1-i1,j2-i2) ) ) {
-				const size_t sl1 = seedHandler.getSeedLength1(j1, j2)-1;
-				const size_t sl2 = seedHandler.getSeedLength2(j1, j2)-1;
-				const size_t sj1 = j1+sl1;
-				const size_t sj2 = j2+sl2;
+				const size_t sl1 = seedHandler.getSeedLength1(j1, j2);
+				const size_t sl2 = seedHandler.getSeedLength2(j1, j2);
+				const size_t sj1 = j1+sl1-1;
+				const size_t sj2 = j2+sl2-1;
 				PredictorMfe2d::updateOptima( i1,j1opt,i2,j2opt, hybridE_right(j1opt-sj1, j2opt-sj2) + hybridE_left(j1-i1,j2-i2) + seedHandler.getSeedE(j1, j2), true );
 			}
 		}

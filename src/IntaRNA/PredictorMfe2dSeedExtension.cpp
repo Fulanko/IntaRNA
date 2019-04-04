@@ -83,10 +83,10 @@ predict( const IndexRange & r1, const IndexRange & r2
 	{
 		// get energy and boundaries of seed
 		E_type seedE = seedHandler.getSeedE(si1, si2);
-		const size_t sl1 = seedHandler.getSeedLength1(si1, si2)-1;
-		const size_t sl2 = seedHandler.getSeedLength2(si1, si2)-1;
-		const size_t sj1 = si1+sl1;
-		const size_t sj2 = si2+sl2;
+		const size_t sl1 = seedHandler.getSeedLength1(si1, si2);
+		const size_t sl2 = seedHandler.getSeedLength2(si1, si2);
+		const size_t sj1 = si1+sl1-1;
+		const size_t sj2 = si2+sl2-1;
 		const size_t maxMatrixLen1 = energy.getAccessibility1().getMaxLength()-sl1;
 		const size_t maxMatrixLen2 = energy.getAccessibility2().getMaxLength()-sl2;
 		// check if seed fits into interaction range
@@ -283,10 +283,10 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 			, i2,j2+1-seedHandler.getConstraint().getBasePairs() ) )
 	{
 			E_type seedE = seedHandler.getSeedE(si1, si2);
-			const size_t sl1 = seedHandler.getSeedLength1(si1, si2)-1;
-			const size_t sl2 = seedHandler.getSeedLength2(si1, si2)-1;
-			const size_t sj1 = si1+sl1;
-			const size_t sj2 = si2+sl2;
+			const size_t sl1 = seedHandler.getSeedLength1(si1, si2);
+			const size_t sl2 = seedHandler.getSeedLength2(si1, si2);
+			const size_t sj1 = si1+sl1-1;
+			const size_t sj2 = si2+sl2-1;
 			const size_t maxMatrixLen1 = energy.getAccessibility1().getMaxLength()-sl1;
 			const size_t maxMatrixLen2 = energy.getAccessibility2().getMaxLength()-sl2;
 
