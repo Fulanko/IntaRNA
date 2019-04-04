@@ -87,8 +87,8 @@ predict( const IndexRange & r1, const IndexRange & r2
 		const size_t sl2 = seedHandler.getSeedLength2(si1, si2);
 		const size_t sj1 = si1+sl1-1;
 		const size_t sj2 = si2+sl2-1;
-		const size_t maxMatrixLen1 = energy.getAccessibility1().getMaxLength()-sl1;
-		const size_t maxMatrixLen2 = energy.getAccessibility2().getMaxLength()-sl2;
+		const size_t maxMatrixLen1 = energy.getAccessibility1().getMaxLength()-sl1-1;
+		const size_t maxMatrixLen2 = energy.getAccessibility2().getMaxLength()-sl2-1;
 		// check if seed fits into interaction range
 		if (sj1 > interaction_size1 || sj2 > interaction_size2)
 			continue;
@@ -159,10 +159,6 @@ fillHybridZ_left( const size_t j1, const size_t j2
 	size_t i1,i2,k1,k2;
 	std::cout << "fill left" << std::endl;
 
-	// position of last seen complementary seed
-	size_t last_si1 = j1;
-	size_t last_si2 = j2;
-
 	// iterate over all window starts i1 (seq1) and i2 (seq2)
 	for (i1=j1; j1-i1 < hybridZ_left.size1(); i1-- ) {
 		for (i2=j2; j2-i2 < hybridZ_left.size2(); i2-- ) {
@@ -190,16 +186,26 @@ fillHybridZ_left( const size_t j1, const size_t j2
 				E_type seedE = seedHandler.getSeedE(i1, i2);
 				if (E_isNotINF(seedE)) {
 					std::cout << "Complementary SEED at " << i1 << ":" << i2 << "= " << seedE << std::endl;
-					const size_t sl1 = seedHandler.getSeedLength1(i1, i2)-1;
-					const size_t sl2 = seedHandler.getSeedLength2(i1, i2)-1;
-					const size_t sj1 = std::min(i1+sl1, last_si1);
-					const size_t sj2 = std::min(i2+sl2, last_si2);
-					std::cout << hybridZ_left(j1-i1,j2-i2) << std::endl;
-					std::cout << "sub: " << energy.getBoltzmannWeight(energy.getE_interLeft(i1,sj1,i2,sj2)) * hybridZ_left(j1-sj1,j2-sj2) << std::endl;
-					hybridZ_left(j1-i1,j2-i2) -= energy.getBoltzmannWeight(energy.getE_interLeft(i1,sj1,i2,sj2)) * hybridZ_left(j1-sj1,j2-sj2);
-					std::cout << hybridZ_left(j1-i1,j2-i2) << std::endl;
-					last_si1 = i1;
-					last_si2 = i2;
+					// iterate seeds in S region
+					size_t nsi1 = i1;
+					size_t nsi2 = i2;
+					while( seedHandler.updateToNextSeed(nsi1,nsi2
+							, i1, i1+seedHandler.getSeedLength1(i1, i2)-1
+							, i2, i2+seedHandler.getSeedLength2(i1, i2)-1) )
+					{
+						std::cout << "Found SEED in S region " << nsi1 << ":" << nsi2 << "= " << seedHandler.getSeedE(nsi1, nsi2) << std::endl;
+						std::cout << seedHandler.areLoopOverlapping(i1, i2, nsi1, nsi2) << std::endl;
+					}
+
+					// find left-most overlapping S'
+
+					// if S'
+
+					  // trace S
+
+						// compute Energy of loop S \ S'
+
+						// correct Z
 				}
 			}
 		}
@@ -314,12 +320,12 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 	{
 		E_type seedE = seedHandler.getSeedE(si1, si2);
 
-		const size_t sl1 = seedHandler.getSeedLength1(si1, si2)-1;
-		const size_t sl2 = seedHandler.getSeedLength2(si1, si2)-1;
-		const size_t sj1 = si1+sl1;
-		const size_t sj2 = si2+sl2;
-		const size_t maxMatrixLen1 = energy.getAccessibility1().getMaxLength()-sl1;
-		const size_t maxMatrixLen2 = energy.getAccessibility2().getMaxLength()-sl2;
+		const size_t sl1 = seedHandler.getSeedLength1(si1, si2);
+		const size_t sl2 = seedHandler.getSeedLength2(si1, si2);
+		const size_t sj1 = si1+sl1-1;
+		const size_t sj2 = si2+sl2-1;
+		const size_t maxMatrixLen1 = energy.getAccessibility1().getMaxLength()-sl1-1;
+		const size_t maxMatrixLen2 = energy.getAccessibility2().getMaxLength()-sl2-1;
 
 		// compute auxiliary matrices for seed check
 		hybridZ_left.resize( std::min(si1+1, maxMatrixLen1), std::min(si2+1, maxMatrixLen2) );

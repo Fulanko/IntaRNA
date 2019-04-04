@@ -81,10 +81,10 @@ predict( const IndexRange & r1, const IndexRange & r2
 			, 0, interaction_size2+1-seedHandler.getConstraint().getBasePairs()) )
 	{
 		E_type seedE = seedHandler.getSeedE(si1, si2);
-		size_t sl1 = seedHandler.getSeedLength1(si1, si2)-1;
-		size_t sl2 = seedHandler.getSeedLength2(si1, si2)-1;
-		const size_t sj1 = si1+sl1;
-		const size_t sj2 = si2+sl2;
+		size_t sl1 = seedHandler.getSeedLength1(si1, si2);
+		size_t sl2 = seedHandler.getSeedLength2(si1, si2);
+		const size_t sj1 = si1+sl1-1;
+		const size_t sj2 = si2+sl2-1;
 		// check if seed fits into interaction range
 		if (sj1 > interaction_size1 || sj2 > interaction_size2)
 			continue;
@@ -375,10 +375,10 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 	{
 		E_type seedE = seedHandler.getSeedE(si1, si2);
 
-		size_t sl1 = seedHandler.getSeedLength1(si1, si2)-1;
-		size_t sl2 = seedHandler.getSeedLength2(si1, si2)-1;
-		size_t sj1 = si1+sl1;
-		size_t sj2 = si2+sl2;
+		size_t sl1 = seedHandler.getSeedLength1(si1, si2);
+		size_t sl2 = seedHandler.getSeedLength2(si1, si2);
+		size_t sj1 = si1+sl1-1;
+		size_t sj2 = si2+sl2-1;
 
 		ExtendedSeed extension;
 		extension.i1 = si1;
