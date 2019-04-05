@@ -102,7 +102,14 @@ protected:
 	Z2dMatrix hybridZ_right;
 
 	//
-	std::unordered_map<size_t, Z_type> Z_partitions;
+	struct ZPartition {
+		size_t i1;
+		size_t j1;
+		size_t i2;
+		size_t j2;
+		Z_type partZ;
+	};
+	std::unordered_map<size_t, ZPartition> Z_partitions;
 
 protected:
 
@@ -183,6 +190,18 @@ protected:
 	void
 	getNextBest( Interaction & curBest );
 
+	/**
+	 * Returns the hybridization energy of the non overlapping part of seeds si and sj
+	 *
+	 * @param si1 the index of seed1 in the first sequence
+	 * @param si2 the index of seed1 in the second sequence
+	 * @param sj1 the index of seed2 in the first sequence
+	 * @param sj2 the index of seed2 in the second sequence
+	 */
+	virtual
+	Z_type
+	getNonOverlappingEnergy( const size_t si1, const size_t si2, const size_t sj1, const size_t sj2, const size_t j1, const size_t j2 );
+
 	// debug function
 	void
 	printMatrix( const Z2dMatrix & matrix );
@@ -212,23 +231,33 @@ updateZ( const size_t i1, const size_t j1
 	// store partial Z
 	size_t maxLength = std::max(energy.getAccessibility1().getMaxLength(), energy.getAccessibility2().getMaxLength());
 	size_t key = 0;
-	key += i1 + pow(maxLength, 0);
-	key += j1 + pow(maxLength, 1);
-	key += i2 + pow(maxLength, 2);
-	key += j2 + pow(maxLength, 3);
+	key += i1;
+	key += j1 * pow(maxLength, 1);
+	key += i2 * pow(maxLength, 2);
+	key += j2 * pow(maxLength, 3);
 	// TODO: check if key overflow
+	ZPartition zPartition;
 	if ( Z_partitions.find(key) == Z_partitions.end() ) {
-		Z_partitions[key] = partZ;
+		zPartition.i1 = i1;
+		zPartition.j1 = j1;
+		zPartition.i2 = i2;
+		zPartition.j2 = j2;
+		zPartition.partZ = partZ;
 	} else {
-		Z_partitions[key] += partZ;
+		zPartition = Z_partitions[key];
+		zPartition.partZ += partZ;
 	}
+	Z_partitions[key] = zPartition;
 }
+
+//////////////////////////////////////////////////////////////////////////
 
 inline
 void
 PredictorMfeEns2dSeedExtension::
 printMatrix( const Z2dMatrix & matrix )
 {
+	std::cout << "==============" << std::endl;
 	for (int i = 0; i < matrix.size1(); i++) {
 		std::cout << "| ";
 		for (int j = 0; j < matrix.size2(); j++) {
@@ -236,6 +265,7 @@ printMatrix( const Z2dMatrix & matrix )
 		}
 		std::cout << std::endl;
 	}
+	std::cout << "==============" << std::endl;
 }
 
 //////////////////////////////////////////////////////////////////////////
