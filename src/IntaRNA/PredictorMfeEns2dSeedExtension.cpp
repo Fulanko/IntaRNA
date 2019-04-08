@@ -238,14 +238,8 @@ fillHybridZ_left( const size_t j1, const size_t j2
 					}
 
 					if (overlappingSeeds.size() > 0) {
-						// for all overlapping seeds
-						size_t leftMost = RnaSequence::lastPos;
 						for (const auto& p : overlappingSeeds) {
-							// check if seed is one of left-most seeds
-							if (p.first > leftMost) {
-								break;
-							}
-							leftMost = p.first;
+							// for left-most overlapping seed ...
 							sj1 = std::get<0>(p.second);
 							sj2 = std::get<1>(p.second);
 
@@ -253,6 +247,8 @@ fillHybridZ_left( const size_t j1, const size_t j2
 							Z_type nonOverlapE = getNonOverlappingEnergy(i1, i2, sj1, sj2, j1, j2);
 							std::cout << "overlap | Energy = " << nonOverlapE << std::endl;
 							subtractList.push_back(std::make_tuple(j1-i1, j2-i2, nonOverlapE));
+
+							break;
 						}
 					} else {
 						// if no S'
