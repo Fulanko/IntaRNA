@@ -197,6 +197,8 @@ protected:
 	 * @param si2 the index of seed1 in the second sequence
 	 * @param sj1 the index of seed2 in the first sequence
 	 * @param sj2 the index of seed2 in the second sequence
+	 * @param j1 the index of the anchor seed in the first sequence
+	 * @param j2 the index of the anchor seed in the second sequence
 	 */
 	virtual
 	Z_type
