@@ -238,18 +238,14 @@ fillHybridZ_left( const size_t j1, const size_t j2
 					}
 
 					if (overlappingSeeds.size() > 0) {
-						for (const auto& p : overlappingSeeds) {
-							// for left-most overlapping seed ...
-							sj1 = std::get<0>(p.second);
-							sj2 = std::get<1>(p.second);
+						std::tuple<size_t, size_t> leftMost = overlappingSeeds.begin()->second;
+						sj1 = std::get<0>(leftMost);
+						sj2 = std::get<1>(leftMost);
 
-							// compute Energy of loop S \ S'
-							Z_type nonOverlapE = getNonOverlappingEnergy(i1, i2, sj1, sj2, j1, j2);
-							std::cout << "overlap | Energy = " << nonOverlapE << std::endl;
-							subtractList.push_back(std::make_tuple(j1-i1, j2-i2, nonOverlapE));
-
-							break;
-						}
+						// compute Energy of loop S \ S'
+						Z_type nonOverlapE = getNonOverlappingEnergy(i1, i2, sj1, sj2, j1, j2);
+						std::cout << "overlap | Energy = " << nonOverlapE << std::endl;
+						subtractList.push_back(std::make_tuple(j1-i1, j2-i2, nonOverlapE));
 					} else {
 						// if no S'
 						std::cout << "non overlap | Energy = " << hybridZ_left(j1-i1, j2-i2) << std::endl;
