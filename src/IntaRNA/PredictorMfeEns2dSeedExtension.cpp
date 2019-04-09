@@ -17,6 +17,8 @@ PredictorMfeEns2dSeedExtension(
 	, hybridZ_right( 0,0 )
 {
 	assert( seedHandler.getConstraint().getBasePairs() > 1 );
+
+	// TODO check if getMaxLength > sqrt3(size_t) -> error
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -116,10 +118,8 @@ predict( const IndexRange & r1, const IndexRange & r2
 						if (sj2+j2-si2+i2 >= energy.getAccessibility2().getMaxLength()) continue;
 						// check complementarity of boundary
 						if (Z_equal(hybridZ_right(j1,j2),0.0)) continue;
-						// compute overall ensemble energy
-						E_type fullE = seedE + energy.getE(hybridZ_left(i1,i2)) + energy.getE(hybridZ_right(j1,j2));
-						// update Z
-						updateZ(si1-i1, sj1+j1, si2-i2, sj2+j2, fullE, true);
+						// compute partition function given the current seed
+						updateZ(si1-i1, sj1+j1, si2-i2, sj2+j2, hybridZ_left(i1,i2) + seedZ + hybridZ_right(j1,j2), true);
 					} // dj2
 				} // di2
 			} // dj1
@@ -129,9 +129,9 @@ predict( const IndexRange & r1, const IndexRange & r2
 
 	// update ensemble mfe
 	for (std::unordered_map<size_t, ZPartition >::const_iterator it = Z_partitions.begin(); it != Z_partitions.end(); ++it)
-  {
-		PredictorMfe::updateOptima( it->second.i1, it->second.j1, it->second.i2, it->second.j2, it->second.partZ, true );
-  }
+	{
+		PredictorMfe::updateOptima( it->second.i1, it->second.j1, it->second.i2, it->second.j2, energy.getE(it->second.partZ), true );
+	}
 
 	std::cout << "Overall Z: " << getHybridZ() << std::endl;
 
@@ -142,25 +142,41 @@ predict( const IndexRange & r1, const IndexRange & r2
 
 //////////////////////////////////////////////////////////////////////////
 
-Z_type
+E_type
 PredictorMfeEns2dSeedExtension::
-getNonOverlappingEnergy( const size_t si1, const size_t si2, const size_t sj1, const size_t sj2, const size_t j1, const size_t j2 ) {
+getNonOverlappingEnergy( const size_t si1, const size_t si2, const size_t si1p, const size_t si2p ) {
+
+#if INTARNA_IN_DEBUG_MODE
+	// check indices
+	if( !seedHandler.isSeedBound(si1,si2) )
+		throw std::runtime_error("PredictorMfeEns2dSeedExtension::getNonOverlappingEnergy( si "+toString(si1)+","+toString(si2)+",..) is no seed bound");
+	if( !seedHandler.isSeedBound(si1p,si2p) )
+		throw std::runtime_error("PredictorMfeEns2dSeedExtension::getNonOverlappingEnergy( sip "+toString(si1p)+","+toString(si2p)+",..) is no seed bound");
+#endif
+
+	// sanity check
+	if( ! seedHandler.areLoopOverlapping(si1,si2,si1p,si2p) || si1 == si1p ) {
+		return E_type(0);
+	}
+
 	// trace S
 	Interaction interaction = Interaction(energy.getAccessibility1().getSequence(), energy.getAccessibility2().getAccessibilityOrigin().getSequence());
 	interaction.basePairs.push_back( energy.getBasePair(si1, si2) );
 	seedHandler.traceBackSeed( interaction, si1, si2 );
-	interaction.basePairs.push_back( energy.getBasePair(si1+seedHandler.getSeedLength1(si1, si2)-1,si2+seedHandler.getSeedLength2(si1, si2)-1) );
 
-	Z_type fullE = 0;
-	for (size_t i = 0; i < interaction.basePairs.size(); i++) {
+	E_type fullE = 0;
+	size_t k1old = si1, k2old = si2;
+	for (size_t i = 1; i < interaction.basePairs.size(); i++) {
+		// get index of current base pair
 		size_t k1 = energy.getIndex1(interaction.basePairs[i]);
-		if (k1-si1 > energy.getMaxInternalLoopSize1()+1 || k1 > sj1) break;
-		for (size_t j = 0; j < interaction.basePairs.size(); j++) {
-			size_t k2 = energy.getIndex2(interaction.basePairs[j]);
-			if (k2-si2 > energy.getMaxInternalLoopSize2()+1 || k2 > sj2) break;
-			// add hybridization energy
-			fullE += energy.getBoltzmannWeight(energy.getE_interLeft(si1,k1,si2,k2)) * hybridZ_left(j1-k1,j2-k2);
-	  }
+		// check if overlap done
+		if (k1 > si1p) break;
+		size_t k2 = energy.getIndex2(interaction.basePairs[i]);
+		// add hybridization energy
+		fullE += energy.getE_interLeft(k1old,k1,k2old,k2);
+		// store
+		k1old = k1;
+		k2old = k2;
 	}
 	return fullE;
 }
@@ -225,35 +241,34 @@ fillHybridZ_left( const size_t j1, const size_t j2
 				E_type seedE = seedHandler.getSeedE(i1, i2);
 				if (E_isNotINF(seedE)) {
 					// iterate seeds in S region
+					// todo maybe rename in si1prime etc
 					size_t sj1 = RnaSequence::lastPos, sj2 = RnaSequence::lastPos;
+					// todo replace with left-most loop-overlapping seed
+					size_t si1overlap = i1, si2overlap = i2;
 					std::map<size_t, std::tuple<size_t, size_t>> overlappingSeeds;
+					// find left-most loop-overlapping seed
 					while( seedHandler.updateToNextSeed(sj1,sj2
-							, i1, i1+seedHandler.getSeedLength1(i1, i2)-1
-							, i2, i2+seedHandler.getSeedLength2(i1, i2)-1) )
+							, i1, i1+seedHandler.getSeedLength1(i1, i2)-2
+							, i2, i2+seedHandler.getSeedLength2(i1, i2)-2) )
 					{
 						// check for overlapping seeds
-						if (seedHandler.areLoopOverlapping(i1, i2, sj1, sj2) && !(i1 == sj1 && i2 == sj2)) {
+						if (seedHandler.areLoopOverlapping(i1, i2, sj1, sj2) && i1 < sj1) {
+							// update left-most loop-overlapping seed
 							overlappingSeeds.insert(std::pair<size_t, std::tuple<size_t, size_t>>(std::min(sj1, sj2), std::make_tuple(sj1, sj2)));
 						}
 					}
 
-					if (overlappingSeeds.size() > 0) {
-						for (const auto& p : overlappingSeeds) {
-							// for left-most overlapping seed ...
-							sj1 = std::get<0>(p.second);
-							sj2 = std::get<1>(p.second);
-
-							// compute Energy of loop S \ S'
-							Z_type nonOverlapE = getNonOverlappingEnergy(i1, i2, sj1, sj2, j1, j2);
-							std::cout << "overlap | Energy = " << nonOverlapE << std::endl;
-							subtractList.push_back(std::make_tuple(j1-i1, j2-i2, nonOverlapE));
-
-							break;
-						}
+					if (i1 < si1overlap) {
+						// compute Energy of loop S \ S'
+						E_type nonOverlapE = getNonOverlappingEnergy(i1, i2, sj1, sj2);
+						std::cout << "overlap | Energy = " << nonOverlapE << std::endl;
+						// substract energy.getBoltzmannWeight( nonOverlapE ) * hybridZ_left( si1overlap, si2overlap bis anchor seed [==1 falls gleich])
+//						subtractList.push_back(std::make_tuple(j1-i1, j2-i2, nonOverlapE));
 					} else {
 						// if no S'
 						std::cout << "non overlap | Energy = " << hybridZ_left(j1-i1, j2-i2) << std::endl;
-						subtractList.push_back(std::make_tuple(j1-i1, j2-i2, hybridZ_left(j1-i1, j2-i2)));
+						// substract seedZ * hybridZ_left(right end seed bis anchor seed)
+//						subtractList.push_back(std::make_tuple(j1-i1, j2-i2, hybridZ_left(j1-i1, j2-i2)));
 					}
 
 				} // seed
