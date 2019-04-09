@@ -119,7 +119,7 @@ predict( const IndexRange & r1, const IndexRange & r2
 						// check complementarity of boundary
 						if (Z_equal(hybridZ_right(j1,j2),0.0)) continue;
 						// compute partition function given the current seed
-						updateZ(si1-i1, sj1+j1, si2-i2, sj2+j2, hybridZ_left(i1,i2) + seedZ + hybridZ_right(j1,j2), true);
+						updateZ(si1-i1, sj1+j1, si2-i2, sj2+j2, hybridZ_left(i1,i2) * seedZ * hybridZ_right(j1,j2), true);
 					} // dj2
 				} // di2
 			} // dj1
@@ -220,24 +220,6 @@ fillHybridZ_left( const size_t j1, const size_t j2
 					} // k2
 				} // k1
 
-			} // complementary
-
-		} // i2
-	} // i1
-
-
-	// ===========================================================================
-	// subtract seeds from hybridZ_left
-
-	std::vector<std::tuple<size_t, size_t, Z_type>> subtractList;
-
-	// iterate over all window starts i1 (seq1) and i2 (seq2)
-	for (i1=j1; j1-i1 < hybridZ_left.size1(); i1-- ) {
-		for (i2=j2; j2-i2 < hybridZ_left.size2(); i2-- ) {
-
-			// check if complementary (use global sequence indexing)
-			if( i1<j1 && i2<j2 && energy.areComplementary(i1,i2) ) {
-
 				E_type seedE = seedHandler.getSeedE(i1, i2);
 				if (E_isNotINF(seedE)) {
 					// iterate seeds in S region
@@ -258,29 +240,31 @@ fillHybridZ_left( const size_t j1, const size_t j2
 						}
 					}
 
-					if (i1 < si1overlap) {
+					//if (i1 < si1overlap) {
+					if (overlappingSeeds.size() > 0) {
+					  si1overlap = std::get<0>(overlappingSeeds.begin()->second);
+						si2overlap = std::get<1>(overlappingSeeds.begin()->second);
 						// compute Energy of loop S \ S'
-						E_type nonOverlapE = getNonOverlappingEnergy(i1, i2, sj1, sj2);
-						std::cout << "overlap | Energy = " << nonOverlapE << std::endl;
+						E_type nonOverlapE = getNonOverlappingEnergy(i1, i2, si1overlap, si2overlap);
+						LOG(DEBUG) << "overlap | Energy = " << nonOverlapE;
 						// substract energy.getBoltzmannWeight( nonOverlapE ) * hybridZ_left( si1overlap, si2overlap bis anchor seed [==1 falls gleich])
 //						subtractList.push_back(std::make_tuple(j1-i1, j2-i2, nonOverlapE));
+						// TODO: case where overlap == anchor
+						hybridZ_left(j1-i1, j2-i2) -= energy.getBoltzmannWeight( nonOverlapE ) * hybridZ_left( j1-si1overlap, j2-si2overlap);
 					} else {
 						// if no S'
-						std::cout << "non overlap | Energy = " << hybridZ_left(j1-i1, j2-i2) << std::endl;
+						LOG(DEBUG) << "non overlap | Energy = " << energy.getBoltzmannWeight(seedE) * hybridZ_left( j1-(i1+seedHandler.getSeedLength1(i1, i2)-1), j2-(i2+seedHandler.getSeedLength2(i1, i2)-1));
 						// substract seedZ * hybridZ_left(right end seed bis anchor seed)
 //						subtractList.push_back(std::make_tuple(j1-i1, j2-i2, hybridZ_left(j1-i1, j2-i2)));
+            hybridZ_left(j1-i1, j2-i2) -= energy.getBoltzmannWeight(seedE) * hybridZ_left( j1-(i1+seedHandler.getSeedLength1(i1, i2)-1), j2-(i2+seedHandler.getSeedLength2(i1, i2)-1));
 					}
 
-				} // seed
+				}
 
 			} // complementary
+
 		} // i2
 	} // i1
-
-	// correct Z
-	for (size_t i = 0; i < subtractList.size(); i++) {
-		hybridZ_left(std::get<0>(subtractList[i]),std::get<1>(subtractList[i])) -= std::get<2>(subtractList[i]);
-	}
 
 }
 
@@ -341,7 +325,6 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 	if (interaction.basePairs.size() < 2) {
 		return;
 	}
-	std::cout << "===========================================================\n";
 
 #if INTARNA_IN_DEBUG_MODE
 	// sanity checks
