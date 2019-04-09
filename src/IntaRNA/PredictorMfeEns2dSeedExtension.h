@@ -197,12 +197,10 @@ protected:
 	 * @param si2 the index of seed1 in the second sequence
 	 * @param sj1 the index of seed2 in the first sequence
 	 * @param sj2 the index of seed2 in the second sequence
-	 * @param j1 the index of the anchor seed in the first sequence
-	 * @param j2 the index of the anchor seed in the second sequence
 	 */
 	virtual
-	Z_type
-	getNonOverlappingEnergy( const size_t si1, const size_t si2, const size_t sj1, const size_t sj2, const size_t j1, const size_t j2 );
+	E_type
+	getNonOverlappingEnergy( const size_t si1, const size_t si2, const size_t sj1, const size_t sj2 );
 
 	// debug function
 	void
@@ -223,12 +221,7 @@ updateZ( const size_t i1, const size_t j1
 		, const bool isHybridZ )
 {
 	// update overall hybridization partition function
-	if (isHybridZ) {
-		overallZhybrid += partZ;
-	} else {
-		// remove ED, dangling end contributions, etc. before adding
-		overallZhybrid += ( partZ / energy.getBoltzmannWeight(energy.getE(i1,j1,i2,j2, E_type(0))) );
-	}
+	PredictorMfeEns::updateZ( i1, j1, i2, j2, partZ, isHybridZ );
 
 	// store partial Z
 	size_t maxLength = std::max(energy.getAccessibility1().getMaxLength(), energy.getAccessibility2().getMaxLength());
@@ -238,18 +231,20 @@ updateZ( const size_t i1, const size_t j1
 	key += i2 * pow(maxLength, 2);
 	key += j2 * pow(maxLength, 3);
 	// TODO: check if key overflow
-	ZPartition zPartition;
 	if ( Z_partitions.find(key) == Z_partitions.end() ) {
+		// create new entry
+		ZPartition zPartition;
 		zPartition.i1 = i1;
 		zPartition.j1 = j1;
 		zPartition.i2 = i2;
 		zPartition.j2 = j2;
 		zPartition.partZ = partZ;
+		Z_partitions[key] = zPartition;
 	} else {
-		zPartition = Z_partitions[key];
+		// update entry
+		ZPartition & zPartition = Z_partitions[key];
 		zPartition.partZ += partZ;
 	}
-	Z_partitions[key] = zPartition;
 }
 
 //////////////////////////////////////////////////////////////////////////
