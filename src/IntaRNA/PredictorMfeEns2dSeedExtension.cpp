@@ -133,7 +133,7 @@ predict( const IndexRange & r1, const IndexRange & r2
 		PredictorMfe::updateOptima( it->second.i1, it->second.j1, it->second.i2, it->second.j2, energy.getE(it->second.partZ), true );
 	}
 
-	std::cout << "Overall Z: " << getHybridZ() << std::endl;
+	LOG(DEBUG) << "Overall Z: " << getHybridZ();
 
 	// report mfe interaction
 	reportOptima( outConstraint );
