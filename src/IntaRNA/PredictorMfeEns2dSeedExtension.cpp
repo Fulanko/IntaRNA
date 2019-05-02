@@ -155,7 +155,7 @@ getNonOverlappingEnergy( const size_t si1, const size_t si2, const size_t si1p, 
 #endif
 
 	// sanity check
-	if( ! seedHandler.areLoopOverlapping(si1,si2,si1p,si2p) || si1 == si1p ) {
+	if( si1 == si1p || ! seedHandler.areLoopOverlapping(si1,si2,si1p,si2p) ) {
 		return E_type(0);
 	}
 
@@ -197,6 +197,8 @@ fillHybridZ_left( const size_t j1, const size_t j2
 	// global vars to avoid reallocation
 	size_t i1,i2,k1,k2;
 
+	LOG(DEBUG)<<"\n fillHybridLeft ( "<<j1<<","<<j2<<" ) ";
+
 	// iterate over all window starts i1 (seq1) and i2 (seq2)
 	for (i1=j1; j1-i1 < hybridZ_left.size1(); i1-- ) {
 		for (i2=j2; j2-i2 < hybridZ_left.size2(); i2-- ) {
@@ -219,46 +221,75 @@ fillHybridZ_left( const size_t j1, const size_t j2
 						}
 					} // k2
 				} // k1
+		LOG_IF((hybridZ_left(j1-i1,j2-i2) < 0),DEBUG) <<" after filling : i "<<i1<<","<<i2<<" hybrid(i) "<<hybridZ_left(j1-i1,j2-i2);
 
-				E_type seedE = seedHandler.getSeedE(i1, i2);
-				if (E_isNotINF(seedE)) {
-					// iterate seeds in S region
-					// todo maybe rename in si1prime etc
-					size_t sj1 = RnaSequence::lastPos, sj2 = RnaSequence::lastPos;
-					// todo replace with left-most loop-overlapping seed
-					size_t si1overlap = i1, si2overlap = i2;
-					std::map<size_t, std::tuple<size_t, size_t>> overlappingSeeds;
-					// find left-most loop-overlapping seed
-					while( seedHandler.updateToNextSeed(sj1,sj2
-							, i1, i1+seedHandler.getSeedLength1(i1, i2)-2
-							, i2, i2+seedHandler.getSeedLength2(i1, i2)-2) )
-					{
-						// check for overlapping seeds
-						if (seedHandler.areLoopOverlapping(i1, i2, sj1, sj2) && i1 < sj1) {
-							// update left-most loop-overlapping seed
-							overlappingSeeds.insert(std::pair<size_t, std::tuple<size_t, size_t>>(std::min(sj1, sj2), std::make_tuple(sj1, sj2)));
+				if (seedHandler.isSeedBound(i1, i2) ) {
+
+					// check if seed is to be processed:
+					bool substractThisSeed =
+							// check if left of anchor seed
+										( i1+seedHandler.getSeedLength1(i1,i2)-1 < j1
+										&& i2+seedHandler.getSeedLength2(i1,i2)-1 < j2 )
+							// check if overlapping with anchor seed
+									||	seedHandler.areLoopOverlapping(i1,i2,j1,j2);
+					if (substractThisSeed) {
+
+						LOG(DEBUG) <<" seedbound  i " <<i1<<","<<i2;
+
+						// iterate seeds in S region
+						// todo maybe rename in si1prime etc
+						size_t sj1 = RnaSequence::lastPos, sj2 = RnaSequence::lastPos;
+						// todo replace with left-most loop-overlapping seed
+						size_t si1overlap = j1+1, si2overlap = j2+1;
+						// find left-most loop-overlapping seed
+						while( seedHandler.updateToNextSeed(sj1,sj2
+								, i1, std::min(j1,i1+seedHandler.getSeedLength1(i1, i2)-2)
+								, i2, std::min(j2,i2+seedHandler.getSeedLength2(i1, i2)-2)) )
+						{
+							// check if right of i1,i2 and overlapping
+							if (sj1 > i1 && seedHandler.areLoopOverlapping(i1, i2, sj1, sj2)) {
+								// update left-most loop-overlapping seed
+								if (sj1 < si1overlap) {
+									si1overlap = sj1;
+									si2overlap = sj2;
+								}
+							}
 						}
-					}
 
-					//if (i1 < si1overlap) {
-					if (overlappingSeeds.size() > 0) {
-					  si1overlap = std::get<0>(overlappingSeeds.begin()->second);
-						si2overlap = std::get<1>(overlappingSeeds.begin()->second);
-						// compute Energy of loop S \ S'
-						E_type nonOverlapE = getNonOverlappingEnergy(i1, i2, si1overlap, si2overlap);
-						LOG(DEBUG) << "overlap | Energy = " << nonOverlapE;
-						// substract energy.getBoltzmannWeight( nonOverlapE ) * hybridZ_left( si1overlap, si2overlap bis anchor seed [==1 falls gleich])
-//						subtractList.push_back(std::make_tuple(j1-i1, j2-i2, nonOverlapE));
-						// TODO: case where overlap == anchor
-						hybridZ_left(j1-i1, j2-i2) -= energy.getBoltzmannWeight( nonOverlapE ) * hybridZ_left( j1-si1overlap, j2-si2overlap);
-					} else {
-						// if no S'
-						LOG(DEBUG) << "non overlap | Energy = " << energy.getBoltzmannWeight(seedE) * hybridZ_left( j1-(i1+seedHandler.getSeedLength1(i1, i2)-1), j2-(i2+seedHandler.getSeedLength2(i1, i2)-1));
-						// substract seedZ * hybridZ_left(right end seed bis anchor seed)
-//						subtractList.push_back(std::make_tuple(j1-i1, j2-i2, hybridZ_left(j1-i1, j2-i2)));
-            hybridZ_left(j1-i1, j2-i2) -= energy.getBoltzmannWeight(seedE) * hybridZ_left( j1-(i1+seedHandler.getSeedLength1(i1, i2)-1), j2-(i2+seedHandler.getSeedLength2(i1, i2)-1));
-					}
-
+						// if we found an overlapping seed
+						if (si1overlap <= j1) {
+							// check if right side is non-empty
+							if ( ! E_equal(hybridZ_left( j1-si1overlap, j2-si2overlap),0) ) {
+								// compute Energy of loop S \ S'
+								E_type nonOverlapE = getNonOverlappingEnergy(i1, i2, si1overlap, si2overlap);
+								LOG(DEBUG) << "overlap | Energy = " << nonOverlapE;
+								// substract energy.getBoltzmannWeight( nonOverlapE ) * hybridZ_left( si1overlap, si2overlap bis anchor seed [==1 falls gleich])
+								// TODO: case where overlap == anchor
+								Z_type correctionTerm = energy.getBoltzmannWeight( nonOverlapE ) * hybridZ_left( j1-si1overlap, j2-si2overlap);
+								LOG_IF(correctionTerm > hybridZ_left(j1-i1, j2-i2),DEBUG) <<" unbalanced correction : correctionTerm "<<correctionTerm<<" > "<<hybridZ_left(j1-i1, j2-i2) <<" hybridZ(i)";
+								hybridZ_left(j1-i1, j2-i2) -= correctionTerm;
+								// sanity ensurence
+								if (hybridZ_left(j1-i1, j2-i2) < 0) {
+									hybridZ_left(j1-i1, j2-i2) = Z_type(0.0);
+								}
+							}
+						} else {
+							// get energy of seed
+							E_type seedE = seedHandler.getSeedE(i1, i2);
+							// if no S'
+							LOG(DEBUG) << "non overlap "
+									<<" | sj "<<(i1+seedHandler.getSeedLength1(i1, i2)-1)<<","<<(i2+seedHandler.getSeedLength2(i1, i2)-1)
+									<<" Energy = " << energy.getBoltzmannWeight(seedE) <<"*"<< hybridZ_left( j1-(i1+seedHandler.getSeedLength1(i1, i2)-1), j2-(i2+seedHandler.getSeedLength2(i1, i2)-1))<<" = "<<energy.getBoltzmannWeight(seedE) * hybridZ_left( j1-(i1+seedHandler.getSeedLength1(i1, i2)-1), j2-(i2+seedHandler.getSeedLength2(i1, i2)-1));
+							// substract seedZ * hybridZ_left(right end seed bis anchor seed)
+							Z_type correctionTerm = energy.getBoltzmannWeight(seedE) * hybridZ_left( j1-(i1+seedHandler.getSeedLength1(i1, i2)-1), j2-(i2+seedHandler.getSeedLength2(i1, i2)-1));
+							LOG_IF(correctionTerm > hybridZ_left(j1-i1, j2-i2),DEBUG) <<" unbalanced correction : correctionTerm "<<correctionTerm<<" > "<<hybridZ_left(j1-i1, j2-i2) <<" hybridZ(i)";
+							hybridZ_left(j1-i1, j2-i2) -= correctionTerm;
+							// sanity ensurence
+							if (hybridZ_left(j1-i1, j2-i2) < 0) {
+								hybridZ_left(j1-i1, j2-i2) = Z_type(0.0);
+							}
+						}
+					} // substractThisSeed
 				}
 
 			} // complementary
