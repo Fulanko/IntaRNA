@@ -76,6 +76,8 @@ predict( const IndexRange & r1, const IndexRange & r2
 
 	// initialize mfe interaction for updates
 	initOptima( outConstraint );
+	// initialize overall partition function for updates
+	initZ( outConstraint );
 
 	size_t si1 = RnaSequence::lastPos, si2 = RnaSequence::lastPos;
 	while( seedHandler.updateToNextSeed(si1,si2
@@ -89,11 +91,11 @@ predict( const IndexRange & r1, const IndexRange & r2
 		const size_t sl2 = seedHandler.getSeedLength2(si1, si2);
 		const size_t sj1 = si1+sl1-1;
 		const size_t sj2 = si2+sl2-1;
-		const size_t maxMatrixLen1 = energy.getAccessibility1().getMaxLength()-sl1+1;
-		const size_t maxMatrixLen2 = energy.getAccessibility2().getMaxLength()-sl2+1;
 		// check if seed fits into interaction range
 		if (sj1 > interaction_size1 || sj2 > interaction_size2)
 			continue;
+		const size_t maxMatrixLen1 = energy.getAccessibility1().getMaxLength()-sl1+1;
+		const size_t maxMatrixLen2 = energy.getAccessibility2().getMaxLength()-sl2+1;
 
 		// EL
 		hybridZ_left.resize( std::min(si1+1, maxMatrixLen1), std::min(si2+1, maxMatrixLen2) );
@@ -130,7 +132,10 @@ predict( const IndexRange & r1, const IndexRange & r2
 	// update ensemble mfe
 	for (std::unordered_map<size_t, ZPartition >::const_iterator it = Z_partitions.begin(); it != Z_partitions.end(); ++it)
 	{
-		PredictorMfe::updateOptima( it->second.i1, it->second.j1, it->second.i2, it->second.j2, energy.getE(it->second.partZ), true );
+		// if partition function is > 0
+		if (Z_isNotINF(it->second.partZ) && it->second.partZ > 0 &&  !Z_equal(it->second.partZ, 0)) {
+			PredictorMfe::updateOptima( it->second.i1, it->second.j1, it->second.i2, it->second.j2, energy.getE(it->second.partZ), true );
+		}
 	}
 
 	LOG(DEBUG) << "Overall Z: " << getHybridZ();
@@ -197,13 +202,12 @@ fillHybridZ_left( const size_t j1, const size_t j2
 	// global vars to avoid reallocation
 	size_t i1,i2,k1,k2;
 
-	LOG(DEBUG)<<"\n fillHybridLeft ( "<<j1<<","<<j2<<" ) ";
 
 	// iterate over all window starts i1 (seq1) and i2 (seq2)
 	for (i1=j1; j1-i1 < hybridZ_left.size1(); i1-- ) {
 		for (i2=j2; j2-i2 < hybridZ_left.size2(); i2-- ) {
 			// init current cell (0 if not just right-most (j1,j2) base pair)
-			hybridZ_left(j1-i1,j2-i2) = i1==j1 && i2==j2 ? energy.getBoltzmannWeight(energy.getE_init()) : 0.0;
+			hybridZ_left(j1-i1,j2-i2) = (i1==j1 && i2==j2) ? energy.getBoltzmannWeight(energy.getE_init()) : 0.0;
 
 			// check if complementary (use global sequence indexing)
 			if( i1<j1 && i2<j2 && energy.areComplementary(i1,i2) ) {
@@ -221,7 +225,6 @@ fillHybridZ_left( const size_t j1, const size_t j2
 						}
 					} // k2
 				} // k1
-		LOG_IF((hybridZ_left(j1-i1,j2-i2) < 0),DEBUG) <<" after filling : i "<<i1<<","<<i2<<" hybrid(i) "<<hybridZ_left(j1-i1,j2-i2);
 
 				if (seedHandler.isSeedBound(i1, i2) ) {
 
