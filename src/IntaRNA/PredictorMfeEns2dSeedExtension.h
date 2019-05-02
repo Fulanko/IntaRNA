@@ -21,19 +21,6 @@ class PredictorMfeEns2dSeedExtension: public PredictorMfeEns {
 
 protected:
 
-	typedef float Z_type;
-	const Z_type Z_INF = std::numeric_limits<Z_type>::infinity();
-
-	//! the delta difference range to consider two energies equivalent
-  //! using sqrt(representable positive value closest to zero)
-	#define Z_precisionEpsilon 0.0001
-
-	//! check if a given energy is NOT set to Z_INF
-	#define Z_isNotINF( e ) ( std::numeric_limits<Z_type>::max() >= e )
-
-	//! check if a given energy is set to Z_INF
-	#define Z_isINF( e ) (  std::numeric_limits<Z_type>::max() < e )
-
 	//! matrix type to hold the partition functions for interaction site starts
 	typedef boost::numeric::ublas::matrix<Z_type> Z2dMatrix;
 
