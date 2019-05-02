@@ -74,6 +74,8 @@ predict( const IndexRange & r1, const IndexRange & r2
 
 	// initialize mfe interaction for updates
 	initOptima( outConstraint );
+	// initialize overall partition function for updates
+	initZ( outConstraint );
 
 	size_t si1 = RnaSequence::lastPos, si2 = RnaSequence::lastPos;
 	while( seedHandler.updateToNextSeed(si1,si2
