@@ -177,7 +177,7 @@ getPfScale( const RnaSequence & seq, const VrnaHandler & vrnaHandler
 	free(foldParams);
 
 	// compute a scaling factor to avoid overflow in partition function
-	return std::exp(-(curModel.sfact*min_en)/ vrnaHandler.getRT() /(double)len);
+	return std::exp(-(curModel.sfact*min_en) / (double)(vrnaHandler.getRT()) / (double)len);
 
 }
 

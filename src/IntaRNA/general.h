@@ -68,6 +68,8 @@
 #include <cmath>
 #include <limits>
 
+#include <boost/multiprecision/float128.hpp>
+
 namespace IntaRNA {
 
 	//! type for energy values in kcal/mol units for in-/output only
@@ -79,7 +81,8 @@ namespace IntaRNA {
 	const E_type E_MAX = E_INF / 2;
 
 	//! type for probabilities, RT and Boltzmann values
-	typedef float Z_type;
+	typedef boost::multiprecision::float128 Z_type;
+//	typedef double Z_type;
 	const Z_type Z_INF = std::numeric_limits<Z_type>::infinity();
 
 } // namespace
@@ -115,13 +118,6 @@ namespace IntaRNA {
   //! convert Z_type to E_type
 #define Z_2_E( e ) ( static_cast<E_type>(e * 100) )
 
-#ifdef E_precisionEpsilon
-	#error E_precisionEpsilon already defined
-#endif
-	//! the delta difference range to consider two energies equivalent
-    //! using sqrt(representable positive value closest to zero)
-#define E_precisionEpsilon 0.0001
-
 #ifdef E_equal
 	#error E_equal already defined
 #endif
@@ -146,7 +142,7 @@ namespace IntaRNA {
 	#error Z_equal already defined
 #endif
 	//! check if two energies are equal according to some epsilon
-#define Z_equal( e1, e2 ) ( std::abs((e1)-(e2)) < IntaRNA_precisionEpsilon)
+#define Z_equal( e1, e2 ) ( boost::multiprecision::abs((e1)-(e2)) < IntaRNA_precisionEpsilon)
 // another option from http://en.cppreference.com/w/cpp/types/numeric_limits/epsilon
 //#define Z_equal_ULP 2
 //#define Z_equal( e1, e2 ) ( \

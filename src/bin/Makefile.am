@@ -29,7 +29,8 @@ IntaRNA_SOURCES =	IntaRNA.cpp \
 					CommandLineParsing.cpp
 					
 IntaRNA_LDADD = 	$(top_builddir)/src/IntaRNA/libIntaRNA.a \
-					$(top_builddir)/src/libeasylogging.a
+					$(top_builddir)/src/libeasylogging.a \
+					-lquadmath
 
 ###############################################################################
 
