@@ -312,7 +312,7 @@ InteractionEnergyBasePair::InteractionEnergyBasePair(
   RT(_RT),
   basePairEnergy(bpEnergy),
   minLoopLength(minLoopLen),
-  basePairWeight(boost::multiprecision::exp(E_2_Z(-bpEnergy) / _RT)),
+  basePairWeight(Z_exp(E_2_Z(-bpEnergy) / _RT)),
   logQ1(),
   logQ2()
 {

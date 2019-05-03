@@ -181,11 +181,11 @@ add( const Interaction & i, const OutputConstraint & outConstraint )
 				break;
 
 			case Pu1:
-				outTmp <<E_2_Ekcal(Z_2_E(boost::multiprecision::exp( - E_2_Z(contr.ED1) / energy.getRT() )));
+				outTmp <<E_2_Ekcal(Z_2_E(Z_exp( - E_2_Z(contr.ED1) / energy.getRT() )));
 				break;
 
 			case Pu2:
-				outTmp <<E_2_Ekcal(Z_2_E(boost::multiprecision::exp( - E_2_Z(contr.ED2 / energy.getRT() ))));
+				outTmp <<E_2_Ekcal(Z_2_E(Z_exp( - E_2_Z(contr.ED2 / energy.getRT() ))));
 				break;
 
 			case E_init:
