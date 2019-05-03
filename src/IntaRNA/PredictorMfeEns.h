@@ -38,6 +38,15 @@ public:
 
 	virtual ~PredictorMfeEns();
 
+	/**
+	 * Access to the current overall partition function covering
+	 * all interactions of the last predict() call.
+	 *
+	 * @return the overall hybridization partition function
+	 */
+	Z_type
+	getOverallZ() const;
+
 protected:
 
 
@@ -52,16 +61,7 @@ protected:
 
 	//! the overall hybridization partition function since initZ() was last called.
 	//! its value is updated by updateZ()
-	Z_type overallZhybrid;
-
-	/**
-	 * Access to the current overall hybridization partition function covering
-	 * all interaction since the last predict() call.
-	 *
-	 * @return the overall hybridization partition function
-	 */
-	Z_type
-	getHybridZ() const;
+	Z_type overallZ;
 
 
 	/**

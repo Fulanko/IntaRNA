@@ -14,7 +14,7 @@ PredictorMfeEns::PredictorMfeEns(
 		, PredictionTracker * predTracker
 		)
 	: PredictorMfe(energy,output,predTracker)
-	, overallZhybrid(0)
+	, overallZ(0)
 {
 
 }
@@ -33,7 +33,7 @@ PredictorMfeEns::
 initZ( const OutputConstraint & outConstraint )
 {
 	// reinit overall partition function
-	overallZhybrid = Z_type(0);
+	overallZ = Z_type(0);
 
 	// reinit mfe information
 	initOptima( outConstraint );
@@ -43,9 +43,9 @@ initZ( const OutputConstraint & outConstraint )
 
 Z_type
 PredictorMfeEns::
-getHybridZ() const
+getOverallZ() const
 {
-	return overallZhybrid;
+	return overallZ;
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -58,16 +58,17 @@ updateZ( const size_t i1, const size_t j1
 		, const bool isHybridZ )
 {
 	// check if something to be done
-	if (Z_equal(partZ,0) || Z_isINF(overallZhybrid))
+	if (Z_equal(partZ,0) || Z_isINF(overallZ))
 		return;
 	// update overall hybridization partition function
 	if (isHybridZ) {
-		overallZhybrid += partZ;
-		if (Z_isINF(overallZhybrid))
-			LOG(WARNING) <<"!!! PredictorMfeEns::overallZhybrid = infinity (partition function overflow)" ;
+		// add ED terms etc. before update
+		overallZ += partZ * energy.getBoltzmannWeight( energy.getE(i1,j1,i2,j2,E_type(0)) );
+		if (Z_isINF(overallZ))
+			LOG(WARNING) <<"!!! PredictorMfeEns::overallZ = infinity (partition function overflow)" ;
 	} else {
-		// remove ED, dangling end contributions, etc. before adding
-		overallZhybrid += ( partZ / energy.getBoltzmannWeight(energy.getE(i1,j1,i2,j2, E_type(0))) );
+		// just update
+		overallZ += partZ;
 	}
 }
 
