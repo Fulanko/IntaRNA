@@ -114,6 +114,9 @@ predict( const IndexRange & r1, const IndexRange & r2
 	// report mfe interaction
 	reportOptima( outConstraint );
 
+	LOG(DEBUG) <<"Overall Z = "<<getOverallZ();
+	LOG(DEBUG) <<"Overall E = "<<E_2_Ekcal(energy.getE(getOverallZ()));
+
 }
 
 
@@ -158,8 +161,12 @@ fillHybridZ_right( const size_t i1, const size_t i2
 				}
 			}
 
-			// update optimum of right extension if needed
-			updateOptRightZ( si1,j1,si2,j2, energy.getE(hybridZ_right(j1-i1,j2-i2) * initZ * seedZ) );
+			if (Z_isNotINF(hybridZ_right(j1-i1,j2-i2)) && !Z_equal(hybridZ_right(j1-i1,j2-i2),Z_type(0))) {
+				// update optimum of right extension if needed
+				updateOptRightZ( si1,j1,si2,j2, energy.getE(hybridZ_right(j1-i1,j2-i2) * initZ * seedZ) );
+				// update partition function estimate
+				updateZ( si1,j1,si2,j2, hybridZ_right(j1-i1,j2-i2) * initZ * seedZ, true );
+			}
 
 		}
 	}
@@ -182,6 +189,9 @@ fillHybridZ_left( const size_t j1, const size_t j2
 
 	// global vars to avoid reallocation
 	size_t i1,i2,k1,k2;
+	const Z_type seedZ = energy.getBoltzmannWeight(seedHandler.getSeedE(j1, j2));
+	const size_t sj1 = j1 + seedHandler.getSeedLength1(j1,j2) -1;
+	const size_t sj2 = j2 + seedHandler.getSeedLength2(j1,j2) -1;
 
 	// iterate over all window starts i1 (seq1) and i2 (seq2)
 	for (i1=j1; j1-i1 < hybridZ_left.size1(); i1-- ) {
@@ -208,18 +218,27 @@ fillHybridZ_left( const size_t j1, const size_t j2
 				} // k1
 			}
 
+			// TODO: correction for left seeds needed
+			// TODO: when correction is implemented: updateZ has to be done outside as in non-heuristic predictor
+
 			// update mfe if needed
-			if ( ! Z_equal(hybridZ_left(j1-i1,j2-i2), 0.0) ) {
-		 	  const size_t sl1 = seedHandler.getSeedLength1(j1, j2)-1;
-		 	  const size_t sl2 = seedHandler.getSeedLength2(j1, j2)-1;
-		 	  const size_t sj1 = j1+sl1;
-		 	  const size_t sj2 = j2+sl2;
-		 	  PredictorMfeEns::updateOptima( i1,j1opt,i2,j2opt,
-		 			  (energy.getE(hybridZ_right(j1opt-sj1, j2opt-sj2))
-		 					  + energy.getE(hybridZ_left(j1-i1,j2-i2))
-		 					  + seedHandler.getSeedE(j1, j2))
-		 				, true );
-      }
+			if ( ! Z_equal(hybridZ_left(j1-i1,j2-i2), 0.0) && Z_isNotINF(hybridZ_left(j1-i1,j2-i2)) ) {
+				const size_t sl1 = seedHandler.getSeedLength1(j1, j2)-1;
+				const size_t sl2 = seedHandler.getSeedLength2(j1, j2)-1;
+				const size_t sj1 = j1+sl1;
+				const size_t sj2 = j2+sl2;
+				PredictorMfeEns::updateOptima( i1,j1opt,i2,j2opt,
+						(energy.getE(hybridZ_right(j1opt-sj1, j2opt-sj2))
+								+ energy.getE(hybridZ_left(j1-i1,j2-i2))
+								+ seedHandler.getSeedE(j1, j2))
+								, true );
+				// update partition function estimate
+				updateZ( i1,j1opt,i2,j2opt, hybridZ_left(j1-i1,j2-i2) * seedZ * hybridZ_right(j1opt-sj1, j2opt-sj2), true );
+				if (i1 < j1 && sj1 < j1opt) {
+					// update with left extension only (but avoid seed-only since covered by hybridRightZ-updates)
+					updateZ( i1,sj1,i2,sj2, hybridZ_left(j1-i1,j2-i2) * seedZ, true );
+				}
+			}
 		}
 	}
 

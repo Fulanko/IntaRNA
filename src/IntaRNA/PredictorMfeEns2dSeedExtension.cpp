@@ -138,7 +138,8 @@ predict( const IndexRange & r1, const IndexRange & r2
 		}
 	}
 
-	LOG(DEBUG) << "Overall Z: " << getHybridZ();
+	LOG(DEBUG) <<"Overall Z = "<< getOverallZ();
+	LOG(DEBUG) <<"Overall E = "<<E_2_Ekcal(energy.getE(getOverallZ()));
 
 	// report mfe interaction
 	reportOptima( outConstraint );
@@ -237,7 +238,7 @@ fillHybridZ_left( const size_t j1, const size_t j2
 									||	seedHandler.areLoopOverlapping(i1,i2,j1,j2);
 					if (substractThisSeed) {
 
-						LOG(DEBUG) <<" seedbound  i " <<i1<<","<<i2;
+//						LOG(DEBUG) <<" seedbound  i " <<i1<<","<<i2;
 
 						// iterate seeds in S region
 						// todo maybe rename in si1prime etc
@@ -265,7 +266,7 @@ fillHybridZ_left( const size_t j1, const size_t j2
 							if ( ! E_equal(hybridZ_left( j1-si1overlap, j2-si2overlap),0) ) {
 								// compute Energy of loop S \ S'
 								E_type nonOverlapE = getNonOverlappingEnergy(i1, i2, si1overlap, si2overlap);
-								LOG(DEBUG) << "overlap | Energy = " << nonOverlapE;
+//								LOG(DEBUG) << "overlap | Energy = " << nonOverlapE;
 								// substract energy.getBoltzmannWeight( nonOverlapE ) * hybridZ_left( si1overlap, si2overlap bis anchor seed [==1 falls gleich])
 								// TODO: case where overlap == anchor
 								Z_type correctionTerm = energy.getBoltzmannWeight( nonOverlapE ) * hybridZ_left( j1-si1overlap, j2-si2overlap);
@@ -280,9 +281,9 @@ fillHybridZ_left( const size_t j1, const size_t j2
 							// get energy of seed
 							E_type seedE = seedHandler.getSeedE(i1, i2);
 							// if no S'
-							LOG(DEBUG) << "non overlap "
-									<<" | sj "<<(i1+seedHandler.getSeedLength1(i1, i2)-1)<<","<<(i2+seedHandler.getSeedLength2(i1, i2)-1)
-									<<" Energy = " << energy.getBoltzmannWeight(seedE) <<"*"<< hybridZ_left( j1-(i1+seedHandler.getSeedLength1(i1, i2)-1), j2-(i2+seedHandler.getSeedLength2(i1, i2)-1))<<" = "<<energy.getBoltzmannWeight(seedE) * hybridZ_left( j1-(i1+seedHandler.getSeedLength1(i1, i2)-1), j2-(i2+seedHandler.getSeedLength2(i1, i2)-1));
+//							LOG(DEBUG) << "non overlap "
+//									<<" | sj "<<(i1+seedHandler.getSeedLength1(i1, i2)-1)<<","<<(i2+seedHandler.getSeedLength2(i1, i2)-1)
+//									<<" Energy = " << energy.getBoltzmannWeight(seedE) <<"*"<< hybridZ_left( j1-(i1+seedHandler.getSeedLength1(i1, i2)-1), j2-(i2+seedHandler.getSeedLength2(i1, i2)-1))<<" = "<<energy.getBoltzmannWeight(seedE) * hybridZ_left( j1-(i1+seedHandler.getSeedLength1(i1, i2)-1), j2-(i2+seedHandler.getSeedLength2(i1, i2)-1));
 							// substract seedZ * hybridZ_left(right end seed bis anchor seed)
 							Z_type correctionTerm = energy.getBoltzmannWeight(seedE) * hybridZ_left( j1-(i1+seedHandler.getSeedLength1(i1, i2)-1), j2-(i2+seedHandler.getSeedLength2(i1, i2)-1));
 							LOG_IF(correctionTerm > hybridZ_left(j1-i1, j2-i2),DEBUG) <<" unbalanced correction : correctionTerm "<<correctionTerm<<" > "<<hybridZ_left(j1-i1, j2-i2) <<" hybridZ(i)";
