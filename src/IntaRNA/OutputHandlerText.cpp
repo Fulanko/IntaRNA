@@ -298,8 +298,8 @@ add( const Interaction & i, const OutputConstraint & outConstraint )
 			outTmp
 				// interaction range
 				<<"\n"
-				<<"interaction seq1   = "<<(i.basePairs.begin()->first +1)<<" -- "<<(i.basePairs.rbegin()->first +1) <<'\n'
-				<<"interaction seq2   = "<<(i.basePairs.rbegin()->second +1)<<" -- "<<(i.basePairs.begin()->second +1) <<'\n'
+				<<"interaction seq1   = "<<(i.basePairs.begin()->first +1)<<"--"<<(i.basePairs.rbegin()->first +1) <<'\n'
+				<<"interaction seq2   = "<<(i.basePairs.rbegin()->second +1)<<"--"<<(i.basePairs.begin()->second +1) <<'\n'
 				;
 		} // detailed
 			// print energy
@@ -335,16 +335,16 @@ add( const Interaction & i, const OutputConstraint & outConstraint )
 				// print via std::for_each instead of std::accumulate due to rounding issues of boost::lexical_cast or std::to_string
 				// since sometimes (float(int)/100.0) gives strings with 10-5 deviations of expected value
 				outTmp
-					<<"\nseed seq1   = "<<(s1->bp_i.first +1)<<" -- "<<(s1->bp_j.first +1);
+					<<"\nseed seq1   = "<<(s1->bp_i.first +1)<<"--"<<(s1->bp_j.first +1);
 				if (!outConstraint.bestSeedOnly)
 					std::for_each( ++(i.seed->begin()), i.seed->end(), [&]( const Interaction::Seed & s) {
-								 outTmp << listSep <<(s.bp_i.first +1)<<" -- "<<(s.bp_j.first +1);
+								 outTmp << listSep <<(s.bp_i.first +1)<<"--"<<(s.bp_j.first +1);
 								});
 				outTmp
-					<<"\nseed seq2   = "<<(s1->bp_j.second +1)<<" -- "<<(s1->bp_i.second +1);
+					<<"\nseed seq2   = "<<(s1->bp_j.second +1)<<"--"<<(s1->bp_i.second +1);
 				if (!outConstraint.bestSeedOnly)
 					std::for_each( ++(i.seed->begin()), i.seed->end(), [&]( const Interaction::Seed & s) {
-								 outTmp << listSep <<(s.bp_j.second +1)<<" -- "<<(s.bp_i.second +1);
+								 outTmp << listSep <<(s.bp_j.second +1)<<"--"<<(s.bp_i.second +1);
 								});
 				outTmp
 					<<"\nseed energy = "<<E_2_Ekcal(s1->energy);
