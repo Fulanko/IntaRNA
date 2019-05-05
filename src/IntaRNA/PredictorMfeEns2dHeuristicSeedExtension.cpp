@@ -82,7 +82,7 @@ predict( const IndexRange & r1, const IndexRange & r2
 			, 0, interaction_size1+1-seedHandler.getConstraint().getBasePairs()
 			, 0, interaction_size2+1-seedHandler.getConstraint().getBasePairs()) )
 	{
-		E_type seedE = seedHandler.getSeedE(si1, si2);
+		const Z_type seedZ = energy.getBoltzmannWeight( seedHandler.getSeedE(si1, si2) );
 		const size_t sl1 = seedHandler.getSeedLength1(si1, si2);
 		const size_t sl2 = seedHandler.getSeedLength2(si1, si2);
 		const size_t sj1 = si1+sl1-1;
@@ -108,6 +108,28 @@ predict( const IndexRange & r1, const IndexRange & r2
 		// EL for fixed right boundary jopt
 		hybridZ_left.resize( std::min(si1+1, maxMatrixLen1-(j1opt-sj1)), std::min(si2+1, maxMatrixLen2-(j2opt-sj2)) );
 		fillHybridZ_left(si1, si2, outConstraint);
+
+		// updateZ for all boundary combinations
+		for (size_t i1 = 0; i1<hybridZ_left.size1(); i1++) {
+			// ensure max interaction length in seq 1
+			for (size_t j1 = 0; j1 < j1opt-sj1+1 ; j1++) {
+				// check interaction length
+				if (sj1+j1-si1+i1 >= energy.getAccessibility1().getMaxLength()) continue;
+				for (size_t i2 = 0; i2 < hybridZ_left.size2(); i2++) {
+					// check complementarity of boundary
+					if ( Z_equal(hybridZ_left(i1,i2), 0.0) ) continue;
+					// ensure max interaction length in seq 2
+					for (size_t j2 = 0; j2 < j2opt-sj2+1 ; j2++) {
+						// check interaction length
+						if (sj2+j2-si2+i2 >= energy.getAccessibility2().getMaxLength()) continue;
+						// check complementarity of boundary
+						if (Z_equal(hybridZ_right(j1,j2),0.0)) continue;
+						// compute partition function given the current seed
+						updateZ(si1-i1, sj1+j1, si2-i2, sj2+j2, hybridZ_left(i1,i2) * seedZ * hybridZ_right(j1,j2), true);
+					} // dj2
+				} // di2
+			} // dj1
+		} // di1
 
 	} // si1 / si2
 
@@ -164,8 +186,6 @@ fillHybridZ_right( const size_t i1, const size_t i2
 			if (Z_isNotINF(hybridZ_right(j1-i1,j2-i2)) && !Z_equal(hybridZ_right(j1-i1,j2-i2),Z_type(0))) {
 				// update optimum of right extension if needed
 				updateOptRightZ( si1,j1,si2,j2, energy.getE(hybridZ_right(j1-i1,j2-i2) * initZ * seedZ) );
-				// update partition function estimate
-				updateZ( si1,j1,si2,j2, hybridZ_right(j1-i1,j2-i2) * initZ * seedZ, true );
 			}
 
 		}
@@ -218,8 +238,66 @@ fillHybridZ_left( const size_t j1, const size_t j2
 				} // k1
 			}
 
-			// TODO: correction for left seeds needed
-			// TODO: when correction is implemented: updateZ has to be done outside as in non-heuristic predictor
+			// correction for left seeds
+			if (seedHandler.isSeedBound(i1, i2) ) {
+
+				// check if seed is to be processed:
+				bool substractThisSeed =
+						// check if left of anchor seed
+									( i1+seedHandler.getSeedLength1(i1,i2)-1 < j1
+									&& i2+seedHandler.getSeedLength2(i1,i2)-1 < j2 )
+						// check if overlapping with anchor seed
+								||	seedHandler.areLoopOverlapping(i1,i2,j1,j2);
+				if (substractThisSeed) {
+
+					// iterate seeds in S region
+					size_t sj1 = RnaSequence::lastPos, sj2 = RnaSequence::lastPos;
+					size_t si1overlap = j1+1, si2overlap = j2+1;
+					// find left-most loop-overlapping seed
+					while( seedHandler.updateToNextSeed(sj1,sj2
+							, i1, std::min(j1,i1+seedHandler.getSeedLength1(i1, i2)-2)
+							, i2, std::min(j2,i2+seedHandler.getSeedLength2(i1, i2)-2)) )
+					{
+						// check if right of i1,i2 and overlapping
+						if (sj1 > i1 && seedHandler.areLoopOverlapping(i1, i2, sj1, sj2)) {
+							// update left-most loop-overlapping seed
+							if (sj1 < si1overlap) {
+								si1overlap = sj1;
+								si2overlap = sj2;
+							}
+						}
+					}
+
+					// if we found an overlapping seed
+					if (si1overlap <= j1) {
+						// check if right side is non-empty
+						if ( ! E_equal(hybridZ_left( j1-si1overlap, j2-si2overlap),0) ) {
+							// compute Energy of loop S \ S'
+							E_type nonOverlapE = getNonOverlappingEnergy(i1, i2, si1overlap, si2overlap);
+							// substract energy.getBoltzmannWeight( nonOverlapE ) * hybridZ_left( si1overlap, si2overlap bis anchor seed [==1 falls gleich])
+							Z_type correctionTerm = energy.getBoltzmannWeight( nonOverlapE ) * hybridZ_left( j1-si1overlap, j2-si2overlap);
+							LOG_IF(correctionTerm > hybridZ_left(j1-i1, j2-i2),DEBUG) <<" unbalanced correction : correctionTerm "<<correctionTerm<<" > "<<hybridZ_left(j1-i1, j2-i2) <<" hybridZ(i)";
+							hybridZ_left(j1-i1, j2-i2) -= correctionTerm;
+							// sanity ensurence
+							if (hybridZ_left(j1-i1, j2-i2) < 0) {
+								hybridZ_left(j1-i1, j2-i2) = Z_type(0.0);
+							}
+						}
+					} else {
+						// get energy of seed
+						E_type seedE = seedHandler.getSeedE(i1, i2);
+						// if no S'
+						// substract seedZ * hybridZ_left(right end seed bis anchor seed)
+						Z_type correctionTerm = energy.getBoltzmannWeight(seedE) * hybridZ_left( j1-(i1+seedHandler.getSeedLength1(i1, i2)-1), j2-(i2+seedHandler.getSeedLength2(i1, i2)-1));
+						LOG_IF(correctionTerm > hybridZ_left(j1-i1, j2-i2),DEBUG) <<" unbalanced correction : correctionTerm "<<correctionTerm<<" > "<<hybridZ_left(j1-i1, j2-i2) <<" hybridZ(i)";
+						hybridZ_left(j1-i1, j2-i2) -= correctionTerm;
+						// sanity ensurence
+						if (hybridZ_left(j1-i1, j2-i2) < 0) {
+							hybridZ_left(j1-i1, j2-i2) = Z_type(0.0);
+						}
+					}
+				} // substractThisSeed
+			}
 
 			// update mfe if needed
 			if ( ! Z_equal(hybridZ_left(j1-i1,j2-i2), 0.0) && Z_isNotINF(hybridZ_left(j1-i1,j2-i2)) ) {
@@ -232,12 +310,6 @@ fillHybridZ_left( const size_t j1, const size_t j2
 								+ energy.getE(hybridZ_left(j1-i1,j2-i2))
 								+ seedHandler.getSeedE(j1, j2))
 								, true );
-				// update partition function estimate
-				updateZ( i1,j1opt,i2,j2opt, hybridZ_left(j1-i1,j2-i2) * seedZ * hybridZ_right(j1opt-sj1, j2opt-sj2), true );
-				if (i1 < j1 && sj1 < j1opt) {
-					// update with left extension only (but avoid seed-only since covered by hybridRightZ-updates)
-					updateZ( i1,sj1,i2,sj2, hybridZ_left(j1-i1,j2-i2) * seedZ, true );
-				}
 			}
 		}
 	}

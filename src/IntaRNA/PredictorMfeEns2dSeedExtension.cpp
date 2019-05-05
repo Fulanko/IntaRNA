@@ -84,8 +84,7 @@ predict( const IndexRange & r1, const IndexRange & r2
 			, 0, interaction_size1+1-seedHandler.getConstraint().getBasePairs()
 			, 0, interaction_size2+1-seedHandler.getConstraint().getBasePairs()) )
 	{
-		E_type seedE = seedHandler.getSeedE(si1, si2);
-		const Z_type seedZ = energy.getBoltzmannWeight( seedE );
+		const Z_type seedZ = energy.getBoltzmannWeight( seedHandler.getSeedE(si1, si2) );
 
 		const size_t sl1 = seedHandler.getSeedLength1(si1, si2);
 		const size_t sl2 = seedHandler.getSeedLength2(si1, si2);
@@ -105,7 +104,7 @@ predict( const IndexRange & r1, const IndexRange & r2
 		hybridZ_right.resize( std::min(interaction_size1-sj1, maxMatrixLen1), std::min(interaction_size2-sj2, maxMatrixLen2) );
 		fillHybridZ_right(sj1, sj2, outConstraint);
 
-		// update Optimum for all boundary combinations
+		// updateZ for all boundary combinations
 		for (size_t i1 = 0; i1<hybridZ_left.size1(); i1++) {
 			// ensure max interaction length in seq 1
 			for (size_t j1 = 0; j1 < hybridZ_right.size1() ; j1++) {
@@ -133,7 +132,7 @@ predict( const IndexRange & r1, const IndexRange & r2
 	for (std::unordered_map<size_t, ZPartition >::const_iterator it = Z_partitions.begin(); it != Z_partitions.end(); ++it)
 	{
 		// if partition function is > 0
-		if (Z_isNotINF(it->second.partZ) && it->second.partZ > 0 &&  !Z_equal(it->second.partZ, 0)) {
+		if (Z_isNotINF(it->second.partZ) && it->second.partZ > 0) {
 			PredictorMfe::updateOptima( it->second.i1, it->second.j1, it->second.i2, it->second.j2, energy.getE(it->second.partZ), true );
 		}
 	}
@@ -241,9 +240,7 @@ fillHybridZ_left( const size_t j1, const size_t j2
 //						LOG(DEBUG) <<" seedbound  i " <<i1<<","<<i2;
 
 						// iterate seeds in S region
-						// todo maybe rename in si1prime etc
 						size_t sj1 = RnaSequence::lastPos, sj2 = RnaSequence::lastPos;
-						// todo replace with left-most loop-overlapping seed
 						size_t si1overlap = j1+1, si2overlap = j2+1;
 						// find left-most loop-overlapping seed
 						while( seedHandler.updateToNextSeed(sj1,sj2
@@ -268,7 +265,6 @@ fillHybridZ_left( const size_t j1, const size_t j2
 								E_type nonOverlapE = getNonOverlappingEnergy(i1, i2, si1overlap, si2overlap);
 //								LOG(DEBUG) << "overlap | Energy = " << nonOverlapE;
 								// substract energy.getBoltzmannWeight( nonOverlapE ) * hybridZ_left( si1overlap, si2overlap bis anchor seed [==1 falls gleich])
-								// TODO: case where overlap == anchor
 								Z_type correctionTerm = energy.getBoltzmannWeight( nonOverlapE ) * hybridZ_left( j1-si1overlap, j2-si2overlap);
 								LOG_IF(correctionTerm > hybridZ_left(j1-i1, j2-i2),DEBUG) <<" unbalanced correction : correctionTerm "<<correctionTerm<<" > "<<hybridZ_left(j1-i1, j2-i2) <<" hybridZ(i)";
 								hybridZ_left(j1-i1, j2-i2) -= correctionTerm;
@@ -400,8 +396,6 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 	}
 #endif
 
-	E_type fullE = interaction.energy;
-
 	size_t si1 = RnaSequence::lastPos, si2 = RnaSequence::lastPos;
 	while( seedHandler.updateToNextSeed(si1,si2
 			, i1,j1+1-seedHandler.getConstraint().getBasePairs()
@@ -413,40 +407,16 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 		const size_t sl2 = seedHandler.getSeedLength2(si1, si2);
 		const size_t sj1 = si1+sl1-1;
 		const size_t sj2 = si2+sl2-1;
-		const size_t maxMatrixLen1 = energy.getAccessibility1().getMaxLength()-sl1+1;
-		const size_t maxMatrixLen2 = energy.getAccessibility2().getMaxLength()-sl2+1;
 
-		// compute auxiliary matrices for seed check
-		hybridZ_left.resize( std::min(si1+1, maxMatrixLen1), std::min(si2+1, maxMatrixLen2) );
-		fillHybridZ_left( si1, si2, outConstraint );
-		hybridZ_right.resize( std::min(j1-sj1+1, maxMatrixLen1), std::min(j2-sj2+1, maxMatrixLen2) );
-		fillHybridZ_right( sj1, sj2, outConstraint );
+		// store seed information
+		interaction.setSeedRange(
+						energy.getBasePair(si1,si2),
+						energy.getBasePair(sj1,sj2),
+						energy.getE(si1,sj1,si2,sj2,seedE)+energy.getE_init());
 
-		// check if we found the right seed for the interaction energy
-		if ( E_equal( fullE,
-				(energy.getE(i1, j1, i2, j2, energy.getE(energy.getBoltzmannWeight(seedE) * hybridZ_left( si1-i1, si2-i2 ) * hybridZ_right( j1-sj1, j2-sj2 ))))))
-		{
-			// found seed -> traceback seed base pairs
-			if (si1 > i1 && si2 > i2) {
-				interaction.basePairs.push_back( energy.getBasePair(si1,si2) );
-			}
-			// store seed information
-			interaction.setSeedRange(
-							energy.getBasePair(si1,si2),
-							energy.getBasePair(sj1,sj2),
-							energy.getE(si1,sj1,si2,sj2,seedE)+energy.getE_init());
-			// trace seed base pairs
-			seedHandler.traceBackSeed( interaction, si1, si2 );
-			if (sj1 < j1 && sj2 < j2) {
-				interaction.basePairs.push_back( energy.getBasePair(sj1,sj2) );
-			}
-			// sort output interaction
-			interaction.sort();
-			seedHandler.addSeeds( interaction );
-
-			// stop searching for seeds
-			return;
-		}
+		// sort output interaction
+		interaction.sort();
+		seedHandler.addSeeds( interaction );
 
 	} // si1 / si2
 
