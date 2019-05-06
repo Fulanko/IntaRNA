@@ -379,46 +379,8 @@ traceBack( Interaction & interaction, const OutputConstraint & outConstraint  )
 	}
 #endif
 
-	// ensure sorting
-	interaction.sort();
-	// get indices in hybridE for boundary base pairs
-	size_t	i1 = energy.getIndex1(interaction.basePairs.at(0)),
-			j1 = energy.getIndex1(interaction.basePairs.at(1)),
-			i2 = energy.getIndex2(interaction.basePairs.at(0)),
-			j2 = energy.getIndex2(interaction.basePairs.at(1))
-			;
-
-#if INTARNA_IN_DEBUG_MODE
-	// check if intervals are larger enough to contain a seed
-	if (std::min(j1-i1,j2-i2)+1 < seedHandler.getConstraint().getBasePairs()) {
-		// no seed possible, abort computation
-		throw std::runtime_error("PredictorMfeEns2dSeedExtension::traceBack() : given boundaries "+toString(interaction)+" can not hold a seed of "+toString(seedHandler.getConstraint().getBasePairs())+" base pairs");
-	}
-#endif
-
-	size_t si1 = RnaSequence::lastPos, si2 = RnaSequence::lastPos;
-	while( seedHandler.updateToNextSeed(si1,si2
-			, i1,j1+1-seedHandler.getConstraint().getBasePairs()
-			, i2,j2+1-seedHandler.getConstraint().getBasePairs() ) )
-	{
-		E_type seedE = seedHandler.getSeedE(si1, si2);
-
-		const size_t sl1 = seedHandler.getSeedLength1(si1, si2);
-		const size_t sl2 = seedHandler.getSeedLength2(si1, si2);
-		const size_t sj1 = si1+sl1-1;
-		const size_t sj2 = si2+sl2-1;
-
-		// store seed information
-		interaction.setSeedRange(
-						energy.getBasePair(si1,si2),
-						energy.getBasePair(sj1,sj2),
-						energy.getE(si1,sj1,si2,sj2,seedE)+energy.getE_init());
-
-		// sort output interaction
-		interaction.sort();
-		seedHandler.addSeeds( interaction );
-
-	} // si1 / si2
+	// add seeds in region
+	seedHandler.addSeeds( interaction );
 
 }
 
