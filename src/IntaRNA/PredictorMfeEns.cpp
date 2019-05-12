@@ -70,6 +70,29 @@ updateZ( const size_t i1, const size_t j1
 		// just update
 		overallZ += partZ;
 	}
+
+	// store partial Z
+	size_t maxLength = std::max(energy.getAccessibility1().getMaxLength(), energy.getAccessibility2().getMaxLength());
+	size_t key = 0;
+	key += i1;
+	key += j1 * pow(maxLength, 1);
+	key += i2 * pow(maxLength, 2);
+	key += j2 * pow(maxLength, 3);
+	// TODO: check if key overflow
+	if ( Z_partitions.find(key) == Z_partitions.end() ) {
+		// create new entry
+		ZPartition zPartition;
+		zPartition.i1 = i1;
+		zPartition.j1 = j1;
+		zPartition.i2 = i2;
+		zPartition.j2 = j2;
+		zPartition.partZ = partZ;
+		Z_partitions[key] = zPartition;
+	} else {
+		// update entry
+		ZPartition & zPartition = Z_partitions[key];
+		zPartition.partZ += partZ;
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////

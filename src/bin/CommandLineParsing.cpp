@@ -52,6 +52,10 @@ extern "C" {
 #include "IntaRNA/PredictorMfe2dHeuristicSeedExtension.h"
 #include "IntaRNA/PredictorMfeEns2dHeuristicSeedExtension.h"
 
+#include "IntaRNA/PredictorMfeEns4d.h"
+#include "IntaRNA/PredictorMfeEns2d.h"
+#include "IntaRNA/PredictorMfeEns2dHeuristic.h"
+
 #include "IntaRNA/PredictionTracker.h"
 #include "IntaRNA/PredictionTrackerHub.h"
 #include "IntaRNA/PredictionTrackerPairMinE.h"
@@ -2008,6 +2012,15 @@ getPredictor( const InteractionEnergy & energy, OutputHandler & output ) const
 		case 'P' : {
 			switch ( predMode.val ) {
 			case 'E' :  return new PredictorMaxProb( energy, output, predTracker );
+			default :  INTARNA_NOT_IMPLEMENTED("mode "+toString(predMode.val)+" not implemented for model "+toString(model.val));
+			}
+		} break;
+		// single-site min ensemble energy interactions (contain only interior loops)
+		case 'E' : {
+			switch ( predMode.val ) {
+			case 'E' :  return new PredictorMfeEns4d( energy, output, predTracker );
+			case 'M' :  return new PredictorMfeEns2d( energy, output, predTracker );
+			case 'H' :  return new PredictorMfeEns2dHeuristic( energy, output, predTracker );
 			default :  INTARNA_NOT_IMPLEMENTED("mode "+toString(predMode.val)+" not implemented for model "+toString(model.val));
 			}
 		} break;

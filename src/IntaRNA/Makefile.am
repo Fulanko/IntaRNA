@@ -72,6 +72,9 @@ libIntaRNA_a_HEADERS =    \
 					PredictorMfe4d.h \
 					PredictorMfe4dSeed.h \
 					PredictorMfeEns.h \
+					PredictorMfeEns2d.h \
+					PredictorMfeEns2dHeuristic.h \
+					PredictorMfeEns4d.h \
 					ReverseAccessibility.h \
 					RnaSequence.h \
 					SeedConstraint.h \
@@ -131,6 +134,9 @@ libIntaRNA_a_SOURCES =    \
 					PredictorMfe4d.cpp \
 					PredictorMfe4dSeed.cpp \
 					PredictorMfeEns.cpp \
+					PredictorMfeEns2d.cpp \
+					PredictorMfeEns2dHeuristic.cpp \
+					PredictorMfeEns4d.cpp \
 					ReverseAccessibility.cpp \
 					RnaSequence.cpp \
 					SeedHandler.cpp \

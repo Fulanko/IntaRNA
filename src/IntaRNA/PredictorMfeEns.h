@@ -49,6 +49,13 @@ public:
 
 protected:
 
+	struct ZPartition {
+		size_t i1;
+		size_t j1;
+		size_t i2;
+		size_t j2;
+		Z_type partZ;
+	};
 
 	//! access to the interaction energy handler of the super class
 	using PredictorMfe::energy;
@@ -62,6 +69,9 @@ protected:
 	//! the overall hybridization partition function since initZ() was last called.
 	//! its value is updated by updateZ()
 	Z_type overallZ;
+
+	//! map storing Z partitions for a given interaction
+	std::unordered_map<size_t, ZPartition> Z_partitions;
 
 
 	/**
