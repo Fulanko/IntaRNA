@@ -14,6 +14,7 @@ PredictorMfeEns2dHeuristic(
 		, PredictionTracker * predTracker )
  : PredictorMfeEns2d(energy,output,predTracker)
 {
+	checkKeyBoundaries(std::max(energy.getAccessibility1().getMaxLength(), energy.getAccessibility2().getMaxLength()));
 }
 
 

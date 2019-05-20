@@ -16,6 +16,7 @@ PredictorMfeEns4d(
 	, maxProbInteraction(energy.getAccessibility1().getSequence()
 			,energy.getAccessibility2().getAccessibilityOrigin().getSequence())
 {
+	checkKeyBoundaries(std::max(energy.getAccessibility1().getMaxLength(), energy.getAccessibility2().getMaxLength()));
 }
 
 

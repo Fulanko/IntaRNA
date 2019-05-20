@@ -15,6 +15,7 @@ PredictorMfeEns2d(
  : PredictorMfeEns(energy,output,predTracker)
 	, hybridZ( 0,0 )
 {
+	checkKeyBoundaries(std::max(energy.getAccessibility1().getMaxLength(), energy.getAccessibility2().getMaxLength()));
 }
 
 

@@ -85,6 +85,15 @@ protected:
 	initZ( const OutputConstraint & outConstraint );
 
 	/**
+	 * Check if energy maxLength exceeds allowed limit for key generation
+	 * Throw runtime error if exceeding limit
+	 *
+	 */
+	static
+	void
+	checkKeyBoundaries( const size_t maxLength );
+
+	/**
 	 * Updates the overall hybridization partition function
 	 * and the mfe information.
 	 *
