@@ -241,7 +241,7 @@ fillHybridZ_left( const size_t j1, const size_t j2
 			}
 
 			// correction for left seeds
-			if (seedHandler.isSeedBound(i1, i2) ) {
+			if (i1 < j1 && i2 < j2 && seedHandler.isSeedBound(i1, i2) ) {
 
 				// check if seed is to be processed:
 				bool substractThisSeed =
@@ -278,7 +278,6 @@ fillHybridZ_left( const size_t j1, const size_t j2
 							E_type nonOverlapE = getNonOverlappingEnergy(i1, i2, si1overlap, si2overlap);
 							// substract energy.getBoltzmannWeight( nonOverlapE ) * hybridZ_left( si1overlap, si2overlap bis anchor seed [==1 falls gleich])
 							Z_type correctionTerm = energy.getBoltzmannWeight( nonOverlapE ) * hybridZ_left( j1-si1overlap, j2-si2overlap);
-							LOG_IF(correctionTerm > hybridZ_left(j1-i1, j2-i2),DEBUG) <<" unbalanced correction : correctionTerm "<<correctionTerm<<" > "<<hybridZ_left(j1-i1, j2-i2) <<" hybridZ(i)";
 							hybridZ_left(j1-i1, j2-i2) -= correctionTerm;
 							// sanity ensurence
 							if (hybridZ_left(j1-i1, j2-i2) < 0) {
@@ -291,7 +290,6 @@ fillHybridZ_left( const size_t j1, const size_t j2
 						// if no S'
 						// substract seedZ * hybridZ_left(right end seed bis anchor seed)
 						Z_type correctionTerm = energy.getBoltzmannWeight(seedE) * hybridZ_left( j1-(i1+seedHandler.getSeedLength1(i1, i2)-1), j2-(i2+seedHandler.getSeedLength2(i1, i2)-1));
-						LOG_IF(correctionTerm > hybridZ_left(j1-i1, j2-i2),DEBUG) <<" unbalanced correction : correctionTerm "<<correctionTerm<<" > "<<hybridZ_left(j1-i1, j2-i2) <<" hybridZ(i)";
 						hybridZ_left(j1-i1, j2-i2) -= correctionTerm;
 						// sanity ensurence
 						if (hybridZ_left(j1-i1, j2-i2) < 0) {
