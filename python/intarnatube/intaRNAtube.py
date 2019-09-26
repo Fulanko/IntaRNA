@@ -3,6 +3,7 @@
 # Author: Frank Gelhausen
 
 import sys, getopt, subprocess
+import matplotlib.pyplot as plt
 sys.path.append("/usr/local/lib/python2.7/site-packages/")
 import RNA
 intaRNAPath = "../../../IntaRNA_basepairprobs/bin/IntaRNA"
@@ -13,17 +14,16 @@ def main(argv):
     cTinit = 1e-5
     cQinit = 1e-5
     paramFile = None
+    plotFile = None
     temperature = 37
 
     try:
-        opts, args = getopt.getopt(argv, "hq:t:", ["qConc=", "tConc=", "paramFile="])
+        opts, args = getopt.getopt(argv, "hq:t:", ["qConc=", "tConc=", "paramFile=", "plot="])
     except getopt.GetoptError:
-        print("intaRNAtube.py -q <seq> -t <seq> [--qConc <concentration>] [--tConc <concentration>] [--paramFile <FileName>]")
-        sys.exit(2)
+        printHelp()
     for opt, arg in opts:
         if opt == "-h":
-            print("intaRNAtube.py -q <seq> -t <seq> [--qConc <concentration>] [--tConc <concentration>] [--paramFile <FileName>]")
-            sys.exit()
+            printHelp()
         elif opt == "-t":
             seqT = arg
         elif opt == "-q":
@@ -34,10 +34,11 @@ def main(argv):
             cQinit = float(arg)
         elif opt == "--paramFile":
             paramFile = arg
+        elif opt == "--plot":
+            plotFile = arg
 
     if seqT == "" or seqQ == "":
-        print("intaRNAtube.py -q <seq> -t <seq> [--qConc <concentration>] [--tConc <concentration>] [--paramFile <FileName>]")
-        sys.exit(2)
+        printHelp()
 
     # parse paramFile
     if paramFile != None:
@@ -72,22 +73,36 @@ def main(argv):
     pfQQ = getInteractionFeature(seqQ, seqQ, temperature, "Eall")
     pfTQ = getInteractionFeature(seqT, seqQ, temperature, "Eall")
 
-    (cTQ, cTT, cQQ, cT, cQ) = RNA.get_concentrations(pfTQ, pfTT, pfQQ, pfT, pfQ, cTinit, cQinit)
-    cTQ /= (cTinit + cQinit)
-    cTT /= (cTinit + cQinit)
-    cQQ /= (cTinit + cQinit)
-    cT /= (cTinit + cQinit)
-    cQ /= (cTinit + cQinit)
+    # plot concentration
+    if plotFile != None:
+        xList = []
+        yList = []
 
+        for i in range(1, 10):
+            (cTQ, cTT, cQQ, cT, cQ) = RNA.get_concentrations(pfTQ, pfTT, pfQQ, pfT, pfQ, cTinit - i, i)
+
+            xList.append(i)
+            yList.append(cT)
+
+        plt.plot(xList, yList)
+        plt.savefig(plotFile)
+
+    # output concentration
+    (cTQ, cTT, cQQ, cT, cQ) = RNA.get_concentrations(pfTQ, pfTT, pfQQ, pfT, pfQ, cTinit, cQinit)
     print(cTQ, cTT, cQQ, cT, cQ)
 
 # returns given feature for IntaRNA interaction
 def getInteractionFeature(seqT, seqQ, temperature, feature):
-    res = subprocess.check_output([intaRNAPath, "-q", seqQ, "-t", seqT, "--mode=M", "--outMode=E", "--noseed", "--temperature=%d"%(temperature)])
+    res = subprocess.check_output([intaRNAPath, "-q", seqQ, "-t", seqT, "--mode=M", "--outMode=E", "--noseed", "--temperature=%d"%(temperature)]).decode('ascii', 'ignore')
     for line in res.splitlines():
         if feature in line:
             return float(line.split(" ")[1])
     return 0
+
+# prints usage information
+def printHelp():
+    print("intaRNAtube.py -q <seq> -t <seq> [--qConc <concentration>] [--tConc <concentration>] [--paramFile <FileName>] [--paramFile <FileName.png>]")
+    sys.exit(2)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
