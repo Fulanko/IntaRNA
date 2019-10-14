@@ -6,20 +6,19 @@ import sys, getopt, subprocess
 import matplotlib.pyplot as plt
 sys.path.append("/usr/local/lib/python2.7/site-packages/")
 import RNA
+import re
+import math
 intaRNAPath = "../../../IntaRNA_basepairprobs/bin/IntaRNA"
 
-# VR1 straight mRNA: AA GCG CAU CUU CUA CUU CAA C
-# VR1hp5'11:         AA GCG CAU CUU CUA CUU CAA C
 # VsiRNA1:           UU CGC GUA GAA GAU GAA GUU G
 # VsiRNA1 reverse:   G UUG AAG UAG AAG AUG CGC UU
 
-# VR1 straight mRNA: UAGUUAAGCUUGGUACAAGCGCAUCUUCUACUUCAACUUCUAGAAUG
-#                    .......(((((...))))).....(((((..........)))))..
+# VR1 straight mRNA: AGCUUGGUACAAGCGCAUCUUCUACUUCAACUUCUAGAA
+# VR1hp5'11 mRNA:    AGCUUGGUACAAGCGCAUCUUCUACUUCAACUUUUCGAAGUUGAAGUAGCUAGAA
 
-# VR1hp5'11:
 
 def main(argv):
-    seqT = "UAGUUAAGCUUGGUACAAGCGCAUCUUCUACUUCAACUUCUAGAAUG"
+    seqT = "AGCUUGGUACAAGCGCAUCUUCUACUUCAACUUCUAGAA"
     seqQ = "UUCGCGUAGAAGAUGAAGUUG"
     cTinit = 1e-5
     cQinit = 1e-5
@@ -75,24 +74,19 @@ def main(argv):
     #(ss, pfT) = RNA.fold_compound(seqT).pf()
     #(ss, pfQ) = RNA.fold_compound(seqQ).pf()
 
-    (struct, mfe) = RNA.fold(seqT)
 
-    print(struct)
-    RNA.cvar.cut_point = len(seqT)+1
-    (x,ac,bc,fcab,cf) = RNA.co_pf_fold(seqT + seqQ, struct)
+    (fcTQ, fcTT, fcQQ, Tc, Qc) = rnaCofold("sequences.fa")
+    (fcUR, fcUU, fcRR, Uc, Rc) = rnaCofold("sequences2.fa")
 
-
-
-    (x,usel1, usel2, fcaa, usel3) = RNA.co_pf_fold(seqT + seqT, struct)
-    (x,usel1, usel2, fcbb, usel3) = RNA.co_pf_fold(seqQ + seqQ, struct)
 
 
     # binding energy:
-    print(fcab - ac -bc)
+    print("binding energy: ", fcTQ - Tc - Qc)
+    print("binding energy (hp5'11): ", fcUR - Uc - Rc)
 
     # TODO: required because of a bug in ViennaRNA (calling deprecated method)
     # (see: https://github.com/ViennaRNA/ViennaRNA/issues/69)
-    #RNA.co_pf_fold("C", None)
+    RNA.co_pf_fold("C", None)
 
     #pfTT = getInteractionFeature(seqT, seqT, temperature, "Eall")
     #pfQQ = getInteractionFeature(seqQ, seqQ, temperature, "Eall")
@@ -101,20 +95,70 @@ def main(argv):
     # plot concentration
     if plotFile != None:
         xList = []
-        yList = []
+        cTList = []
+        cTTList = []
+        cTQList = []
+        cQList = []
 
-        for i in range(1, 10):
-            (cTQ, cTT, cQQ, cT, cQ) = RNA.get_concentrations(fcab, fcaa, fcbb, ac, bc, cTinit - i, i)
+        cUList = []
+        cUUList = []
+        cURList = []
+        cRList = []
 
+        for i in range(1, 11):
             xList.append(i)
-            yList.append(cT)
 
-        plt.plot(xList, yList)
+            (cTQ, cTT, cQQ, cT, cQ) = RNA.get_concentrations(fcTQ, fcTT, fcQQ, Tc, Qc, cTinit - i, i)
+            cTList.append(cT)
+            cTTList.append(cTT)
+            cTQList.append(cTQ)
+            cQList.append(cQ)
+
+            (cUR, cUU, cRR, cU, cR) = RNA.get_concentrations(fcUR, fcUU, fcRR, Uc, Rc, cTinit - i, i)
+            cUList.append(cU)
+            cUUList.append(cUU)
+            cURList.append(cUR)
+            cRList.append(cR)
+
+        plt.xscale('log')
+        plt.plot(xList, cTQList, color='black', label="A.si", linewidth=3)
+        plt.plot(xList, cTTList, color='red', label="A.A")
+        plt.plot(xList, cTList, color='blue', label="A", linewidth=3)
+        plt.plot(xList, cQList, color='pink', label="si")
+
+        #plt.plot(xList, cTQList, color='lime', label="A'.si'", linestyle='-.', linewidth=3)
+        #plt.plot(xList, cTTList, color='teal', label="A'.A'", linestyle='-.')
+        #plt.plot(xList, cTList, color='aqua', label="A'", linestyle='-.', linewidth=3)
+        #plt.plot(xList, cQList, color='magenta', label="si'", linestyle='-.')
+
+        plt.xlim(1, 15)
+        plt.ylim(0, 20)
+        plt.xlabel("total siRNA concentration [nmol/L]")
+        plt.ylabel("concentration [nmol/L]")
+        plt.legend(loc='upper left')
+
+        plt.text(4, -6.5, "Binding energies: ΔF(A) = %.2f kcal/mol"%(fcTQ - Tc - Qc), ha='center')
+        plt.text(5.575, -8, "ΔF(A') = %.2f kcal/mol"%(fcUR - Uc - Rc), ha='center')
+        plt.subplots_adjust(bottom=0.3)
+
         plt.savefig(plotFile)
 
     # output concentration
-    (cTQ, cTT, cQQ, cT, cQ) = RNA.get_concentrations(fcab, fcaa, fcbb, ac, bc, cTinit, cQinit)
+    (cTQ, cTT, cQQ, cT, cQ) = RNA.get_concentrations(fcTQ, fcTT, fcQQ, Tc, Qc, cTinit, cQinit)
     print(cTQ, cTT, cQQ, cT, cQ)
+
+# returns given feature for RNAFold
+def rnaFold(inputFile):
+    res = subprocess.check_output(["RNAFold", "-P", "./rna_turner1999.par", "--noPS", inputFile]).decode('ascii', 'ignore').splitlines()
+    split = res[2].split(" ", 1)
+    print("mfe: ", split[1])
+    return split[0]
+
+# returns given feature for RNACofold
+def rnaCofold(inputFile):
+    res = subprocess.check_output(["RNAcofold", "-P", "./rna_turner1999.par", "--noPS", "--all_pf=2", inputFile]).decode('ascii', 'ignore').splitlines()
+    fe = res[7].split("\t")
+    return (float(fe[0]), float(fe[1]), float(fe[2]), float(fe[3]), float(fe[4]))
 
 # returns given feature for IntaRNA interaction
 def getInteractionFeature(seqT, seqQ, temperature, feature):
