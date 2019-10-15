@@ -98,40 +98,40 @@ def main(argv):
         cTList = []
         cTTList = []
         cTQList = []
-        cQList = []
+        cQQList = []
 
         cUList = []
         cUUList = []
         cURList = []
-        cRList = []
+        cRRList = []
 
-        for i in range(1, 11):
+        for i in range(1, 50):
             xList.append(i)
 
-            (cTQ, cTT, cQQ, cT, cQ) = RNA.get_concentrations(fcTQ, fcTT, fcQQ, Tc, Qc, cTinit - i, i)
+            (cTQ, cTT, cQQ, cT, cQ) = RNA.get_concentrations(fcTQ, fcTT, fcQQ, Tc, Qc, cTinit, i)
             cTList.append(cT)
             cTTList.append(cTT)
             cTQList.append(cTQ)
-            cQList.append(cQ)
+            cQQList.append(cQQ)
 
-            (cUR, cUU, cRR, cU, cR) = RNA.get_concentrations(fcUR, fcUU, fcRR, Uc, Rc, cTinit - i, i)
+            (cUR, cUU, cRR, cU, cR) = RNA.get_concentrations(fcUR, fcUU, fcRR, Uc, Rc, cTinit, i)
             cUList.append(cU)
             cUUList.append(cUU)
             cURList.append(cUR)
-            cRList.append(cR)
+            cRRList.append(cRR)
 
         plt.xscale('log')
         plt.plot(xList, cTQList, color='black', label="A.si", linewidth=3)
         plt.plot(xList, cTTList, color='red', label="A.A")
         plt.plot(xList, cTList, color='blue', label="A", linewidth=3)
-        plt.plot(xList, cQList, color='pink', label="si")
+        plt.plot(xList, cQQList, color='pink', label="si")
 
-        #plt.plot(xList, cTQList, color='lime', label="A'.si'", linestyle='-.', linewidth=3)
-        #plt.plot(xList, cTTList, color='teal', label="A'.A'", linestyle='-.')
-        #plt.plot(xList, cTList, color='aqua', label="A'", linestyle='-.', linewidth=3)
-        #plt.plot(xList, cQList, color='magenta', label="si'", linestyle='-.')
+        plt.plot(xList, cUList, color='lime', label="A'.si'", linestyle='-.', linewidth=3)
+        plt.plot(xList, cUUList, color='teal', label="A'.A'", linestyle='-.')
+        plt.plot(xList, cURList, color='aqua', label="A'", linestyle='-.', linewidth=3)
+        plt.plot(xList, cRRList, color='magenta', label="si'", linestyle='-.')
 
-        plt.xlim(1, 15)
+        plt.xlim(1, 50)
         plt.ylim(0, 20)
         plt.xlabel("total siRNA concentration [nmol/L]")
         plt.ylabel("concentration [nmol/L]")
