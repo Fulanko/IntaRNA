@@ -10,17 +10,13 @@ import re
 import math
 intaRNAPath = "../../../IntaRNA_basepairprobs/bin/IntaRNA"
 
-# VsiRNA1:           UU CGC GUA GAA GAU GAA GUU G
-# VsiRNA1 reverse:   G UUG AAG UAG AAG AUG CGC UU
-
 # VR1 straight mRNA: AGCUUGGUACAAGCGCAUCUUCUACUUCAACUUCUAGAA
-# VR1hp5'11 mRNA:    AGCUUGGUACAAGCGCAUCUUCUACUUCAACUUUUCGAAGUUGAAGUAGCUAGAA
-
+# VsiRNA: UUCGCGUAGAAGAUGAAGUUG
 
 def main(argv):
-    seqT = "AGCUUGGUACAAGCGCAUCUUCUACUUCAACUUCUAGAA"
-    seqQ = "UUCGCGUAGAAGAUGAAGUUG"
-    method = "I"
+    seqT = ""
+    seqQ = ""
+    method = ""
     cTinit = 1e-5
     cQinit = 1e-5
     paramFile = None
@@ -52,6 +48,9 @@ def main(argv):
     if seqT == "" or seqQ == "":
         printHelp()
 
+    if method != "I" and method != "C":
+        printHelp()
+
     # parse paramFile
     if paramFile != None:
         f = open(paramFile, "r")
@@ -74,8 +73,6 @@ def main(argv):
                 print("--qAccConstr not supported")
                 sys.exit(2)
 
-    (fcTQ, fcTT, fcQQ, Tc, Qc) = rnaCofold("sequences.fa")
-
     # TODO: required because of a bug in ViennaRNA (calling deprecated method)
     # (see: https://github.com/ViennaRNA/ViennaRNA/issues/69)
     RNA.co_pf_fold("C", None)
@@ -83,17 +80,19 @@ def main(argv):
     # if IntaRNA ...
     if method == "I":
         print("Using IntaRNA ...")
-        fcTT = getInteractionFeature(seqT, seqT, temperature, "Eall") + 2 * Tc
-        fcQQ = getInteractionFeature(seqQ, seqQ, temperature, "Eall") + 2 * Qc
-        fcTQ = getInteractionFeature(seqT, seqQ, temperature, "Eall") + Tc + Qc
+        fcTT = getInteractionFeature(seqT, seqT, temperature, "EallTotal")
+        fcQQ = getInteractionFeature(seqQ, seqQ, temperature, "EallTotal")
+        fcTQ = getInteractionFeature(seqT, seqQ, temperature, "EallTotal")
+        Tc = getInteractionFeature(seqT, seqQ, temperature, "Eall1")
+        Qc = getInteractionFeature(seqT, seqQ, temperature, "Eall2")
     else:
         print("Using rnaCofold ...")
+        (fcTQ, fcTT, fcQQ, Tc, Qc) = rnaCofold("sequences.fa")
 
-    print(fcTQ, fcTT, fcQQ, Tc, Qc)
+    print("free energies: ", fcTQ, fcTT, fcQQ, Tc, Qc)
 
     # binding energy:
     print("binding energy: ", fcTQ - Tc - Qc)
-    #print("binding energy (hp5'11): ", fcUR - Uc - Rc)
 
     # plot concentration
     if plotFile != None:
@@ -111,13 +110,6 @@ def main(argv):
             cTTList.append(cTT)
             cTQList.append(cTQ)
             cQQList.append(cQQ)
-
-        # NUPACK
-        # xList = [1,5,10,15,20,25,30,40,50]
-        # cTQList = [0,0.24,0.47,0.68,0.89,1.1,1.3,1.6,2]
-        # cTTList = [10,9.8,9.5,9.3,9.1,8.9,8.7,8.4,8]
-        # cQQList = [0.95,4.8,9.5,14,19,24,29,38,48]
-        # cTList = [0,0,0,0,0,0,0,0,0]
 
         plt.xscale('log')
         plt.plot(xList, cTQList, color='black', label="A.si", linewidth=3)
@@ -138,7 +130,7 @@ def main(argv):
 
     # output concentration
     (cTQ, cTT, cQQ, cT, cQ) = RNA.get_concentrations(fcTQ, fcTT, fcQQ, Tc, Qc, cTinit, cQinit)
-    print(cTQ, cTT, cQQ, cT, cQ)
+    print("concentrations: ", cTQ, cTT, cQQ, cT, cQ)
 
 # returns given feature for RNAFold
 def rnaFold(inputFile):
