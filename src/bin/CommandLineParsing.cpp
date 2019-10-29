@@ -82,8 +82,7 @@ const std::string CommandLineParsing::outCsvCols_default = "id1,start1,end1,id2,
 
 ////////////////////////////////////////////////////////////////////////////
 
-const std::string CommandLineParsing::outCsvColSep = ";";
-const std::string CommandLineParsing::outCsvLstSep = ",";
+const std::string CommandLineParsing::outCsvLstSep = ":";
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -196,6 +195,7 @@ CommandLineParsing::CommandLineParsing( const Personality personality  )
 	outBestSeedOnly(false),
 	outNoLP(false),
 	outNoGUend(false),
+	outSep(";"),
 	outCsvCols(outCsvCols_default),
 	outPerRegion(false),
 	outSpotProbSpots(""),
@@ -837,6 +837,12 @@ CommandLineParsing::CommandLineParsing( const Personality personality  )
 					"\n 'basePairProb:' (target+query) tracks intermolecular basepair probabilities."
 					"\nFor each, provide a file name or STDOUT/STDERR to write to the respective output stream."
 					).c_str())
+		("outSep"
+			, value< std::string >(&(outSep))
+				->composing()
+				->default_value(outSep.c_str())
+				->notifier(boost::bind(&CommandLineParsing::validate_outSep,this,_1))
+			, std::string("column separator to be used in tabular CSV output").c_str())
 		(outMode.name.c_str()
 			, value<char>(&(outMode.val))
 				->default_value(outMode.def)
@@ -1284,8 +1290,8 @@ parse(int argc, char** argv)
 			case 'C' : {
 				if (!qAccFile.empty()) LOG(INFO) <<"qAcc = "<<qAcc.val<<" : ignoring --qAccFile";
 				if (energy.val != 'V') {
-					if (!accNoLP) LOG(INFO) <<"ignoring --accNoLP, not supported for energy=="<<energy.val;
-					if (!accNoGUend) LOG(INFO) <<"ignoring --accNoGUend, not supported for energy=="<<energy.val;
+					if (accNoLP) LOG(INFO) <<"ignoring --accNoLP, not supported for energy=="<<energy.val;
+					if (accNoGUend) LOG(INFO) <<"ignoring --accNoGUend, not supported for energy=="<<energy.val;
 				}
 				break;
 			}
@@ -1306,8 +1312,8 @@ parse(int argc, char** argv)
 			case 'C' : {
 				if (!tAccFile.empty()) LOG(INFO) <<"tAcc = "<<tAcc.val<<" : ignoring --tAccFile";
 				if (energy.val != 'V') {
-					if (!accNoLP) LOG(INFO) <<"ignoring --accNoLP, not supported for energy=="<<energy.val;
-					if (!accNoGUend) LOG(INFO) <<"ignoring --accNoGUend, not supported for energy=="<<energy.val;
+					if (accNoLP) LOG(INFO) <<"ignoring --accNoLP, not supported for energy=="<<energy.val;
+					if (accNoGUend) LOG(INFO) <<"ignoring --accNoGUend, not supported for energy=="<<energy.val;
 				}
 				break;
 			}
@@ -1366,7 +1372,7 @@ parse(int argc, char** argv)
 				bool sortLexOrder = (std::find( OutputHandlerCsv::colTypeNumericSort.begin(), OutputHandlerCsv::colTypeNumericSort.end(), outCsvColType) == OutputHandlerCsv::colTypeNumericSort.end());
 				// setup sorted CSV output
 				OutputStreamHandler * tmpOSH = outStreamHandler;
-				outStreamHandler = new OutputStreamHandlerSortedCsv( tmpOSH, outCsvSortIdx, sortLexOrder, outCsvColSep, true, outCsvLstSep );
+				outStreamHandler = new OutputStreamHandlerSortedCsv( tmpOSH, outCsvSortIdx, sortLexOrder, outSep, true, outCsvLstSep );
 			}
 
 			// check output sanity
@@ -1515,13 +1521,13 @@ validate_indexRangeList(const std::string & argName, const std::string & value
 				}
 				// check if boundaries in range (given they are ascending)
 				if (i->to >= seq.size() ) {
-					LOG(ERROR)  <<argName<<" : subrange " <<*i <<" is out of bounds [,"<<(seq.size()-1)<<"]";
+					LOG(ERROR)  <<argName<<" : subrange " <<*i <<" is out of bounds [,"<<(seq.size()-1)<<"] of sequence "<<seq.getId();
 					updateParsingCode(ReturnCode::STOP_PARSING_ERROR);
 					return;
 				}
 			}
 		} catch (std::runtime_error & e) {
-			LOG(ERROR)  <<argName<<" : '" <<value <<"' can not be parsed for sequence index range ["<<seq.getInOutIndex(0)<<","<<seq.getInOutIndex(seq.size()-1)<<"]";
+			LOG(ERROR)  <<argName<<" : '" <<value <<"' can not be parsed for sequence index range ["<<seq.getInOutIndex(0)<<","<<seq.getInOutIndex(seq.size()-1)<<"] of sequence "<<seq.getId();
 			updateParsingCode(ReturnCode::STOP_PARSING_ERROR);
 			return;
 		}
@@ -1628,35 +1634,30 @@ void
 CommandLineParsing::
 parseRegion( const std::string & argName, const std::string & value, const RnaSequenceVec & sequences, IndexRangeListVec & rangeList )
 {
+	// ensure range list size sufficient
+	rangeList.resize( sequences.size() );
 	// check if nothing given
 	if (value.empty()) {
-		// ensure range list size sufficient
-		rangeList.resize( sequences.size() );
-		size_t s=0;
-		for( IndexRangeList & r : rangeList ) {
-			// clear old data if any
-			r.clear();
-			assert(sequences.at(s).size()>0);
-			// push full range
-			r.push_back( IndexRange(0,sequences.at(s++).size()-1) );
+		for( size_t i=0; i<sequences.size(); i++) {
+			// clear if any datathere
+			rangeList[i].clear();
+			// set sequence-specific full-length range
+			rangeList[i].push_back( IndexRange(0,sequences.at(i).size()-1) );
 		}
 		return;
 	} else
 	// check direct range input
 	if (boost::regex_match( value, IndexRangeList::regex, boost::match_perl )) {
-		// ensure single sequence input
-		if(sequences.size() != 1) {
-			throw boost::program_options::error(argName +" : string range list encoding provided but more than one sequence present.");
+		for( size_t i=0; i<sequences.size(); i++) {
+			// validate range encodings for current sequence
+			validate_indexRangeList(argName, value, sequences.at(i));
+			// fill range list from string using index correction from first sequence
+			rangeList[i] = IndexRangeList( value, false, &(sequences.at(i)) );
 		}
-		// validate range encodings
-		validate_indexRangeList(argName, value, *sequences.begin());
-		// ensure range list size sufficient
-		rangeList.resize(1);
-		// fill range list from string using index correction from first sequence
-		rangeList[0] = IndexRangeList( value, false, &(*sequences.begin()) );
 		return;
+	} else {
+		throw boost::program_options::error(argName+" is not a comma-separated list of index ranges.");
 	}
-	throw boost::program_options::error(argName+" is not a comma-separated list of index ranges.");
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -2139,7 +2140,7 @@ getPredictor( const InteractionEnergy & energy, OutputHandler & output ) const
 						, getFullFilename( outPrefix2streamName.at(OutPrefixCode::OP_qMinE)
 								, &(energy.getAccessibility1().getSequence())
 								, &(energy.getAccessibility2().getAccessibilityOrigin().getSequence()))
-						, "NA") );
+						, "NA", outSep ) );
 	}
 
 	// check if spotProb-profile is to be generated
@@ -2154,7 +2155,7 @@ getPredictor( const InteractionEnergy & energy, OutputHandler & output ) const
 						, getFullFilename( outPrefix2streamName.at(OutPrefixCode::OP_qSpotProb)
 								, &(energy.getAccessibility1().getSequence())
 								, &(energy.getAccessibility2().getAccessibilityOrigin().getSequence()))
-						, "0") );
+						, "0", outSep ) );
 	}
 
 	// check if minE-pairs are to be generated
@@ -2165,7 +2166,7 @@ getPredictor( const InteractionEnergy & energy, OutputHandler & output ) const
 						, getFullFilename( outPrefix2streamName.at(OutPrefixCode::OP_pMinE)
 								, &(energy.getAccessibility1().getSequence())
 								, &(energy.getAccessibility2().getAccessibilityOrigin().getSequence()))
-						, "NA") );
+						, "NA", outSep ) );
 	}
 
 	// check if specific spotProbs are to be tracked
@@ -2175,7 +2176,8 @@ getPredictor( const InteractionEnergy & energy, OutputHandler & output ) const
 				new PredictionTrackerSpotProb( energy
 								// get encoding
 								, outSpotProbSpots
-								, outPrefix2streamName.at(OutPrefixCode::OP_spotProb) )
+								, outPrefix2streamName.at(OutPrefixCode::OP_spotProb)
+								, outSep )
 							);
 	}
 
@@ -2188,7 +2190,7 @@ getPredictor( const InteractionEnergy & energy, OutputHandler & output ) const
 						, getFullFilename( outPrefix2streamName.at(OutPrefixCode::OP_spotProbAll)
 								, &(energy.getAccessibility1().getSequence())
 								, &(energy.getAccessibility2().getAccessibilityOrigin().getSequence()))
-						, "0") );
+						, "0", outSep ) );
 	}
 
 	// check if specific basepairProbs are to be tracked
@@ -2299,7 +2301,7 @@ initOutputHandler()
 	switch (outMode.val) {
 	case 'C' :
 		outStreamHandler->getOutStream()
-		<<OutputHandlerCsv::getHeader( OutputHandlerCsv::string2list( outCsvCols ) )
+		<<OutputHandlerCsv::getHeader( OutputHandlerCsv::string2list( outCsvCols ), outSep )
 		; break;
 	}
 
@@ -2324,11 +2326,11 @@ getOutputHandler( const InteractionEnergy & energy ) const
 		return new OutputHandlerEnsemble( getOutputConstraint(), outStreamHandler->getOutStream(), energy );
 	case 'C' :
 		// ensure that Zall is computed if needed
-		outNeedsZall = outNeedsZall || OutputHandlerCsv::needsZall(OutputHandlerCsv::string2list( outCsvCols ), outCsvColSep);
+		outNeedsZall = outNeedsZall || OutputHandlerCsv::needsZall(OutputHandlerCsv::string2list( outCsvCols ));
 		// check whether interaction details are needed
-		outNeedsBPs = OutputHandlerCsv::needBPs(OutputHandlerCsv::string2list( outCsvCols ), outCsvColSep);;
+		outNeedsBPs = OutputHandlerCsv::needBPs(OutputHandlerCsv::string2list( outCsvCols ));;
 		// create output handler
-		return new OutputHandlerCsv( getOutputConstraint(), outStreamHandler->getOutStream(), energy, OutputHandlerCsv::string2list( outCsvCols ), outCsvColSep, false, outCsvLstSep );
+		return new OutputHandlerCsv( getOutputConstraint(), outStreamHandler->getOutStream(), energy, OutputHandlerCsv::string2list( outCsvCols ), outSep, false, outCsvLstSep );
 	default :
 		INTARNA_NOT_IMPLEMENTED("Output mode "+toString(outMode.val)+" not implemented yet");
 	}

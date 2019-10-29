@@ -46,7 +46,9 @@ public:
 		hybridDB, //!< hybrid in dot-bar notation
 		hybridDPfull, //!< hybrid in VRNA dot-bracket notation for full sequence lengths
 		hybridDBfull, //!< hybrid in dot-bar notation for full sequence lengths
+		bpList, //!< list of hybrid base pairs like (1,3),(4,2),...
 		E, //!< overall interaction energy
+		Etotal, //!< overall energy of the interaction including the intra-molecular ensemble energies (E+Eall1+Eall2)
 		ED1, //!< ED value of seq1
 		ED2, //!< ED value of seq2
 		Pu1, //!< probability to be accessible for seq1
@@ -73,8 +75,13 @@ public:
 		w, //!< Boltzmann weight of the interaction energy
 		// output only available if Zall was computed (outConstraint.needZall)
 		Eall, //!< ensemble energy of all interactions (outConstraint.needZall)
+		Eall1, //!< ensemble energy of all intra-molecular structures of seq1
+		Eall2, //!< ensemble energy of all intra-molecular structures of seq2
 		Zall, //!< partition function of all interactions (outConstraint.needZall)
-		P_E, //!< probability of mfe E within interaction ensemble (outConstraint.needZall)
+		Zall1, //!< partition function of all intra-molecular structures of seq1
+		Zall2, //!< partition function of all intra-molecular structures of seq2
+		EallTotal, //!< total ensemble energy (Eall+Eall1+Eall2) of all interactions including the intra-molecular ensemble energies (outConstraint.needZall)
+		P_E, //!< probability of mfe within interaction ensemble (outConstraint.needZall)
 		ColTypeNumber //!< number of column types
 	};
 
@@ -120,7 +127,9 @@ protected:
 			colType2string[hybridDB] = "hybridDB";
 			colType2string[hybridDPfull] = "hybridDPfull";
 			colType2string[hybridDBfull] = "hybridDBfull";
+			colType2string[bpList] = "bpList";
 			colType2string[E] = "E";
+			colType2string[Etotal] = "Etotal";
 			colType2string[ED1] = "ED1";
 			colType2string[ED2] = "ED2";
 			colType2string[Pu1] = "Pu1";
@@ -146,7 +155,12 @@ protected:
 			colType2string[seedPu1] = "seedPu1";
 			colType2string[seedPu2] = "seedPu2";
 			colType2string[Eall] = "Eall";
+			colType2string[Eall1] = "Eall1";
+			colType2string[Eall2] = "Eall2";
+			colType2string[EallTotal] = "EallTotal";
 			colType2string[Zall] = "Zall";
+			colType2string[Zall1] = "Zall1";
+			colType2string[Zall2] = "Zall2";
 			colType2string[P_E] = "P_E";
 			// ensure filling is complete
 			for (size_t i=0; i<ColTypeNumber; i++) {
@@ -222,24 +236,22 @@ public:
 	/**
 	 * Checks whether or not Zall needs to be computed to generate all colTypes
 	 * @param colTypes the list of column types to consider
-	 * @param colSep the column separator to be used
 	 * @return true if one of the colTypes requires Zall computation;
 	 *         false otherwise.
 	 */
 	static
 	bool
-	needsZall( const ColTypeList & colTypes, const std::string & colSep = ";" );
+	needsZall( const ColTypeList & colTypes );
 
 	/**
 	 * Checks whether or not interaction base pairs are needed to generate all colTypes
 	 * @param colTypes the list of column types to consider
-	 * @param colSep the column separator to be used
 	 * @return true if one of the colTypes requires Zall computation;
 	 *         false otherwise.
 	 */
 	static
 	bool
-	needBPs( const ColTypeList & colTypes, const std::string & colSep = ";" );
+	needBPs( const ColTypeList & colTypes );
 
 	/**
 	 * Generates the header line for a given list of columns
@@ -249,7 +261,7 @@ public:
 	 */
 	static
 	std::string
-	getHeader( const ColTypeList & colTypes, const std::string& colSep = ";" );
+	getHeader( const ColTypeList & colTypes, const std::string& colSep );
 
 
 protected:
@@ -362,12 +374,13 @@ string2list( const std::string & stringEncoding )
 inline
 bool
 OutputHandlerCsv::
-needsZall( const ColTypeList & colTypes, const std::string & colSep )
+needsZall( const ColTypeList & colTypes )
 {
 	for (auto it = colTypes.begin(); it != colTypes.end(); it++ ) {
 		// check if type requires Zall computation
 		switch ( *it ) {
 		case Eall:
+		case EallTotal:
 		case Zall:
 		case P_E:
 			return true;
@@ -381,7 +394,7 @@ needsZall( const ColTypeList & colTypes, const std::string & colSep )
 inline
 bool
 OutputHandlerCsv::
-needBPs( const ColTypeList & colTypes, const std::string & colSep )
+needBPs( const ColTypeList & colTypes )
 {
 	for (auto it = colTypes.begin(); it != colTypes.end(); it++ ) {
 		// check if type requires Zall computation
@@ -390,6 +403,7 @@ needBPs( const ColTypeList & colTypes, const std::string & colSep )
 		case hybridDBfull:
 		case hybridDP:
 		case hybridDPfull:
+		case bpList:
 			return true;
 		}
 	}
