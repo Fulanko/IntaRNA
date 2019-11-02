@@ -17,6 +17,7 @@ def main(argv):
     seqT = ""
     seqQ = ""
     method = ""
+    title = ""
     cTinit = 1e-5
     cQinit = 1e-5
     paramFile = None
@@ -80,6 +81,7 @@ def main(argv):
     # if IntaRNA ...
     if method == "I":
         print("Using IntaRNA ...")
+        title = "IntaRNA"
         fcTT = getInteractionFeature(seqT, seqT, temperature, "EallTotal")
         fcQQ = getInteractionFeature(seqQ, seqQ, temperature, "EallTotal")
         fcTQ = getInteractionFeature(seqT, seqQ, temperature, "EallTotal")
@@ -87,6 +89,7 @@ def main(argv):
         Qc = getInteractionFeature(seqT, seqQ, temperature, "Eall2")
     else:
         print("Using rnaCofold ...")
+        title = "RNAcofold"
         (fcTQ, fcTT, fcQQ, Tc, Qc) = rnaCofold("sequences.fa")
 
     print("free energies: ", fcTQ, fcTT, fcQQ, Tc, Qc)
@@ -119,11 +122,14 @@ def main(argv):
 
         plt.xlim(1, 50)
         plt.ylim(0, 20)
-        plt.xlabel("total siRNA concentration [nmol/L]")
-        plt.ylabel("concentration [nmol/L]")
+        plt.xlabel("total siRNA concentration [nmol/L]", fontsize=16)
+        plt.ylabel("concentration [nmol/L]", fontsize=16)
         plt.legend(loc='upper left')
+        plt.suptitle(title, fontsize=20)
+        plt.xticks(fontsize=13)
+        plt.yticks(fontsize=13)
 
-        plt.text(4, -6.5, "Binding energies: ΔF(A) = %.2f kcal/mol"%(fcTQ - Tc - Qc), ha='center')
+        plt.text(5, -7.5, "Binding energies: ΔF(A) = %.2f kcal/mol"%(fcTQ - Tc - Qc), ha='center', fontsize=16)
         plt.subplots_adjust(bottom=0.3)
 
         plt.savefig(plotFile)
